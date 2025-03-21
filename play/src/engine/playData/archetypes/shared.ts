@@ -21,10 +21,12 @@ export const scaleX = (hitTime: number) => judgeLineX + -speed * (bpmChanges.at(
 /** return the x of the point at y between 2 points */
 export const yOnLine = (hitTime: number, lastPoint: number, nextPoint: number): number => {
 
-  const l = archetypes.LinePoint.pos.get(lastPoint)
-  const n = archetypes.LinePoint.pos.get(nextPoint)
+  const ly = archetypes.LinePoint.pos.get(lastPoint).y
+  const ny = archetypes.LinePoint.pos.get(nextPoint).y
 
-  return l.y + (hitTime - l.x) / (n.x - l.x) * (n.y - l.y)
+  const lx = bpmChanges.at(archetypes.LinePoint.import.get(lastPoint).Time).time
+  const nx = bpmChanges.at(archetypes.LinePoint.import.get(nextPoint).Time).time
+  return ly + (bpmChanges.at(hitTime).time - lx) / (nx - lx) * (ny - ly)
 }
 
 export const lineToQuad = (lx: number, ly: number, nx: number, ny: number,): Quad => {
