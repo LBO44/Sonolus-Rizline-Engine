@@ -1,22 +1,22 @@
-import { archetypes } from "."
 import { skin } from "../skin"
-import { scaleX, speed, yOnLine } from "./shared"
+import { spawnBeatToTime, toLineX, toLineY } from "./shared"
 
 export class Note extends Archetype {
+
   import = this.defineImport({
     Line: { name: "Line", type: Number },
-    Time: { name: "Time", type: Number },
-    LastLinePoint: { name: "LastPoint", type: Number },
-    NextLinePoint: { name: "NextPoint", type: Number }
+    Beat: { name: "Beat", type: Number },
+    LastPoint: { name: "LastPoint", type: Number },
+    NextPoint: { name: "NextPoint", type: Number }
   })
 
   spawnTime = this.entityMemory(Number)
-  endTime = this.entityMemory(Number)
+  hitTime = this.entityMemory(Number)
   hasInput = true
 
   preprocess() {
-    this.spawnTime = bpmChanges.at(this.import.Time).time - 10 / speed
-    this.endTime = bpmChanges.at(this.import.Time).time
+    this.spawnTime = spawnBeatToTime(this.import.Beat)
+    this.hitTime = bpmChanges.at(this.import.Beat).time
   }
 
   shouldSpawn() {
@@ -24,13 +24,13 @@ export class Note extends Archetype {
   }
 
   updateSequential() {
-    const x = scaleX(this.import.Time)
-    if (this.endTime < time.now) this.despawn = true
 
+    if (this.hitTime < time.now) this.despawn = true
 
-    const y = yOnLine(this.import.Time, this.import.LastLinePoint, this.import.NextLinePoint)
-    const debugLayout = Rect.one.mul(0.05)
-    skin.sprites.judgeRingGreen.draw(debugLayout.translate(x, y), 5, 0.8)
+    const y = toLineY(this.import.Beat, this.import.LastPoint, this.import.NextPoint)
+    const x = toLineX(this.import.Beat, this.import.LastPoint, this.import.NextPoint)
+    const noteLayout = Rect.one.mul(0.05)
+    skin.sprites.judgeRingGreen.draw(noteLayout.translate(x, y), 5, 0.8)
 
   }
 }

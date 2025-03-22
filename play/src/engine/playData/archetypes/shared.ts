@@ -1,4 +1,5 @@
 import { archetypes } from "."
+import { configuration } from "../../configuration"
 
 //canvas info modified by the canvas etities
 export const canvas = levelMemory({
@@ -6,27 +7,40 @@ export const canvas = levelMemory({
   speed: Tuple(16, Number),
 })
 
-export const judgeLineX = 0.8
-export const speed = 2.5
+export const judgeLineX = 0.9
+export const speed = configuration.options.NoteSpeed
 
 const lineWidth: number = 0.01
 
+export const spawnBeatToTime = (spawnBeat: number) => bpmChanges.at(spawnBeat).time - 10 / speed
+
 /** the judgeline is on the y axis
  * in rizline -0.5 is left and 0.5 is right edge of screen */
-export const scaleY = (y: number) => y * 2
+export const scaleY = (y: number, canvasID: number) => (y + canvas.yPos.get(canvasID)) * 2
 
 /** time to screen x based on judgeLineX, speed and point hitTime and cuurent time*/
-export const scaleX = (hitTime: number) => judgeLineX + -speed * (bpmChanges.at(hitTime).time - time.now)
+export const scaleX = (hitTime: number, canvasID: number) => judgeLineX + -(speed * canvas.speed.get(canvasID)) * (hitTime - time.now)
 
-/** return the x of the point at y between 2 points */
-export const yOnLine = (hitTime: number, lastPoint: number, nextPoint: number): number => {
+/** return the y of the note at a certain time between 2 linePoints */
+export const toLineY = (hitBeat: number, lastPoint: number, nextPoint: number): number => {
 
   const ly = archetypes.LinePoint.pos.get(lastPoint).y
   const ny = archetypes.LinePoint.pos.get(nextPoint).y
 
-  const lx = bpmChanges.at(archetypes.LinePoint.import.get(lastPoint).Time).time
-  const nx = bpmChanges.at(archetypes.LinePoint.import.get(nextPoint).Time).time
-  return ly + (bpmChanges.at(hitTime).time - lx) / (nx - lx) * (ny - ly)
+  const lt = bpmChanges.at(archetypes.LinePoint.import.get(lastPoint).HitBeat).time
+  const nt = bpmChanges.at(archetypes.LinePoint.import.get(nextPoint).HitBeat).time
+  return ly + (bpmChanges.at(hitBeat).time - lt) / (nt - lt) * (ny - ly)
+}
+
+/** return the x of the note at a certain time between 2 linePoints */
+export const toLineX = (hitBeat: number, lastPoint: number, nextPoint: number): number => {
+
+  const lx = archetypes.LinePoint.pos.get(lastPoint).x
+  const nx = archetypes.LinePoint.pos.get(nextPoint).x
+
+  const lt = bpmChanges.at(archetypes.LinePoint.import.get(lastPoint).HitBeat).time
+  const nt = bpmChanges.at(archetypes.LinePoint.import.get(nextPoint).HitBeat).time
+  return lx + (bpmChanges.at(hitBeat).time - lt) / (nt - lt) * (nx - lx)
 }
 
 export const lineToQuad = (lx: number, ly: number, nx: number, ny: number,): Quad => {

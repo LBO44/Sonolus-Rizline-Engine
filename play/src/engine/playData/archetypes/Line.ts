@@ -13,7 +13,6 @@ export class Line extends Archetype {
   skinID = this.entityMemory(SkinSpriteId)
 
   sharedMemory = this.defineSharedMemory({
-    x: Number
   })
 
 

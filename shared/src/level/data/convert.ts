@@ -28,7 +28,7 @@ type RizChart = { //incomplete
   bPM: number,
   bpmShifts: RizKeyPoint[],
   lines: {
-    linePoints: { time: number, xPosition: number, canvasIndex: number, color: RizColor }[],
+    linePoints: { time: number, xPosition: number, canvasIndex: number, easeType: number, color: RizColor }[],
     notes: { type: RizNoteType, time: number, otherInformations: number[] }[]
   }[],
   canvasMoves: {
@@ -42,97 +42,108 @@ type RizChart = { //incomplete
 
 
 //LevelDataEntity generator functions
-const BpmChangeEntity = (time: number, bpm: number): LevelDataEntity => {
+const BpmChangeEntity = (beat: number, bpm: number): LevelDataEntity => {
   return {
     archetype: EngineArchetypeName.BpmChange,
     data: [
-      { name: EngineArchetypeDataName.Beat, value: time },
+      { name: EngineArchetypeDataName.Beat, value: beat },
       { name: EngineArchetypeDataName.Bpm, value: bpm }]
   }
 }
 
+//line entity only handles drawing the judge ring
 const LineEntity = (lineIndex: number, startTime: number, endTime: number): LevelDataEntity => {
   return {
     name: `Line${lineIndex}`,
     archetype: 'Line',
     data: [
       { name: "FirstPoint", ref: `Line${lineIndex}-Point0` },
-      { name: "StartTime", value: startTime },
+      { name: "StartTime", value: Math.max(0, startTime) },
       { name: "EndTime", value: endTime }]
   }
 }
 
-const LinePointEntity = (time:number, spawnTime:number, pointIndex:number, lineIndex: number, canvasId: number, yPos: number, color: RizColor, isLastPoint = false): LevelDataEntity => {
+const LinePointEntity = (
+  hitBeat: number, //when the point is supposed to reach tye judgement line
+  spawnBeat: number, //hitBeat of the previous point
+  pointIndex: number,
+  line: number,
+  canvas: number,
+  yPos: number,
+  easeType: number,
+  color: RizColor,
+  isLastPoint = false): LevelDataEntity => {
   return {
-    name: `Line${lineIndex}-Point${pointIndex}`,
+    name: `Line${line}-Point${pointIndex}`,
     archetype: 'LinePoint',
     data: [
-      { name: "Time", value: time },
-      { name: "SpawnTime", value: spawnTime },
-      { name: "Line", ref: `Line${lineIndex}` },
-      { name: "NextPoint", ref: `Line${lineIndex}-Point${pointIndex+1}` }, //this value will be incorrect if last point
+      { name: "HitBeat", value: Math.max(0, hitBeat) },
+      { name: "SpawnBeat", value: spawnBeat },
+      { name: "Line", ref: `Line${line}` },
+      { name: "NextPoint", ref: `Line${line}-Point${pointIndex + 1}` }, //this value will be incorrect if last point
       { name: "YPos", value: yPos }, //renamed x pos to y pos as rizline x corresponds to sonolus y
       { name: "IsLastPoint", value: +isLastPoint },
-      { name: "CanvasId", value: canvasId },
+      { name: "Canvas", value: canvas },
+      { name: "EaseType", value: easeType },
       //{ name: "ColorR", value: 1 - color.r / 255 },
       //{ name: "ColorG", value: 1 - color.g / 255 },
       //{ name: "ColorB", value: 1 - color.b / 255 },
-      { name: "ColorA", value: color.a }]
+      { name: "ColorA", value: color.a / 255 }]
   }
 }
 
-const NoteEntity = (time: number,lineIndex:number, LastPointIndex: number): LevelDataEntity => {
+const NoteEntity = (beat: number, line: number, LastPoint: number): LevelDataEntity => {
   return {
     archetype: 'Note',
     data: [
-      { name: "Time", value: time },
-      { name: "Line", ref: `line${lineIndex}` },
-      { name: "LastPoint", ref: `Line${lineIndex}-Point${LastPointIndex}` },
-      { name: "NextPoint", ref: `Line${lineIndex}-Point${LastPointIndex+1}` }]
+      { name: "Beat", value: beat },
+      { name: "Line", ref: `line${line}` },
+      { name: "LastPoint", ref: `Line${line}-Point${LastPoint}` },
+      { name: "NextPoint", ref: `Line${line}-Point${LastPoint + 1}` }]
   }
 }
 
-const CanvasMoveEntity = (time: number, index: number, canvasId: number, yPos: number): LevelDataEntity => {
+const CanvasMoveEntity = (beat: number, index: number, canvas: number, yPos: number): LevelDataEntity => {
   return {
-    name: `CanvasMove${canvasId}-${index}`,
+    name: `CanvasMove${canvas}-${index}`,
     archetype: 'CanvasMove',
     data: [
-      { name: "Time", value: time },
-      { name: "NextCanvasMove", ref: `CanvasMove${canvasId}-${index + 1}` },
-      { name: "CanvasId", value: canvasId },
+      { name: "Beat", value: beat },
+      { name: "NextCanvasMove", ref: `CanvasMove${canvas}-${index + 1}` },
+      { name: "Canvas", value: canvas },
       { name: "YPos", value: yPos }]
   }
 }
 
-const CanvasSpeedEntity = (time: number, index: number, canvasId: number, speed: number): LevelDataEntity => {
+const CanvasSpeedEntity = (beat: number, index: number, canvas: number, speed: number): LevelDataEntity => {
   return {
-    name: `CanvasSpeed${canvasId}-${index}`,
+    name: `CanvasSpeed${canvas}-${index}`,
     archetype: 'CanvasSpeed',
     data: [
-      { name: "Time", value: time },
-      { name: "NextCanvasMove", ref: `CanvasMove${canvasId}-${index + 1}` },
-      { name: "CanvasId", value: canvasId },
+      { name: "Beat", value: beat },
+      { name: "NextCanvasMove", ref: `CanvasMove${canvas}-${index + 1}` },
+      { name: "Canvas", value: canvas },
       { name: "Speed", value: speed }]
   }
 }
 
-const CameraMoveEntity = (time: number, index: number, yPos: number): LevelDataEntity => {
+const CameraMoveEntity = (beat: number, index: number, yPos: number): LevelDataEntity => {
   return {
     name: `CameraMove-${index}`,
     archetype: 'CameraMove',
     data: [
-      { name: "Time", value: time },
+      { name: "Beat", value: beat },
       { name: "NextCameraMove", ref: `CameraMove-${index}` },
       { name: "YPos", value: yPos }]
   }
 }
 
-const CameraScaleEntity = (time: number, index: number, scale: number): LevelDataEntity => {
+const CameraScaleEntity = (beat: number, index: number, scale: number): LevelDataEntity => {
   return {
     name: `CameraScale-${index}`,
     archetype: 'CameraScale',
     data: [
-      { name: "Time", value: time },
+      { name: "Beat", value: beat },
       { name: "NextCameraScale", ref: `CameraScale-${index + 1}` },
       { name: "Scale", value: scale }]
   }
@@ -151,15 +162,15 @@ export const convertsChart = (chart: RizChart): LevelData => {
 
   //line, line point, and note
   chart.lines.forEach((line, lineIndex) => {
-    // if (line.notes.length == 0 || line.linePoints.length == 0) return //igore lines without notes
+    if (line.notes.length == 0 || line.linePoints.length == 0) return //igore lines without notes
 
     // add lines, line names are `LineN`, line start and ends are first and last points time
     LineEntities.push(LineEntity(lineIndex, line.linePoints[0].time, line.linePoints[line.linePoints.length - 1].time))
 
     //add points, a lane is made of a bunch of points
-    let spawnTime = 0
+    let spawnTime = line.linePoints[0].time
     line.linePoints.forEach((point, pointIndex) => {
-      LinePointEntities.push(LinePointEntity(point.time,spawnTime,pointIndex , lineIndex, point.canvasIndex, point.xPosition, point.color, pointIndex === line.linePoints.length - 1))
+      LinePointEntities.push(LinePointEntity(point.time, spawnTime, pointIndex, lineIndex, point.canvasIndex, point.xPosition, point.easeType, point.color, pointIndex === line.linePoints.length - 1))
       spawnTime = point.time
     })
 
@@ -202,10 +213,11 @@ export const convertsChart = (chart: RizChart): LevelData => {
 
   //merge all the enties in a single array
   let convertedEntities = [
-    ...LineEntities,
-    ...LinePointEntities, 
-    ...NoteEntities, 
-    //...CanvasMoveEntities,
+    //...LineEntities,
+    ...bpmEntities,
+    ...LinePointEntities,
+    ...NoteEntities,
+    ...CanvasMoveEntities,
     //...CanvasSpeedEntities,
     //...CameraMoveEntities,
     //...CameraScaleEntities
@@ -213,8 +225,8 @@ export const convertsChart = (chart: RizChart): LevelData => {
 
   //sort entities based on their spawn time 
   convertedEntities.sort((a, b) => {
-    const timeA: number = (a.data.find(item => item.name === "Time" || item.name === "StartTime" || item.name == EngineArchetypeDataName.Beat) as { name: string, value: number }).value
-    const timeB: number = (b.data.find(item => item.name === "Time" || item.name === "StartTime" || item.name == EngineArchetypeDataName.Beat) as { name: string, value: number }).value
+    const timeA: number = (a.data.find(item => item.name === "Beat" || item.name === "SpawnBeat" || item.name == EngineArchetypeDataName.Beat) as { name: string, value: number }).value
+    const timeB: number = (b.data.find(item => item.name === "Beat" || item.name === "SpawnBeat" || item.name == EngineArchetypeDataName.Beat) as { name: string, value: number }).value
     if (timeA === undefined || timeB === undefined) return 0
     if (timeA < timeB) return -1
     if (timeA > timeB) return 1
@@ -225,7 +237,6 @@ export const convertsChart = (chart: RizChart): LevelData => {
   const entities = [
     { archetype: 'Initialization', data: [] },
     { archetype: 'Stage', data: [] },
-    ...bpmEntities,
     ...convertedEntities
   ]
 
