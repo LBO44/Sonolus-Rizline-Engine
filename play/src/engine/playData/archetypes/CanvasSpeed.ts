@@ -45,7 +45,6 @@ export class CanvasSpeed extends Archetype {
     const ns = n.Speed
 
     const s = Math.lerp(ls, ns, Math.remapClamped(lt, nt, 0, 1, time.now))
-    debug.log(s)
     canvas.speed.set(this.import.Canvas, s)
   }
 }

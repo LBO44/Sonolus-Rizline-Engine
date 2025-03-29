@@ -7,7 +7,10 @@ export const canvas = levelMemory({
   speed: Tuple(16, Number),
 })
 
+
 export const judgeLineX = 0.9
+export const XMin = -1.5
+
 export const speed = configuration.options.NoteSpeed
 
 const lineWidth: number = 0.01
@@ -19,7 +22,7 @@ export const spawnBeatToTime = (spawnBeat: number) => bpmChanges.at(spawnBeat).t
 export const scaleY = (y: number, canvasID: number) => (y + canvas.yPos.get(canvasID)) * 2
 
 /** time to screen x based on judgeLineX, speed and point hitTime and cuurent time*/
-export const scaleX = (hitTime: number, canvasID: number) => judgeLineX + -(speed * canvas.speed.get(canvasID)) * (hitTime - time.now)
+export const scaleX = (hitTime: number, canvasID: number) => judgeLineX -(speed * canvas.speed.get(canvasID)) * (hitTime - time.now)
 
 /** return the y of the note at a certain time between 2 linePoints */
 export const toLineY = (hitBeat: number, lastPoint: number, nextPoint: number): number => {
@@ -43,7 +46,7 @@ export const toLineX = (hitBeat: number, lastPoint: number, nextPoint: number): 
   return lx + (bpmChanges.at(hitBeat).time - lt) / (nt - lt) * (nx - lx)
 }
 
-export const lineToQuad = (lx: number, ly: number, nx: number, ny: number,): Quad => {
+export const lineToQuad2 = (lx: number, ly: number, nx: number, ny: number,): Quad => {
   // Calculate direction vector
   const dx = nx - lx;
   const dy = ny - ly;
@@ -64,3 +67,60 @@ export const lineToQuad = (lx: number, ly: number, nx: number, ny: number,): Qua
     x4: nx + offsetX, y4: ny + offsetY,
   })
 }
+
+export const lineToQuad = (
+  lx: number,
+  ly: number,
+  nx: number,
+  ny: number,
+): Quad => {
+
+  // --- Clipping Logic ---
+  let t0 = 0;
+  let t1 = 1;
+  const dx = nx - lx;
+  const dy = ny - ly;
+
+  // Clip against xMin and xMax
+  if (dx !== 0) {
+    // Calculate t where x = xMin and x = xMax
+    let tXMin = (XMin - lx) / dx;
+    let tXMax = (judgeLineX - lx) / dx;
+
+    // Swap if dx is negative
+    if (dx > 0) {
+      t0 = Math.max(t0, tXMin);
+      t1 = Math.min(t1, tXMax);
+    } else {
+      t0 = Math.max(t0, tXMax);
+      t1 = Math.min(t1, tXMin);
+    }
+  } 
+
+
+  // Calculate clipped line segment
+  const clippedLx = lx + t0 * dx;
+  const clippedLy = ly + t0 * dy;
+  const clippedNx = lx + t1 * dx;
+  const clippedNy = ly + t1 * dy;
+
+  // --- Quad Generation for Clipped Segment ---
+  const clippedDx = clippedNx - clippedLx;
+  const clippedDy = clippedNy - clippedLy;
+
+  // Calculate perpendicular offset
+  const perpX = -clippedDy;
+  const perpY = clippedDx;
+  const length = Math.hypot(perpX, perpY);
+  const offsetX = (perpX / length) * (lineWidth / 2);
+  const offsetY = (perpY / length) * (lineWidth / 2);
+
+  return new Quad({
+    x1: clippedLx + offsetX, y1: clippedLy + offsetY,
+    x2: clippedLx - offsetX, y2: clippedLy - offsetY,
+    x3: clippedNx - offsetX, y3: clippedNy - offsetY,
+    x4: clippedNx + offsetX, y4: clippedNy + offsetY,
+  });
+
+
+};

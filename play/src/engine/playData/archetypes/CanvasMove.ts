@@ -44,7 +44,6 @@ export class CanvasMove extends Archetype {
     const ny = n.YPos
 
     const y = Math.lerp(ly, ny, Math.remapClamped(lt, nt, 0, 1, time.now))
-    debug.log(y)
     canvas.yPos.set(this.import.Canvas, y)
   }
 }

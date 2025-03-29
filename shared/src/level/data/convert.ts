@@ -103,7 +103,7 @@ const NoteEntity = (beat: number, line: number, LastPoint: number): LevelDataEnt
   }
 }
 
-const CanvasMoveEntity = (beat: number, index: number, canvas: number, yPos: number): LevelDataEntity => {
+const CanvasMoveEntity = (beat: number, index: number, canvas: number, yPos: number, easeType: number): LevelDataEntity => {
   return {
     name: `CanvasMove${canvas}-${index}`,
     archetype: 'CanvasMove',
@@ -111,19 +111,21 @@ const CanvasMoveEntity = (beat: number, index: number, canvas: number, yPos: num
       { name: "Beat", value: beat },
       { name: "NextCanvasMove", ref: `CanvasMove${canvas}-${index + 1}` },
       { name: "Canvas", value: canvas },
-      { name: "YPos", value: yPos }]
+      { name: "YPos", value: yPos },
+      {name: "EaseType", value: easeType}]
   }
 }
 
-const CanvasSpeedEntity = (beat: number, index: number, canvas: number, speed: number): LevelDataEntity => {
+const CanvasSpeedEntity = (beat: number, index: number, canvas: number, speed: number, easeType: number): LevelDataEntity => {
   return {
     name: `CanvasSpeed${canvas}-${index}`,
     archetype: 'CanvasSpeed',
     data: [
       { name: "Beat", value: beat },
-      { name: "NextCanvasMove", ref: `CanvasMove${canvas}-${index + 1}` },
+      { name: "NextCanvasSpeed", ref: `CanvasSpeed${canvas}-${index + 1}` },
       { name: "Canvas", value: canvas },
-      { name: "Speed", value: speed }]
+      { name: "Speed", value: speed },
+      {name: "EaseType", value: easeType}]
   }
 }
 
@@ -162,7 +164,7 @@ export const convertsChart = (chart: RizChart): LevelData => {
 
   //line, line point, and note
   chart.lines.forEach((line, lineIndex) => {
-    if (line.notes.length == 0 || line.linePoints.length == 0) return //igore lines without notes
+    //if (line.notes.length == 0 || line.linePoints.length == 0) return //igore lines without notes
 
     // add lines, line names are `LineN`, line start and ends are first and last points time
     LineEntities.push(LineEntity(lineIndex, line.linePoints[0].time, line.linePoints[line.linePoints.length - 1].time))
@@ -191,10 +193,10 @@ export const convertsChart = (chart: RizChart): LevelData => {
 
   chart.canvasMoves.forEach((canvas) => {
     canvas.xPositionKeyPoints.forEach((point, index) => {
-      CanvasMoveEntities.push(CanvasMoveEntity(point.time, index, canvas.index, point.value))
+      CanvasMoveEntities.push(CanvasMoveEntity(point.time, index, canvas.index, point.value, point.easeType))
     })
     canvas.speedKeyPoints.forEach((point, index) => {
-      CanvasSpeedEntities.push(CanvasSpeedEntity(point.time, index, canvas.index, point.value))
+      CanvasSpeedEntities.push(CanvasSpeedEntity(point.time, index, canvas.index, point.value, point.easeType))
     })
   })
 
@@ -218,7 +220,7 @@ export const convertsChart = (chart: RizChart): LevelData => {
     ...LinePointEntities,
     ...NoteEntities,
     ...CanvasMoveEntities,
-    //...CanvasSpeedEntities,
+    ...CanvasSpeedEntities,
     //...CameraMoveEntities,
     //...CameraScaleEntities
   ]
