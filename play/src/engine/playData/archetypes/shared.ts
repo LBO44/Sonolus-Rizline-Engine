@@ -7,6 +7,18 @@ export const canvas = levelMemory({
   speed: Tuple(16, Number),
 })
 
+// export const judgementWindow = {
+//   hit: Range.one.mul(0.045),
+//   early: new Range({ min: -90, max: -45 }),
+//   late: new Range({ min: 45, max: 90 }),
+//   bad: new Range({ min: -95, max: 90 })
+// }
+
+export const judgementWindow = {
+  perfect: Range.one.mul(0.045),
+  great: Range.one.mul(0.09),
+  good: Range.one.mul(0.09)
+}
 
 export const judgeLineX = 0.9
 export const XMin = -1.5
@@ -22,7 +34,7 @@ export const spawnBeatToTime = (spawnBeat: number) => bpmChanges.at(spawnBeat).t
 export const scaleY = (y: number, canvasID: number) => (y + canvas.yPos.get(canvasID)) * 2
 
 /** time to screen x based on judgeLineX, speed and point hitTime and cuurent time*/
-export const scaleX = (hitTime: number, canvasID: number) => judgeLineX -(speed * canvas.speed.get(canvasID)) * (hitTime - time.now)
+export const scaleX = (hitTime: number, canvasID: number) => judgeLineX - (speed * canvas.speed.get(canvasID)) * (hitTime - time.now)
 
 /** return the y of the note at a certain time between 2 linePoints */
 export const toLineY = (hitBeat: number, lastPoint: number, nextPoint: number): number => {
@@ -95,7 +107,7 @@ export const lineToQuad = (
       t0 = Math.max(t0, tXMax);
       t1 = Math.min(t1, tXMin);
     }
-  } 
+  }
 
 
   // Calculate clipped line segment

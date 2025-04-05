@@ -1,3 +1,9 @@
+import { EffectClipName } from "@sonolus/core";
+
 export const effect = defineEffect({
-    clips: {},
+    clips: {
+    perfect: EffectClipName.Perfect,
+    great: EffectClipName.Great,
+    good: EffectClipName.Miss
+  },
 })

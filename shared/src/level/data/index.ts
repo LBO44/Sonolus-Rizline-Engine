@@ -1,5 +1,5 @@
 import { LevelData } from '@sonolus/core'
-import { convertsChart } from './convert'
+import { convertsChart } from '../../../../lib/chart_converter'
 import fs from 'fs'
 import chart from "./chart.json"
 

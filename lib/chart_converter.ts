@@ -15,13 +15,13 @@ type RizColor = {
   a: number
 }
 
-const enum RizNoteType {
+export enum RizNoteType {
   Tap,
   Catch,
   Hold
 }
 
-type RizChart = { //incomplete
+export type RizChart = { //incomplete
   fileVersion: number,
   songsName: string,
   offset: number, //should always be 0
@@ -92,14 +92,19 @@ const LinePointEntity = (
   }
 }
 
-const NoteEntity = (beat: number, line: number, LastPoint: number): LevelDataEntity => {
+const NoteEntity = (beat: number, line: number, LastPoint: number, type: RizNoteType, otherInformations: number[]): LevelDataEntity => {
   return {
-    archetype: 'Note',
+    archetype: `${RizNoteType[type]}Note`,
     data: [
       { name: "Beat", value: beat },
       { name: "Line", ref: `line${line}` },
       { name: "LastPoint", ref: `Line${line}-Point${LastPoint}` },
-      { name: "NextPoint", ref: `Line${line}-Point${LastPoint + 1}` }]
+      { name: "NextPoint", ref: `Line${line}-Point${LastPoint + 1}` },
+      ...(type == RizNoteType.Hold) ? [
+        { name: "HoldEndBeat", value: otherInformations[0] },
+        { name: "HoldDurationBeat", value: otherInformations[1] }
+      ] : []
+    ]
   }
 }
 
@@ -112,7 +117,7 @@ const CanvasMoveEntity = (beat: number, index: number, canvas: number, yPos: num
       { name: "NextCanvasMove", ref: `CanvasMove${canvas}-${index + 1}` },
       { name: "Canvas", value: canvas },
       { name: "YPos", value: yPos },
-      {name: "EaseType", value: easeType}]
+      { name: "EaseType", value: easeType }]
   }
 }
 
@@ -125,7 +130,7 @@ const CanvasSpeedEntity = (beat: number, index: number, canvas: number, speed: n
       { name: "NextCanvasSpeed", ref: `CanvasSpeed${canvas}-${index + 1}` },
       { name: "Canvas", value: canvas },
       { name: "Speed", value: speed },
-      {name: "EaseType", value: easeType}]
+      { name: "EaseType", value: easeType }]
   }
 }
 
@@ -178,12 +183,11 @@ export const convertsChart = (chart: RizChart): LevelData => {
 
     //add notes, during runtime we calculate the note's sonolus y/ rizline x based on the position of the 2 points(on the same line) it's between
     line.notes.forEach((note) => {
-      if (note.type === RizNoteType.Tap) {
 
-        const LastLinePoint = line.linePoints.findIndex((p, i) => (p.time <= note.time && line.linePoints[i + 1].time >= note.time))
+      const LastLinePoint = line.linePoints.findIndex((p, i) => (p.time <= note.time && line.linePoints[i + 1].time >= note.time))
 
-        NoteEntities.push(NoteEntity(note.time, lineIndex, LastLinePoint))
-      }
+      NoteEntities.push(NoteEntity(note.time, lineIndex, LastLinePoint, note.type, note.otherInformations))
+
     })
   })
 

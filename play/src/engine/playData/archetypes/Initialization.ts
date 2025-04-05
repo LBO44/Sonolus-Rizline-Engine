@@ -1,3 +1,5 @@
+import { archetypes } from "."
+
 export class Initialization extends Archetype {
   preprocess() {
     ui.menu.set({
@@ -19,6 +21,15 @@ export class Initialization extends Archetype {
       background: false,
 
     })
+    ui.combo.value.set({
+      anchor: screen.rect.cl.add(new Vec(0.2, -0.05)),
+      pivot: { x: 0, y: 1 },
+      size: new Vec(0.15, 0.05).mul(ui.configuration.combo.scale),
+      rotation: 90,
+      alpha: ui.configuration.combo.alpha,
+      horizontalAlign: HorizontalAlign.Center,
+      background: false,
+    })
   }
 
   spawnOrder() {
@@ -27,5 +38,6 @@ export class Initialization extends Archetype {
 
   updateSequential() {
     this.despawn = true
+    archetypes.InputManager.spawn({})
   }
 }

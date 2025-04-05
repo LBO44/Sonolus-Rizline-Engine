@@ -7,7 +7,7 @@ export default {
 
   devServer(sonolus) {
     //kinda useless code to easely switch between levels while testing
-    const rizLevel = levelList[0]
+    const rizLevel = levelList[2]
     const level = sonolus.level.items[0]
 
     level.title = { en: rizLevel.title }
