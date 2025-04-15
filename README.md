@@ -1,67 +1,11 @@
-# Sonolus.js Template (TS)
+<h1 align=center>sonolus Rizline Engine</h1>
+<p align="center">My attempt at recreating <b>Rizline</b> in <a href="https://sonolus.com/">Sonolus</a></p>
+<p align="center">Uses <a href="https://github.com/Sonolus/sonolus.js">Sonolus.js</a></p>
 
-## Prerequisites
+## Todo List:
+- everything
 
--   [Node.js](https://nodejs.org) (16+)
-
-## Recommended Setup
-
--   [Visual Studio Code](https://code.visualstudio.com)
-
-## Get Started
-
-To get this template, run (change `my-project` to desired name):
-
-```
-npx degit Sonolus/sonolus.js-template-ts my-project
-```
-
-To install dependencies, run in project directory:
-
-```
-npm i
-```
-
-## Start Dev Server
-
-Run in project directory:
-
-```
-npm run dev:play
-```
-
-```
-npm run dev:watch
-```
-
-```
-npm run dev:preview
-```
-
-```
-npm run dev:tutorial
-```
-
-A dev server will be up and running. You can connect to it using Sonolus app and play test the level.
-
-Changes made to the project will be automatically detected and trigger rebuild.
-
-Temporary files and extraction artifacts can be found in `.dev`.
-
-## Type Check
-
-Run in project directory:
-
-```
-npm run type-check
-```
-
-## Build
-
-Run in project directory:
-
-```
-npm run build
-```
-
-Build artifacts can be found in `dist`.
+## Links:
+- [Sonolus Website](https://sonolus.com/)
+- [Sonolus Wiki](https://github.com/NonSpicyBurrito/sonolus-wiki)
+- This repository is based on [Sonolus.js Template (TS)](https://github.com/Sonolus/sonolus.js-template-ts)

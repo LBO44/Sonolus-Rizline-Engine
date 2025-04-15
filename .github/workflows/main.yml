@@ -1,0 +1,54 @@
+name: sync engine
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "latest"
+
+      - name: Build Engine
+        run: |
+          npm install
+          npm run build
+
+      - name: Checkout Server Repo
+        uses: actions/checkout@v4
+        with:
+          repository: LBO44/Sonolus-Rizline-Server
+          token: ${{ secrets.SERVER_REPO_TOKEN }}
+          path: server
+          sparse-checkout: |
+            engine
+          sparse-checkout-cone-mode: false
+
+      - name: Copy Engine Assets
+        run: |
+          mkdir server/engine/data -p
+          cp dist/EnginePlayData server/engine/data/playData
+          cp dist/EngineWatchData server/engine/data/watchData
+          cp dist/EnginePreviewData server/engine/data/previewData
+          cp dist/EngineTutorialData server/engine/data/tutorialData
+          cp dist/EngineConfiguration server/engine/data/configuration
+
+          cp lib/chart_converter.ts server/engine/chart_converter.ts
+
+      - name: Commit Updated Engine to Server Repo
+        working-directory: server
+        run: |
+          git config --global user.name "github-actions"
+          git config --global user.email "actions@github.com"
+          git add --sparse .
+          git commit -m "Update engine assets; [${GITHUB_SHA}](https://github.com/LBO44/Sonolus-Rizline-Engine/commit/${GITHUB_SHA})"
+          git push

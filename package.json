@@ -1,7 +1,7 @@
 {
-  "name": "sonolus.js-template-ts",
-  "version": "1.4.8",
-  "description": "Sonolus.js Template (TS)",
+  "name": "sonolus-rizline-engine",
+  "description": "My attempt at making a Rizline engine in Sonolus",
+  "author": "LBO44",
   "private": true,
   "type": "module",
   "scripts": {
@@ -13,9 +13,11 @@
     "build": "sonolus-cli --build ./play && sonolus-cli --build ./watch && sonolus-cli --build ./preview && sonolus-cli --build ./tutorial"
   },
   "devDependencies": {
-    "@sonolus/core": "~7.13.0",
     "@sonolus/sonolus.js": "~9.5.5",
     "@types/node": "^22.14.1",
     "typescript": "~5.8.3"
+  },
+  "dependencies": {
+    "@sonolus/core": "~7.13.0"
   }
 }
