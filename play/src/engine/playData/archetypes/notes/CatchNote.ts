@@ -16,6 +16,8 @@ export class CatchNote extends Note {
     good: Range.one.mul(0.000)
   }
 
+  noteRadius = 0.03
+
   touch() {
     if (this.inputTime.min > time.now) return
 
@@ -27,7 +29,7 @@ export class CatchNote extends Note {
       this.result.bucket.index = this.bucket.index
       this.result.bucket.value = this.result.accuracy * 1000
 
-      effect.clips.perfect.play(0.02)
+      effect.clips.Catch.play(0.02)
 
       const layout = Rect.one.mul(0.2).translate(judgeLineX, this.pos.y)
       particle.effects.note.spawn(layout, 0.5, false)

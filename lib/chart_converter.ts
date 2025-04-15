@@ -114,9 +114,9 @@ const CanvasMoveEntity = (beat: number, index: number, canvas: number, yPos: num
     archetype: 'CanvasMove',
     data: [
       { name: "Beat", value: beat },
-      { name: "NextCanvasMove", ref: `CanvasMove${canvas}-${index + 1}` },
+      { name: "NextCanvasEntity", ref: `CanvasMove${canvas}-${index + 1}` },
       { name: "Canvas", value: canvas },
-      { name: "YPos", value: yPos },
+      { name: "Value", value: yPos },
       { name: "EaseType", value: easeType }]
   }
 }
@@ -127,9 +127,9 @@ const CanvasSpeedEntity = (beat: number, index: number, canvas: number, speed: n
     archetype: 'CanvasSpeed',
     data: [
       { name: "Beat", value: beat },
-      { name: "NextCanvasSpeed", ref: `CanvasSpeed${canvas}-${index + 1}` },
+      { name: "NextCanvasEntity", ref: `CanvasSpeed${canvas}-${index + 1}` },
       { name: "Canvas", value: canvas },
-      { name: "Speed", value: speed },
+      { name: "Value", value: speed },
       { name: "EaseType", value: easeType }]
   }
 }

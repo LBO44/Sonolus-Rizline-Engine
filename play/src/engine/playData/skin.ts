@@ -14,11 +14,11 @@ export const skin = defineSkin({
     noteTap: SkinSpriteName.NoteHeadBlue,
     noteTapChallenge: SkinSpriteName.NoteHeadBlue,
 
-    noteCatch: SkinSpriteName.NoteTailNeutral,
+    noteCatch: SkinSpriteName.NoteTailGreen,
     noteCatchChallenge: SkinSpriteName.NoteTailBlue,
 
-    noteHoldStart: SkinSpriteName.NoteConnectionNeutral,
-    noteHoldMiddle: SkinSpriteName.NoteConnectionNeutralSeamless,
+    noteHoldStart: SkinSpriteName.NoteHeadPurple,
+    noteHoldMiddle: SkinSpriteName.NoteConnectionRedSeamless,
     noteHoldEnd: SkinSpriteName.NoteTailNeutral,
 
     //Judge Ring

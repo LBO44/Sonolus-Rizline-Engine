@@ -11,12 +11,13 @@ export class TapNote extends Note {
 
   sprite = skin.sprites.noteTap
   bucket = buckets.TapNote
-  judgementWindow= {
-  perfect: Range.one.mul(0.045),
-  great: Range.one.mul(0.09),
-  good: Range.one.mul(0.09)
-}
+  judgementWindow = {
+    perfect: Range.one.mul(0.045),
+    great: Range.one.mul(0.09),
+    good: Range.one.mul(0.09)
+  }
 
+  noteRadius = 0.05
 
   touch() {
     if (this.inputTime.min > time.now) return
@@ -32,17 +33,7 @@ export class TapNote extends Note {
       this.result.bucket.index = this.bucket.index
       this.result.bucket.value = this.result.accuracy * 1000
 
-      switch (this.result.judgment) {
-        case Judgment.Perfect:
-          effect.clips.perfect.play(0.02)
-          break
-        case Judgment.Great:
-          effect.clips.great.play(0.02)
-          break
-        case Judgment.Good:
-          effect.clips.good.play(0.02)
-          break
-      }
+      effect.clips.Tap.play(0.02)
 
       const layout = Rect.one.mul(0.2).translate(judgeLineX, this.pos.y)
       particle.effects.note.spawn(layout, 0.5, false)

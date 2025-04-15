@@ -23,6 +23,7 @@ export abstract class Note extends Archetype {
     great: Range
     good: Range
   }
+  abstract noteRadius: number
 
 
   preprocess() {
@@ -30,7 +31,6 @@ export abstract class Note extends Archetype {
     this.hitTime = bpmChanges.at(this.import.Beat).time
     this.inputTime.copyFrom(this.judgementWindow.good.add(this.hitTime).add(input.offset))
     this.bucket.set(this.judgementWindow)
-
   }
 
   shouldSpawn() {
@@ -42,12 +42,15 @@ export abstract class Note extends Archetype {
     this.pos.y = toLineY(this.import.Beat, this.import.LastPoint, this.import.NextPoint)
   }
 
+  draw() {
+    const noteLayout = Rect.one.mul(this.noteRadius)
+    this.sprite.draw(noteLayout.translate(this.pos.x, this.pos.y), 5, 0.8)
+  }
+
   updateSequential() {
     if (this.inputTime.max < time.now) this.despawn = true
     this.getPos()
     if (this.pos.x < XMin) return
-    const noteLayout = Rect.one.mul(0.05)
-    this.sprite.draw(noteLayout.translate(this.pos.x, this.pos.y), 5, 0.8)
-
+    this.draw()
   }
 }
