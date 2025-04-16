@@ -2,5 +2,4 @@ node_modules
 
 .dev
 dist
-./shared/src/level/data/chart.json
-./shared/src/level/data/converted_chart.json
+shared/src/level/data/converted_chart.json
