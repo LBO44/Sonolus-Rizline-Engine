@@ -134,25 +134,27 @@ const CanvasSpeedEntity = (beat: number, index: number, canvas: number, speed: n
   }
 }
 
-const CameraMoveEntity = (beat: number, index: number, yPos: number): LevelDataEntity => {
+const CameraMoveEntity = (beat: number, index: number, yPos: number, easeType: number): LevelDataEntity => {
   return {
     name: `CameraMove-${index}`,
     archetype: 'CameraMove',
     data: [
       { name: "Beat", value: beat },
-      { name: "NextCameraMove", ref: `CameraMove-${index}` },
-      { name: "YPos", value: yPos }]
+      { name: "NextCameraEntity", ref: `CameraMove-${index}` },
+      { name: "Value", value: yPos },
+      { name: "EaseType", value: easeType }]
   }
 }
 
-const CameraScaleEntity = (beat: number, index: number, scale: number): LevelDataEntity => {
+const CameraScaleEntity = (beat: number, index: number, scale: number, easeType: number): LevelDataEntity => {
   return {
     name: `CameraScale-${index}`,
     archetype: 'CameraScale',
     data: [
       { name: "Beat", value: beat },
-      { name: "NextCameraScale", ref: `CameraScale-${index + 1}` },
-      { name: "Scale", value: scale }]
+      { name: "NextCameraEntity", ref: `CameraScale-${index + 1}` },
+      { name: "Value", value: scale },
+      { name: "EaseType", value: easeType }]
   }
 }
 
@@ -200,7 +202,8 @@ export const convertsChart = (chart: RizChart): LevelData => {
       CanvasMoveEntities.push(CanvasMoveEntity(point.time, index, canvas.index, point.value, point.easeType))
     })
     canvas.speedKeyPoints.forEach((point, index) => {
-      CanvasSpeedEntities.push(CanvasSpeedEntity(point.time, index, canvas.index, point.value, point.easeType))
+      //That easeType probably ain't correct, however it seems that every `speedKeyPoints` has an `easeType` of 0
+      CanvasSpeedEntities.push(CanvasSpeedEntity(point.time, index, canvas.index, point.value, (point.easeType===0)? 13: point.easeType))
     })
   })
 
@@ -209,11 +212,11 @@ export const convertsChart = (chart: RizChart): LevelData => {
   let CameraScaleEntities: (LevelDataEntity)[] = new Array
 
   chart.cameraMove.scaleKeyPoints.forEach((point, index) => {
-    CameraScaleEntities.push(CameraScaleEntity(point.time, index, point.value))
+    CameraScaleEntities.push(CameraScaleEntity(point.time, index, point.value, point.easeType))
   })
 
   chart.cameraMove.xPositionKeyPoints.forEach((point, index) => {
-    CameraMoveEntities.push(CameraMoveEntity(point.time, index, point.value))
+    CameraMoveEntities.push(CameraMoveEntity(point.time, index, point.value, point.easeType))
   })
 
 
@@ -225,7 +228,7 @@ export const convertsChart = (chart: RizChart): LevelData => {
     ...NoteEntities,
     ...CanvasMoveEntities,
     ...CanvasSpeedEntities,
-    //...CameraMoveEntities,
+    ...CameraMoveEntities,
     //...CameraScaleEntities
   ]
 

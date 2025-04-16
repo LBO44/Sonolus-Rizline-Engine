@@ -7,6 +7,11 @@ export const canvas = levelMemory({
   speed: Tuple(16, Number),
 })
 
+export const camera = levelMemory({
+  yPos: Number,
+  scale: Number
+})
+
 // export const judgementWindow = {
 //   hit: Range.one.mul(0.045),
 //   early: new Range({ min: -90, max: -45 }),
@@ -27,11 +32,35 @@ export const speed = configuration.options.NoteSpeed
 
 const lineWidth: number = 0.01
 
+export const ease = (v1: number, v2: number, easeType: number, x: number, x1: number, x2: number): number => {
+  const t = Math.remapClamped(x1, x2, 0, 1, x)
+  let a = 0
+  switch (easeType) {
+    case 0: a = t; break
+    case 1: a = Math.ease("In", "Sine", t); break
+    case 2: a = Math.ease("Out", "Sine", t); break
+    case 3: a = Math.ease("InOut", "Sine", t); break
+    case 4: a = Math.ease("In", "Quad", t); break
+    case 5: a = Math.ease("Out", "Quad", t); break
+    case 6: a = Math.ease("InOut", "Quad", t); break
+    case 7: a = Math.ease("In", "Cubic", t); break
+    case 8: a = Math.ease("Out", "Cubic", t); break
+    case 9: a = Math.ease("InOut", "Cubic", t); break
+    case 10: a = Math.ease("In", "Quart", t); break
+    case 11: a = Math.ease("Out", "Quart", t); break
+    case 12: a = Math.ease("InOut", "Quart", t); break
+    case 13: a = 0; break
+    case 14: a = 1; break
+  }
+  return Math.lerpClamped(v1, v2, a)
+}
+
+
 export const spawnBeatToTime = (spawnBeat: number) => bpmChanges.at(spawnBeat).time - 10 / speed
 
 /** the judgeline is on the y axis
  * in rizline -0.5 is left and 0.5 is right edge of screen */
-export const scaleY = (y: number, canvasID: number) => (y + canvas.yPos.get(canvasID)) * 2
+export const scaleY = (y: number, canvasID: number) => (y + canvas.yPos.get(canvasID) + camera.yPos) * 2
 
 /** time to screen x based on judgeLineX, speed and point hitTime and cuurent time*/
 export const scaleX = (hitTime: number, canvasID: number) => judgeLineX - (speed * canvas.speed.get(canvasID)) * (hitTime - time.now)

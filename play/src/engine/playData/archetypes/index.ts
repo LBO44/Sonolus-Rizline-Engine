@@ -1,5 +1,6 @@
-import { CanvasMove } from './canvasEvent/CanvasMove.js'
-import { CanvasSpeed } from './canvasEvent/CanvasSpeed.js'
+import { CameraMove } from './cameraEvents/CameraMove.js'
+import { CanvasMove } from './canvasEvents/CanvasMove.js'
+import { CanvasSpeed } from './canvasEvents/CanvasSpeed.js'
 import { Initialization } from './Initialization.js'
 import { InputManager } from './InputManager.js'
 import { LinePoint } from './LinePoint.js'
@@ -17,5 +18,6 @@ export const archetypes = defineArchetypes({
   InputManager,
   TapNote,
   CatchNote,
-  HoldNote
+  HoldNote,
+  CameraMove
 })
