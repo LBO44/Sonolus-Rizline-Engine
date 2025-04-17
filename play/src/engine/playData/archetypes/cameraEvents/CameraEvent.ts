@@ -1,4 +1,4 @@
-import { camera, ease, spawnBeatToTime } from "../shared"
+import { camera, ease, easeValue, spawnBeatToTime } from "../shared"
 
 export abstract class CameraEvent extends Archetype {
 
@@ -43,7 +43,7 @@ export abstract class CameraEvent extends Archetype {
     const nt = this.nextTime
     const ny = this.nextValue
 
-    const y = ease(ly, ny, this.import.EaseType, time.now, lt, nt)
+    const y = easeValue(ly, ny, this.import.EaseType, time.now, lt, nt)
     this.cameraVaraible = y
   }
 }

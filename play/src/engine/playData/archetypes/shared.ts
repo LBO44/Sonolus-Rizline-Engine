@@ -1,5 +1,6 @@
 import { archetypes } from "."
 import { configuration } from "../../configuration"
+import { skin } from "../skin"
 
 //canvas info modified by the canvas etities
 export const canvas = levelMemory({
@@ -32,27 +33,30 @@ export const speed = configuration.options.NoteSpeed
 
 const lineWidth: number = 0.01
 
-export const ease = (v1: number, v2: number, easeType: number, x: number, x1: number, x2: number): number => {
-  const t = Math.remapClamped(x1, x2, 0, 1, x)
-  let a = 0
+export const ease = (t: number, easeType: number): number => {
   switch (easeType) {
-    case 0: a = t; break
-    case 1: a = Math.ease("In", "Sine", t); break
-    case 2: a = Math.ease("Out", "Sine", t); break
-    case 3: a = Math.ease("InOut", "Sine", t); break
-    case 4: a = Math.ease("In", "Quad", t); break
-    case 5: a = Math.ease("Out", "Quad", t); break
-    case 6: a = Math.ease("InOut", "Quad", t); break
-    case 7: a = Math.ease("In", "Cubic", t); break
-    case 8: a = Math.ease("Out", "Cubic", t); break
-    case 9: a = Math.ease("InOut", "Cubic", t); break
-    case 10: a = Math.ease("In", "Quart", t); break
-    case 11: a = Math.ease("Out", "Quart", t); break
-    case 12: a = Math.ease("InOut", "Quart", t); break
-    case 13: a = 0; break
-    case 14: a = 1; break
+    case 0: return t
+    case 1: return Math.ease("In", "Sine", t)
+    case 2: return Math.ease("Out", "Sine", t)
+    case 3: return Math.ease("InOut", "Sine", t)
+    case 4: return Math.ease("In", "Quad", t)
+    case 5: return Math.ease("Out", "Quad", t)
+    case 6: return Math.ease("InOut", "Quad", t)
+    case 7: return Math.ease("In", "Cubic", t)
+    case 8: return Math.ease("Out", "Cubic", t)
+    case 9: return Math.ease("InOut", "Cubic", t)
+    case 10: return Math.ease("In", "Quart", t)
+    case 11: return Math.ease("Out", "Quart", t)
+    case 12: return Math.ease("InOut", "Quart", t)
+    case 13: return 0
+    case 14: return 1
+    default: return t
   }
-  return Math.lerpClamped(v1, v2, a)
+}
+
+export const easeValue = (v1: number, v2: number, easeType: number, x: number, x1: number, x2: number): number => {
+  const t = Math.remapClamped(x1, x2, 0, 1, x)
+  return Math.lerpClamped(v1, v2, ease(t, easeType))
 }
 
 
@@ -67,13 +71,20 @@ export const scaleX = (hitTime: number, canvasID: number) => judgeLineX - (speed
 
 /** return the y of the note at a certain time between 2 linePoints */
 export const toLineY = (hitBeat: number, lastPoint: number, nextPoint: number): number => {
-
   const ly = archetypes.LinePoint.pos.get(lastPoint).y
   const ny = archetypes.LinePoint.pos.get(nextPoint).y
 
   const lt = bpmChanges.at(archetypes.LinePoint.import.get(lastPoint).HitBeat).time
   const nt = bpmChanges.at(archetypes.LinePoint.import.get(nextPoint).HitBeat).time
-  return ly + (bpmChanges.at(hitBeat).time - lt) / (nt - lt) * (ny - ly)
+
+  const tRaw = bpmChanges.at(hitBeat).time
+
+  const t = Math.clamp((tRaw - lt) / (nt - lt), 0, 1)
+
+  const easeType = archetypes.LinePoint.import.get(lastPoint).EaseType
+
+  const e = ease(t, easeType)
+  return ly + e * (ny - ly)
 }
 
 /** return the x of the note at a certain time between 2 linePoints */
@@ -87,81 +98,72 @@ export const toLineX = (hitBeat: number, lastPoint: number, nextPoint: number): 
   return lx + (bpmChanges.at(hitBeat).time - lt) / (nt - lt) * (nx - lx)
 }
 
-export const lineToQuad2 = (lx: number, ly: number, nx: number, ny: number,): Quad => {
-  // Calculate direction vector
-  const dx = nx - lx;
-  const dy = ny - ly;
+export const lineToQuad = (
+  startX: number,
+  startY: number,
+  endX: number,
+  endY: number,
+): Quad => {
+  const dx = endX - startX
+  const dy = endY - startY
+  const hw = lineWidth / 2
 
-  // Calculate perpendicular vector
-  const perpX = -dy;
-  const perpY = dx;
-  const length = Math.hypot(perpX, perpY);
-
-  // Scale to line width
-  const offsetX = (perpX / length) * (lineWidth / 2)
-  const offsetY = (perpY / length) * (lineWidth / 2)
+  // Calculate normalized perpendicular direction
+  const len = Math.hypot(dx, dy)
+  const nx = (-dy / len) * hw
+  const ny = (dx / len) * hw
 
   return new Quad({
-    x1: lx + offsetX, y1: ly + offsetY,
-    x2: lx - offsetX, y2: ly - offsetY,
-    x3: nx - offsetX, y3: ny - offsetY,
-    x4: nx + offsetX, y4: ny + offsetY,
+    x1: startX + nx, y1: startY + ny,
+    x2: startX - nx, y2: startY - ny,
+    x3: endX - nx, y3: endY - ny,
+    x4: endX + nx, y4: endY + ny
   })
 }
 
-export const lineToQuad = (
-  lx: number,
-  ly: number,
-  nx: number,
-  ny: number,
-): Quad => {
+export function drawCurvedLine(
+  startX: number,
+  startY: number,
+  endX: number,
+  endY: number,
+  easeType: number,
+  alpha: number
+) {
+  const clipXMax = XMin
+  const clipXMin = judgeLineX
 
-  // --- Clipping Logic ---
-  let t0 = 0;
-  let t1 = 1;
-  const dx = nx - lx;
-  const dy = ny - ly;
+  const dx = endX - startX
 
-  // Clip against xMin and xMax
-  if (dx !== 0) {
-    // Calculate t where x = xMin and x = xMax
-    let tXMin = (XMin - lx) / dx;
-    let tXMax = (judgeLineX - lx) / dx;
+  // Compute t‑range 
+  let t0 = (clipXMin - startX) / dx
+  let t1 = (clipXMax - startX) / dx
+  t0 = Math.max(0, Math.min(1, t0))
+  t1 = Math.max(0, Math.min(1, t1))
+  if (t0 >= t1) return  // nothing to draw
 
-    // Swap if dx is negative
-    if (dx > 0) {
-      t0 = Math.max(t0, tXMin);
-      t1 = Math.min(t1, tXMax);
-    } else {
-      t0 = Math.max(t0, tXMax);
-      t1 = Math.min(t1, tXMin);
-    }
+  const segments = (easeType === 0) ? 1 : 32
+
+  for (let i = 0; i < segments; i++) {
+    // fraction along the CLIPPED span
+    const u0 = i / segments
+    const u1 = (i + 1) / segments
+
+    // map into [t0, t1]
+    const ta = t0 + (t1 - t0) * u0
+    const tb = t0 + (t1 - t0) * u1
+
+    // eased Y‐fractions
+    const ea = ease(ta, easeType)
+    const eb = ease(tb, easeType)
+
+    // actual points
+    const xA = startX + dx * ta
+    const xB = startX + dx * tb
+    const yA = startY + (endY - startY) * ea
+    const yB = startY + (endY - startY) * eb
+
+    const quad = lineToQuad(xA, yA, xB, yB)
+    skin.sprites.lineGreen.draw(quad, 4, alpha)
+
   }
-
-
-  // Calculate clipped line segment
-  const clippedLx = lx + t0 * dx;
-  const clippedLy = ly + t0 * dy;
-  const clippedNx = lx + t1 * dx;
-  const clippedNy = ly + t1 * dy;
-
-  // --- Quad Generation for Clipped Segment ---
-  const clippedDx = clippedNx - clippedLx;
-  const clippedDy = clippedNy - clippedLy;
-
-  // Calculate perpendicular offset
-  const perpX = -clippedDy;
-  const perpY = clippedDx;
-  const length = Math.hypot(perpX, perpY);
-  const offsetX = (perpX / length) * (lineWidth / 2);
-  const offsetY = (perpY / length) * (lineWidth / 2);
-
-  return new Quad({
-    x1: clippedLx + offsetX, y1: clippedLy + offsetY,
-    x2: clippedLx - offsetX, y2: clippedLy - offsetY,
-    x3: clippedNx - offsetX, y3: clippedNy - offsetY,
-    x4: clippedNx + offsetX, y4: clippedNy + offsetY,
-  });
-
-
-};
+}

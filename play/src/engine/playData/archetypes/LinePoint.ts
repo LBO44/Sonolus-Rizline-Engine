@@ -1,6 +1,6 @@
 import { archetypes } from "."
 import { skin } from "../skin"
-import { judgeLineX, lineToQuad, scaleX, scaleY, spawnBeatToTime, speed, XMin } from "./shared"
+import { drawCurvedLine, judgeLineX, lineToQuad, scaleX, scaleY, spawnBeatToTime, speed, XMin } from "./shared"
 
 export class LinePoint extends Archetype {
 
@@ -12,6 +12,7 @@ export class LinePoint extends Archetype {
     YPos: { name: "YPos", type: Number },
     IsLastPoint: { name: "IsLastPoint", type: Number },
     Canvas: { name: "Canvas", type: Number },
+    EaseType: { name: "EaseType", type: Number },
     ColorA: { name: "ColorA", type: Number },
   })
 
@@ -38,25 +39,29 @@ export class LinePoint extends Archetype {
   }
 
   updateSequential() {
+
+    this.pos.x = scaleX(this.hitTime, this.import.Canvas)
+    this.pos.y = scaleY(this.import.YPos, this.import.Canvas)
+  }
+
+  updateParallel() {
     const n = archetypes.LinePoint.pos.get(this.import.NextPoint)
 
     if ((n.x >= judgeLineX && !this.import.IsLastPoint) || (this.import.IsLastPoint && this.hitTime <= time.now)) this.despawn = true
 
-
-    const debugLayout = Rect.one.mul(0.025)
-
-    this.pos.x = scaleX(this.hitTime, this.import.Canvas)
-    this.pos.y = scaleY(this.import.YPos, this.import.Canvas)
-
-
     if (this.import.IsLastPoint == 0 && this.pos.x > XMin && archetypes.LinePoint.pos.get(this.import.NextPoint).x != 0) {
 
-      const lineLayout = lineToQuad(this.pos.x, this.pos.y, n.x, n.y)
-
-
-      skin.sprites.lineNeutral.draw(lineLayout, 3, this.nextA)
-      //  skin.sprites.judgeRingBlue.draw(debugLayout.translate(this.pos.x, this.pos.y), 2, this.nextA)
+      if (this.pos.x === n.x) {
+        const lineLayout = lineToQuad(this.pos.x, this.pos.y, n.x, n.y)
+        skin.sprites.lineGreen.draw(lineLayout, 3, this.nextA)
+      }
+      else if (this.pos.y === n.y) {
+        const lineLayout = lineToQuad(Math.min(this.pos.x,judgeLineX), this.pos.y, Math.max(XMin,n.x), n.y)
+        skin.sprites.lineGreen.draw(lineLayout, 3, this.nextA)
+      }
+      else {
+        drawCurvedLine(this.pos.x, this.pos.y, n.x, n.y, this.import.EaseType, this.import.ColorA)
+      }
     }
-
   }
 }

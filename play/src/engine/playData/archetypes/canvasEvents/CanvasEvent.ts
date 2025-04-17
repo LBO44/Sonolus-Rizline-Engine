@@ -1,4 +1,4 @@
-import { canvas, ease, spawnBeatToTime } from "../shared"
+import { canvas, ease, easeValue, spawnBeatToTime } from "../shared"
 
 export abstract class CanvasEntity extends Archetype {
 
@@ -44,7 +44,7 @@ export abstract class CanvasEntity extends Archetype {
     const nt = this.nextTime
     const ny = this.nextValue
 
-    const y = ease(ly, ny, this.import.EaseType, time.now, lt, nt)
+    const y = easeValue(ly, ny, this.import.EaseType, time.now, lt, nt)
     this.canvasVaraible.set(this.import.Canvas, y)
   }
 }
