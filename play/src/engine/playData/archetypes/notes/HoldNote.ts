@@ -3,7 +3,7 @@ import { effect } from "../../effect";
 import { particle } from "../../particle";
 import { skin } from "../../skin";
 import { isUsed, markAsUsed } from "../InputManager";
-import { judgeLineX, scaleX, toLineX, toLineY, XMin } from "../shared";
+import { game, scaleX, toLineX, toLineY} from "../shared";
 import { Note } from "./Note";
 
 export class HoldNote extends Note {
@@ -83,7 +83,7 @@ export class HoldNote extends Note {
 
     effect.clips.Tap.play(0.02)
 
-    const layout = Rect.one.mul(0.2).translate(judgeLineX, this.pos.y)
+    const layout = Rect.one.mul(0.2).translate(game.XMax, this.pos.y)
     particle.effects.note.spawn(layout, 0.5, false)
 
 
@@ -92,7 +92,7 @@ export class HoldNote extends Note {
 
 
   getPos() {
-    if (this.touchStarted) this.pos.x = judgeLineX
+    if (this.touchStarted) this.pos.x = game.XMax
     else this.pos.x = toLineX(this.import.Beat, this.import.LastPoint, this.import.NextPoint)
     this.pos.xEnd = toLineX(this.import.HoldEndBeat, this.import.LastPoint, this.import.NextPoint)
     this.pos.y = toLineY(this.import.Beat, this.import.LastPoint, this.import.NextPoint)
@@ -107,13 +107,13 @@ export class HoldNote extends Note {
       t: this.pos.y + this.noteRadius
     })
     skin.sprites.noteHoldMiddle.draw(holdLayout, 10, 1)
-    this.sprite.draw(startLayout.translate(Math.max(this.pos.x, XMin), this.pos.y), 5, 1)
+    this.sprite.draw(startLayout.translate(Math.max(this.pos.x, game.Xmin), this.pos.y), 5, 1)
   }
 
   updateSequential() {
     if (this.endTime + input.offset < time.now) this.despawn = true
     this.getPos()
-    if (this.pos.x < XMin) return
+    if (this.pos.x < game.Xmin) return
     this.draw()
   }
 

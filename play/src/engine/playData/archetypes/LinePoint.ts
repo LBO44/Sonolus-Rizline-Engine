@@ -1,6 +1,6 @@
 import { archetypes } from "."
 import { skin } from "../skin"
-import { drawCurvedLine, judgeLineX, lineToQuad, scaleX, scaleY, spawnBeatToTime, speed, XMin } from "./shared"
+import { drawCurvedLine,  game,  lineToQuad, scaleX, scaleY, spawnBeatToTime  } from "./shared"
 
 export class LinePoint extends Archetype {
 
@@ -47,16 +47,16 @@ export class LinePoint extends Archetype {
   updateParallel() {
     const n = archetypes.LinePoint.pos.get(this.import.NextPoint)
 
-    if ((n.x >= judgeLineX && !this.import.IsLastPoint) || (this.import.IsLastPoint && this.hitTime <= time.now)) this.despawn = true
+    if ((n.x >= game.XMax && !this.import.IsLastPoint) || (this.import.IsLastPoint && this.hitTime <= time.now)) this.despawn = true
 
-    if (this.import.IsLastPoint == 0 && this.pos.x > XMin && archetypes.LinePoint.pos.get(this.import.NextPoint).x != 0) {
+    if (this.import.IsLastPoint == 0 && this.pos.x > game.Xmin && archetypes.LinePoint.pos.get(this.import.NextPoint).x != 0) {
 
       if (this.pos.x === n.x) {
         const lineLayout = lineToQuad(this.pos.x, this.pos.y, n.x, n.y)
         skin.sprites.lineGreen.draw(lineLayout, 3, this.nextA)
       }
       else if (this.pos.y === n.y) {
-        const lineLayout = lineToQuad(Math.min(this.pos.x,judgeLineX), this.pos.y, Math.max(XMin,n.x), n.y)
+        const lineLayout = lineToQuad(Math.min(this.pos.x,game.XMax), this.pos.y, Math.max(game.Xmin,n.x), n.y)
         skin.sprites.lineGreen.draw(lineLayout, 3, this.nextA)
       }
       else {

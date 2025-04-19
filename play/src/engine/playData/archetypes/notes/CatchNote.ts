@@ -4,8 +4,7 @@ import { Note } from "./Note";
 import { buckets } from "../../buckets";
 import { effect } from "../../effect";
 import { particle } from "../../particle";
-import { judgeLineX, judgementWindow } from "../shared";
-import { isUsed, markAsUsed } from "../InputManager";
+import { game } from "../shared";
 
 export class CatchNote extends Note {
   sprite = skin.sprites.noteCatch
@@ -31,7 +30,7 @@ export class CatchNote extends Note {
 
       effect.clips.Catch.play(0.02)
 
-      const layout = Rect.one.mul(0.2).translate(judgeLineX, this.pos.y)
+      const layout = Rect.one.mul(0.2).translate(game.XMax, this.pos.y)
       particle.effects.note.spawn(layout, 0.5, false)
 
       this.despawn = true

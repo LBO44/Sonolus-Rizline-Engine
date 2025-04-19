@@ -3,9 +3,9 @@ import { buckets } from "../../buckets";
 import { effect } from "../../effect";
 import { particle } from "../../particle";
 import { isUsed, markAsUsed } from "../InputManager";
-import { judgeLineX } from "../shared";
 import { Note } from "./Note";
 import { skin } from "../../skin";
+import { game } from "../shared";
 
 export class TapNote extends Note {
 
@@ -35,7 +35,7 @@ export class TapNote extends Note {
 
       effect.clips.Tap.play(0.02)
 
-      const layout = Rect.one.mul(0.2).translate(judgeLineX, this.pos.y)
+      const layout = Rect.one.mul(0.2).translate(game.XMax, this.pos.y)
       particle.effects.note.spawn(layout, 0.5, false)
 
       this.despawn = true

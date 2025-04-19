@@ -1,4 +1,4 @@
-import { judgeLineX, spawnBeatToTime, toLineX, toLineY, XMin } from "../shared"
+import { game, spawnBeatToTime, toLineX, toLineY} from "../shared"
 
 export abstract class Note extends Archetype {
   hasInput = true
@@ -50,7 +50,7 @@ export abstract class Note extends Archetype {
   updateSequential() {
     if (this.inputTime.max < time.now) this.despawn = true
     this.getPos()
-    if (this.pos.x < XMin) return
+    if (this.pos.x < game.Xmin) return
     this.draw()
   }
 }

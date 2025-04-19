@@ -2,10 +2,9 @@ import { archetypes } from "."
 import { configuration } from "../../configuration"
 import { skin } from "../skin"
 
-//canvas info modified by the canvas etities
 export const canvas = levelMemory({
-  yPos: Tuple(16, Number),
-  speed: Tuple(16, Number),
+  yPos: Tuple(256, Number),
+  speed: Tuple(256, Number),
 })
 
 export const camera = levelMemory({
@@ -13,12 +12,11 @@ export const camera = levelMemory({
   scale: Number
 })
 
-// export const judgementWindow = {
-//   hit: Range.one.mul(0.045),
-//   early: new Range({ min: -90, max: -45 }),
-//   late: new Range({ min: 45, max: 90 }),
-//   bad: new Range({ min: -95, max: 90 })
-// }
+export const game = {
+  XMax: 0.9, //aka judgeLineX
+  Xmin: -1.5,
+  speed: configuration.options.NoteSpeed
+}
 
 export const judgementWindow = {
   perfect: Range.one.mul(0.045),
@@ -26,12 +24,6 @@ export const judgementWindow = {
   good: Range.one.mul(0.09)
 }
 
-export const judgeLineX = 0.9
-export const XMin = -1.5
-
-export const speed = configuration.options.NoteSpeed
-
-const lineWidth: number = 0.01
 
 export const ease = (t: number, easeType: number): number => {
   switch (easeType) {
@@ -60,14 +52,14 @@ export const easeValue = (v1: number, v2: number, easeType: number, x: number, x
 }
 
 
-export const spawnBeatToTime = (spawnBeat: number) => bpmChanges.at(spawnBeat).time - 10 / speed
+export const spawnBeatToTime = (spawnBeat: number) => bpmChanges.at(spawnBeat).time - 10 / game.speed
 
 /** the judgeline is on the y axis
  * in rizline -0.5 is left and 0.5 is right edge of screen */
-export const scaleY = (y: number, canvasID: number) => (y + canvas.yPos.get(canvasID) + camera.yPos) * 2
+export const scaleY = (y: number, canvasID: number) => (y + canvas.yPos.get(canvasID) - camera.yPos) * 2
 
 /** time to screen x based on judgeLineX, speed and point hitTime and cuurent time*/
-export const scaleX = (hitTime: number, canvasID: number) => judgeLineX - (speed * canvas.speed.get(canvasID)) * (hitTime - time.now)
+export const scaleX = (hitTime: number, canvasID: number) => game.XMax - (game.speed * canvas.speed.get(canvasID)) * (hitTime - time.now)
 
 /** return the y of the note at a certain time between 2 linePoints */
 export const toLineY = (hitBeat: number, lastPoint: number, nextPoint: number): number => {
@@ -98,6 +90,7 @@ export const toLineX = (hitBeat: number, lastPoint: number, nextPoint: number): 
   return lx + (bpmChanges.at(hitBeat).time - lt) / (nt - lt) * (nx - lx)
 }
 
+
 export const lineToQuad = (
   startX: number,
   startY: number,
@@ -106,12 +99,12 @@ export const lineToQuad = (
 ): Quad => {
   const dx = endX - startX
   const dy = endY - startY
-  const hw = lineWidth / 2
+  const lineWidth = 0.01
 
   // Calculate normalized perpendicular direction
   const len = Math.hypot(dx, dy)
-  const nx = (-dy / len) * hw
-  const ny = (dx / len) * hw
+  const nx = (-dy / len) * lineWidth
+  const ny = (dx / len) * lineWidth
 
   return new Quad({
     x1: startX + nx, y1: startY + ny,
@@ -129,14 +122,12 @@ export function drawCurvedLine(
   easeType: number,
   alpha: number
 ) {
-  const clipXMax = XMin
-  const clipXMin = judgeLineX
 
   const dx = endX - startX
 
   // Compute t‑range 
-  let t0 = (clipXMin - startX) / dx
-  let t1 = (clipXMax - startX) / dx
+  let t0 = (game.XMax - startX) / dx
+  let t1 = (game.Xmin - startX) / dx
   t0 = Math.max(0, Math.min(1, t0))
   t1 = Math.max(0, Math.min(1, t1))
   if (t0 >= t1) return  // nothing to draw
