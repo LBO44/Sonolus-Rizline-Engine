@@ -5,7 +5,6 @@ export abstract class Note extends Archetype {
   touchOrder = 1
 
   import = this.defineImport({
-    Line: { name: "Line", type: Number },
     Beat: { name: "Beat", type: Number },
     LastPoint: { name: "LastPoint", type: Number },
     NextPoint: { name: "NextPoint", type: Number },

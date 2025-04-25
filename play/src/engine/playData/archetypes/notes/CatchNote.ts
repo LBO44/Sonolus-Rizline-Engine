@@ -7,7 +7,7 @@ import { particle } from "../../particle";
 import { game } from "../shared";
 
 export class CatchNote extends Note {
-  sprite = skin.sprites.noteCatch
+  sprite = skin.sprites.noteTouch
   bucket = buckets.CatchNote
   judgementWindow = {
     perfect: Range.one.mul(0.000),

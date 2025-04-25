@@ -120,6 +120,7 @@ export function drawCurvedLine(
   endX: number,
   endY: number,
   easeType: number,
+  spriteId: SkinSpriteId,
   alpha: number
 ) {
 
@@ -154,7 +155,7 @@ export function drawCurvedLine(
     const yB = startY + (endY - startY) * eb
 
     const quad = lineToQuad(xA, yA, xB, yB)
-    skin.sprites.lineGreen.draw(quad, 4, alpha)
+    skin.sprites.draw(spriteId, quad, 4, alpha)
 
   }
 }

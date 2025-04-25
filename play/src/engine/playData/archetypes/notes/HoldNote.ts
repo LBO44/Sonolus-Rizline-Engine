@@ -106,7 +106,7 @@ export class HoldNote extends Note {
       b: this.pos.y - this.noteRadius,
       t: this.pos.y + this.noteRadius
     })
-    skin.sprites.noteHoldMiddle.draw(holdLayout, 10, 1)
+    skin.sprites.noteHold.draw(holdLayout, 10, 1)
     this.sprite.draw(startLayout.translate(Math.max(this.pos.x, game.Xmin), this.pos.y), 5, 1)
   }
 

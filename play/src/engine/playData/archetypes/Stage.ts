@@ -10,7 +10,7 @@ export class Stage extends Archetype {
 
   updateSequentialOrder = 10
   updateParallel() {
-    const layout = new Rect({ l: game.XMax+0.01, r: game.XMax-0.01, t: -1 , b: 1 })
-    skin.sprites.lineRed.draw(layout, 10, 1)
+    const layout = new Rect({ l: game.XMax + 0.01, r: game.XMax - 0.01, t: -1, b: 1 })
+    skin.sprites.draw((skin.sprites.Line0.id + 1 as SkinSpriteId), layout, 10, 1)
   }
 }

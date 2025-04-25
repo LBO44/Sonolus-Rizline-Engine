@@ -18,7 +18,7 @@ export const buckets = defineBuckets({
   CatchNote: {
     sprites: [
       {
-        id: skin.sprites.noteCatch.id,
+        id: skin.sprites.noteTouch.id,
         x: 0,
         y: 0,
         w: 2,

@@ -2,29 +2,25 @@ import { SkinSpriteName } from "@sonolus/core";
 
 export const skin = defineSkin({
   renderMode: "standard",
-    sprites: {
-
-    //line
-    lineNeutral: SkinSpriteName.GridNeutral,
-    lineRed: SkinSpriteName.GridRed,
-    lineBlue: SkinSpriteName.GridBlue,
-    lineGreen: SkinSpriteName.GridGreen,
+  sprites: {
 
     //note
-    noteTap: SkinSpriteName.NoteHeadBlue,
-    noteTapChallenge: SkinSpriteName.NoteHeadBlue,
+    noteTap: "Tap Note Normal",
+    noteTapChallenge: "Tap Note Challenge",
 
-    noteCatch: SkinSpriteName.NoteTailGreen,
-    noteCatchChallenge: SkinSpriteName.NoteTailBlue,
+    noteTouch: "Touch Note",
 
-    noteHoldStart: SkinSpriteName.NoteHeadPurple,
-    noteHoldMiddle: SkinSpriteName.NoteConnectionRedSeamless,
-    noteHoldEnd: SkinSpriteName.NoteTailNeutral,
+    noteHoldStart: "Hold Note",
+    noteHold: "Hold Trail Normal",
+    noteHoldChallenge: "Hold Trail Challenge",
 
     //Judge Ring
-    JudgeRingNeutral: SkinSpriteName.NoteConnectionNeutral,
-    judgeRingRed: SkinSpriteName.NoteTailRed,
-    judgeRingBlue: SkinSpriteName.NoteTailBlue,
-    judgeRingGreen: SkinSpriteName.NoteHeadGreen,
+    JudgeRing: "Judge Ring",
+
+    //lines
+    Line0: "L0",
+    ...Object.fromEntries(
+      Array.from({ length: 30 /* number of lines available in skin*/ }, (_, i) => [`Line${i + 1}`, `L${i + 1}`])
+    )
   },
 })
