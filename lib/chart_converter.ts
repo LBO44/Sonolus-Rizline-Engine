@@ -85,7 +85,7 @@ export type RizChart = { //incomplete
   }
 }
 
-export const hexColor = (color: RizColor): string => {
+export const hexColor= (color: RizColor): string => {
   const toHex = (value: number) => value.toString(16).padStart(2, "0")
   return `#${toHex(color.r)}${toHex(color.g)}${toHex(color.b)}`
 }
@@ -101,7 +101,7 @@ const BpmChangeEntity = (beat: number, bpm: number): LevelDataEntity => {
   }
 }
 
-//line entity only handles drawing the judge ring and storing the line color
+//line entity only handles storing the line color
 const LineEntity = (
   line: number,
   startBeat: number,
@@ -157,7 +157,7 @@ const ColorKeyPoint = (
       { name: "Beat", value: beat },
       { name: "Line", ref: `Line${line}` },
       { name: "ColorIndex", value: startColorIndex },
-      { name: "Alpha", value: startAlpha },
+      { name: "Alpha", value: startAlpha / 255 },
       { name: "NextPoint", ref: `Line${line}-${type}ColorKeyPoint${pointIndex + 1}` }, //this value will be incorrect if last point
     ]
   }
@@ -229,7 +229,7 @@ const CameraMoveEntity = (
     archetype: 'CameraMove',
     data: [
       { name: "Beat", value: beat },
-      { name: "NextCameraEntity", ref: `CameraMove-${index}` },
+      { name: "NextCameraEntity", ref: `CameraMove-${index + 1}` },
       { name: "Value", value: yPos },
       { name: "EaseType", value: easeType }]
   }
@@ -273,7 +273,7 @@ const getColorIndex = (rizcolor: RizColor, colorArray: string[]) => {
 
 export const convertsChart = (chart: RizChart): { data: LevelData, info: chartInfo } => {
   let lineColors: string[] = []
-  let ringColors: string[] = []
+  let judgeRingColors: string[] = []
 
   //entity array to populate
   let bpmEntities: (LevelDataEntity)[] = new Array
@@ -305,12 +305,12 @@ export const convertsChart = (chart: RizChart): { data: LevelData, info: chartIn
 
     line.lineColor.forEach((lineColor, pointIndex) => {
       const colorIndex = getColorIndex(lineColor.startColor, lineColors)
-      LineColorEntities.push(ColorKeyPoint(lineColor.time, "Line", lineIndex, pointIndex, colorIndex, lineColor.startColor.a))
+      LineColorEntities.push(ColorKeyPoint(Math.max(lineColor.time, line.linePoints[0].time), "Line", lineIndex, pointIndex, colorIndex, lineColor.startColor.a))
     })
 
     line.judgeRingColor.forEach((ringColor, pointIndex) => {
-      const colorIndex = getColorIndex(ringColor.startColor, ringColors)
-      JudgeRingColorEntities.push(ColorKeyPoint(ringColor.time, "JudgeRing", lineIndex, pointIndex, colorIndex, ringColor.startColor.a))
+      const colorIndex = getColorIndex(ringColor.startColor, judgeRingColors)
+      JudgeRingColorEntities.push(ColorKeyPoint(Math.max(ringColor.time, line.linePoints[0].time), "JudgeRing", lineIndex, pointIndex, colorIndex, ringColor.startColor.a))
     })
 
     //add notes, during runtime we calculate the note's sonolus y/ rizline x based on the position of the 2 points(on the same line) it's between
@@ -375,9 +375,20 @@ export const convertsChart = (chart: RizChart): { data: LevelData, info: chartIn
   })
 
   //add the "default" entities present in every level
-  const entities = [
+  const entities: LevelDataEntity[] = [
     { archetype: 'Initialization', data: [] },
-    { archetype: 'Stage', data: [] },
+    {
+      archetype: 'Stage', data: [
+        { name: "Challenge1StartBeat", value: chart.challengeTimes[0].start },
+        { name: "Challenge1EndBeat", value: chart.challengeTimes[0].end },
+        { name: "Challenge1TransBeat", value: chart.challengeTimes[0].transTime },
+        ...(chart.challengeTimes[1]) ? [
+          { name: "Challenge2StartBeat", value: chart.challengeTimes[1].start },
+          { name: "Challenge2EndBeat", value: chart.challengeTimes[1].end },
+          { name: "Challenge2TransBeat", value: chart.challengeTimes[1].transTime },
+        ] : []
+      ]
+    },
     ...convertedEntities
   ]
 
@@ -387,5 +398,5 @@ export const convertsChart = (chart: RizChart): { data: LevelData, info: chartIn
     entities: entities
   }
 
-  return { data, info: { themes: chart.themes, lineColors, judgeRingColors: [] } }
+  return { data, info: { themes: chart.themes, lineColors, judgeRingColors } }
 }

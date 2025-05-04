@@ -3,14 +3,28 @@ import { skin } from "../skin"
 import { game } from "./shared"
 
 export class Stage extends Archetype {
-  shouldSpawn() {
-    return entityInfos.get(0).state === EntityState.Despawned
+
+  import = this.defineImport({
+    Challenge1StartBeat: { name: "Challenge1StartBeat", type: Number },
+    Challenge1EndBeat: { name: "Challenge1EndBeat", type: Number },
+  })
+
+  Challenge1StartTime = this.entityMemory(Number)
+  Challenge1EndTime = this.entityMemory(Number)
+
+  preprocess() {
+    this.Challenge1StartTime = bpmChanges.at(this.import.Challenge1StartBeat).time
+    this.Challenge1EndTime = bpmChanges.at(this.import.Challenge1EndBeat).time
   }
 
+  shouldSpawn() {
+    return true
+  }
 
-  updateSequentialOrder = 10
   updateParallel() {
-    const layout = new Rect({ l: game.XMax + 0.01, r: game.XMax - 0.01, t: -1, b: 1 })
-    skin.sprites.draw((skin.sprites.Line0.id + 1 as SkinSpriteId), layout, 10, 1)
+    if (time.now > this.Challenge1StartTime && time.now < this.Challenge1EndTime)
+      skin.sprites.backgroundChallenge.draw(screen.rect, 1, 1)
+    else
+      skin.sprites.backgroundNormal.draw(screen.rect, 1, 1)
   }
 }

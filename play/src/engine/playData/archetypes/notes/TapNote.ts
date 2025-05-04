@@ -9,7 +9,7 @@ import { game } from "../shared";
 
 export class TapNote extends Note {
 
-  sprite = skin.sprites.noteTap
+  sprite = skin.sprites.noteTapNormal
   bucket = buckets.TapNote
   judgementWindow = {
     perfect: Range.one.mul(0.045),
@@ -17,7 +17,7 @@ export class TapNote extends Note {
     good: Range.one.mul(0.09)
   }
 
-  noteRadius = 0.05
+  noteRadius = 0.07
 
   touch() {
     if (this.inputTime.min > time.now) return

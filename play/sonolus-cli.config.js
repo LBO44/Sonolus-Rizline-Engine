@@ -21,7 +21,7 @@ export default {
 
     copyFileSync(`./shared/src/assets/songs/${rizLevel.music_id}.mp3`, `./.dev/${rizLevel.music_id}.mp3`)
     level.bgm = { hash: `dbe1aa285c6922875a4571208e1a8410996a911`, url: `/${rizLevel.music_id}.mp3` }
-    
+
     copyFileSync(`./shared/src/assets/charts/${rizLevel.chart_hd.id}.json`, `./shared/src/level/data/chart.json`)
   }
 

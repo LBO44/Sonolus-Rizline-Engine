@@ -3,7 +3,7 @@ import { effect } from "../../effect";
 import { particle } from "../../particle";
 import { skin } from "../../skin";
 import { isUsed, markAsUsed } from "../InputManager";
-import { game, scaleX, toLineX, toLineY} from "../shared";
+import { game, scaleX, toLineX, toLineY } from "../shared";
 import { Note } from "./Note";
 
 export class HoldNote extends Note {
@@ -16,14 +16,14 @@ export class HoldNote extends Note {
     HoldEndBeat: { name: "HoldEndBeat", type: Number },
   })
 
-  sprite = skin.sprites.noteHoldStart
+  sprite = skin.sprites.noteHold
   bucket = buckets.TapNote
   judgementWindow = {
     perfect: Range.one.mul(0.045),
     great: Range.one.mul(0.09),
     good: Range.one.mul(0.09)
   }
-  noteRadius = 0.05
+  noteRadius = 0.07
 
   failed = this.entityMemory(Boolean)
   pos = this.entityMemory({ x: Number, y: Number, xEnd: Number })
@@ -106,8 +106,9 @@ export class HoldNote extends Note {
       b: this.pos.y - this.noteRadius,
       t: this.pos.y + this.noteRadius
     })
-    skin.sprites.noteHold.draw(holdLayout, 10, 1)
+    skin.sprites.noteHoldConnectorNormal.draw(holdLayout, 10, 1)
     this.sprite.draw(startLayout.translate(Math.max(this.pos.x, game.Xmin), this.pos.y), 5, 1)
+    skin.sprites.noteHoldStartNormal.draw(startLayout.translate(Math.max(this.pos.x, game.Xmin), this.pos.y), 6, 1)
   }
 
   updateSequential() {

@@ -43,7 +43,7 @@ export abstract class Note extends Archetype {
 
   draw() {
     const noteLayout = Rect.one.mul(this.noteRadius)
-    this.sprite.draw(noteLayout.translate(this.pos.x, this.pos.y), 5, 0.8)
+    this.sprite.draw(noteLayout.translate(this.pos.x, this.pos.y), 5, 1)
   }
 
   updateSequential() {

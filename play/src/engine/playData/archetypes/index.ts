@@ -3,6 +3,9 @@ import { CanvasMove } from './canvasEvents/CanvasMove.js'
 import { CanvasSpeed } from './canvasEvents/CanvasSpeed.js'
 import { Initialization } from './Initialization.js'
 import { InputManager } from './InputManager.js'
+import { JudgeRingColorKeyPoint } from './JudgeRingColorKeyPoint.js'
+import { Line } from './Line.js'
+import { LineColorKeyPoint } from './LineColorKeyPoint.js'
 import { LinePoint } from './LinePoint.js'
 import { CatchNote } from './notes/CatchNote.js'
 import { HoldNote } from './notes/HoldNote.js'
@@ -19,5 +22,8 @@ export const archetypes = defineArchetypes({
   TapNote,
   CatchNote,
   HoldNote,
-  CameraMove
+  CameraMove,
+  Line,
+  LineColorKeyPoint,
+  JudgeRingColorKeyPoint,
 })

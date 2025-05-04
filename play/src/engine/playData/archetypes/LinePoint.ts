@@ -1,6 +1,6 @@
 import { archetypes } from "."
 import { skin } from "../skin"
-import { drawCurvedLine, game, lineToQuad, scaleX, scaleY, spawnBeatToTime } from "./shared"
+import { drawCurvedLine, ease, game, lineToQuad, scaleX, scaleY, spawnBeatToTime } from "./shared"
 
 export class LinePoint extends Archetype {
 
@@ -40,31 +40,57 @@ export class LinePoint extends Archetype {
   }
 
   updateSequential() {
-
     this.pos.x = scaleX(this.hitTime, this.import.Canvas)
     this.pos.y = scaleY(this.import.YPos, this.import.Canvas)
+  }
+
+
+  drawLineToNextPoint() {
+    const n = archetypes.LinePoint.pos.get(this.import.NextPoint)
+
+    const lineColor = archetypes.Line.color.get(this.import.Line)
+    const colorID = (this.import.Alpha < 0) ? this.import.ColorIndex : lineColor.line.colorIndex
+    const alpha = (this.import.Alpha > 0) ? this.import.Alpha : lineColor.line.alpha
+
+    const spriteId = skin.sprites.line0.id + Math.min(31, colorID) as SkinSpriteId
+
+    if (this.pos.x === n.x) {
+      const lineLayout = lineToQuad(this.pos.x, this.pos.y, n.x, n.y)
+      skin.sprites.draw(spriteId, lineLayout, 3, this.nextA)
+    }
+    else if (this.pos.y === n.y) {
+      const lineLayout = lineToQuad(Math.min(this.pos.x, game.XMax), this.pos.y, Math.max(game.Xmin, n.x), n.y)
+      skin.sprites.draw(spriteId, lineLayout, 3, this.nextA)
+    }
+    else {
+      drawCurvedLine(this.pos.x, this.pos.y, n.x, n.y, this.import.EaseType, spriteId, alpha)
+    }
+  }
+
+  drawJudgeRing() {
+    const n = archetypes.LinePoint.pos.get(this.import.NextPoint)
+    const t = Math.clamp((game.XMax - this.pos.x) / (n.x - this.pos.x), 0, 1)
+    const e = ease(t, this.import.EaseType)
+    const y = /**(this.pos.x === n.x) ? this.pos.y :*/ this.pos.y + e * (n.y - this.pos.y)
+
+
+    const lineColor = archetypes.Line.color.get(this.import.Line)
+    const alpha = 1 // lineColor.judgeRing.alpha
+    const layout = Rect.one.mul(0.1)
+      .translate(game.XMax, y)
+    const spriteId = skin.sprites.judgeRing0.id + Math.min(31, lineColor.judgeRing.colorIndex) as SkinSpriteId
+    skin.sprites.draw(spriteId, layout, 100, alpha)
+
   }
 
   updateParallel() {
     const n = archetypes.LinePoint.pos.get(this.import.NextPoint)
 
     if ((n.x >= game.XMax && !this.import.IsLastPoint) || (this.import.IsLastPoint && this.hitTime <= time.now)) this.despawn = true
+    if (n.x === 0 || this.import.IsLastPoint === 1) return
 
-    if (this.import.IsLastPoint == 0 && this.pos.x > game.Xmin && archetypes.LinePoint.pos.get(this.import.NextPoint).x != 0) {
+    if (this.pos.x > game.Xmin) this.drawLineToNextPoint()
 
-      const spriteId = skin.sprites.Line0.id + Math.min(29, this.import.ColorIndex) as SkinSpriteId
-
-      if (this.pos.x === n.x) {
-        const lineLayout = lineToQuad(this.pos.x, this.pos.y, n.x, n.y)
-        skin.sprites.draw(spriteId, lineLayout, 3, this.nextA)
-      }
-      else if (this.pos.y === n.y) {
-        const lineLayout = lineToQuad(Math.min(this.pos.x, game.XMax), this.pos.y, Math.max(game.Xmin, n.x), n.y)
-        skin.sprites.draw(spriteId, lineLayout, 3, this.nextA)
-      }
-      else {
-        drawCurvedLine(this.pos.x, this.pos.y, n.x, n.y, this.import.EaseType, spriteId, this.import.Alpha)
-      }
-    }
+    if (this.pos.x >= game.XMax) this.drawJudgeRing()
   }
 }

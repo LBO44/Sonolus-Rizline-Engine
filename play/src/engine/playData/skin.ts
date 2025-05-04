@@ -1,26 +1,36 @@
 import { SkinSpriteName } from "@sonolus/core";
 
 export const skin = defineSkin({
-  renderMode: "standard",
+  renderMode: "default",
   sprites: {
 
+    //background
+    backgroundNormal: "Background Normal",
+    backgroundChallenge: "Background Challenge",
+
+
     //note
-    noteTap: "Tap Note Normal",
+    noteTapNormal: "Tap Note Normal",
     noteTapChallenge: "Tap Note Challenge",
 
-    noteTouch: "Touch Note",
+    noteDrag: "Drag Note",
 
-    noteHoldStart: "Hold Note",
-    noteHold: "Hold Trail Normal",
-    noteHoldChallenge: "Hold Trail Challenge",
-
-    //Judge Ring
-    JudgeRing: "Judge Ring",
+    noteHold: "Hold Note",
+    noteHoldStartNormal: "Hold Start Normal",
+    noteHoldChallenge: "Hold Start Challenge",
+    noteHoldConnectorNormal: "Hold Connector Normal",
+    noteHoldConnectorChallenge: "Hold Connector Challenge",
 
     //lines
-    Line0: "L0",
+    line0: "L0",
     ...Object.fromEntries(
-      Array.from({ length: 30 /* number of lines available in skin*/ }, (_, i) => [`Line${i + 1}`, `L${i + 1}`])
+      Array.from({ length: 31 /* number of lines available in skin*/ }, (_, i) => [`line${i + 1}`, `L${i + 1}`])
+    ),
+
+    //JudgeRings
+    judgeRing0: "J0",
+    ...Object.fromEntries(
+      Array.from({ length: 31 }, (_, i) => [`judgeRing${i + 1}`, `J${i + 1}`])
     )
   },
 })

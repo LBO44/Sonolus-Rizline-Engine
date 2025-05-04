@@ -7,15 +7,15 @@ import { particle } from "../../particle";
 import { game } from "../shared";
 
 export class CatchNote extends Note {
-  sprite = skin.sprites.noteTouch
-  bucket = buckets.CatchNote
+  sprite = skin.sprites.noteDrag
+  bucket = buckets.DragNote
   judgementWindow = {
     perfect: Range.one.mul(0.000),
     great: Range.one.mul(0.000),
     good: Range.one.mul(0.000)
   }
 
-  noteRadius = 0.03
+  noteRadius = 0.045
 
   touch() {
     if (this.inputTime.min > time.now) return
