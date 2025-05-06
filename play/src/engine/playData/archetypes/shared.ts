@@ -12,6 +12,10 @@ export const camera = levelMemory({
   scale: Number
 })
 
+export const levelMem = levelMemory({
+  isChallenge: Boolean
+})
+
 export const game = {
   XMax: 0.9, //aka judgeLineX
   Xmin: -1.5,

@@ -1,9 +1,10 @@
+import { options } from "../../../configuration/options";
 import { buckets } from "../../buckets";
 import { effect } from "../../effect";
 import { particle } from "../../particle";
 import { skin } from "../../skin";
 import { isUsed, markAsUsed } from "../InputManager";
-import { game, scaleX, toLineX, toLineY } from "../shared";
+import { game, levelMem, scaleX, toLineX, toLineY } from "../shared";
 import { Note } from "./Note";
 
 export class HoldNote extends Note {
@@ -16,14 +17,12 @@ export class HoldNote extends Note {
     HoldEndBeat: { name: "HoldEndBeat", type: Number },
   })
 
-  sprite = skin.sprites.noteHold
-  bucket = buckets.TapNote
+  bucket = buckets.HoldNote
   judgementWindow = {
     perfect: Range.one.mul(0.045),
     great: Range.one.mul(0.09),
     good: Range.one.mul(0.09)
   }
-  noteRadius = 0.07
 
   failed = this.entityMemory(Boolean)
   pos = this.entityMemory({ x: Number, y: Number, xEnd: Number })
@@ -99,18 +98,23 @@ export class HoldNote extends Note {
   }
 
   draw() {
-    const startLayout = Rect.one.mul(this.noteRadius)
+    const noteRadius = 0.07 * options.NoteSize
+    const startLayout = Rect.one.mul(noteRadius)
     const holdLayout = new Rect({
       l: this.pos.xEnd,
-      r: this.pos.x,
-      b: this.pos.y - this.noteRadius,
-      t: this.pos.y + this.noteRadius
+      r: this.pos.x - noteRadius,
+      b: this.pos.y - noteRadius,
+      t: this.pos.y + noteRadius
     })
-    skin.sprites.noteHoldConnectorNormal.draw(holdLayout, 10, 1)
-    this.sprite.draw(startLayout.translate(Math.max(this.pos.x, game.Xmin), this.pos.y), 5, 1)
-    skin.sprites.noteHoldStartNormal.draw(startLayout.translate(Math.max(this.pos.x, game.Xmin), this.pos.y), 6, 1)
+    skin.sprites.noteHold.draw(startLayout.translate(Math.max(this.pos.x, game.Xmin), this.pos.y), 5, 1)
+    if (levelMem.isChallenge) {
+      skin.sprites.noteHoldConnectorChallenge.draw(holdLayout, 10, 1)
+      skin.sprites.noteHoldStartChallenge.draw(startLayout.translate(Math.max(this.pos.x, game.Xmin), this.pos.y), 6, 1)
+    } else {
+      skin.sprites.noteHoldConnectorNormal.draw(holdLayout, 10, 1)
+      skin.sprites.noteHoldStartNormal.draw(startLayout.translate(Math.max(this.pos.x, game.Xmin), this.pos.y), 6, 1)
+    }
   }
-
   updateSequential() {
     if (this.endTime + input.offset < time.now) this.despawn = true
     this.getPos()

@@ -1,15 +1,15 @@
-import { Bucket, Range, SkinSprite } from "@sonolus/sonolus.js-compiler/play";
+import { Bucket, Range } from "@sonolus/sonolus.js-compiler/play";
 import { buckets } from "../../buckets";
 import { effect } from "../../effect";
 import { particle } from "../../particle";
 import { isUsed, markAsUsed } from "../InputManager";
 import { Note } from "./Note";
 import { skin } from "../../skin";
-import { game } from "../shared";
+import { game, levelMem } from "../shared";
+import { options } from "../../../configuration/options";
 
 export class TapNote extends Note {
 
-  sprite = skin.sprites.noteTapNormal
   bucket = buckets.TapNote
   judgementWindow = {
     perfect: Range.one.mul(0.045),
@@ -17,7 +17,13 @@ export class TapNote extends Note {
     good: Range.one.mul(0.09)
   }
 
-  noteRadius = 0.07
+
+  draw() {
+    const noteRadius = 0.07 * options.NoteSize
+    const noteLayout = Rect.one.mul(noteRadius)
+    const spriteId = levelMem.isChallenge ? skin.sprites.noteTapChallenge.id : skin.sprites.noteTapNormal.id
+    skin.sprites.draw(spriteId, noteLayout.translate(this.pos.x, this.pos.y), 5, 1)
+  }
 
   touch() {
     if (this.inputTime.min > time.now) return

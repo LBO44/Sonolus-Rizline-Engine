@@ -17,7 +17,7 @@ export const skin = defineSkin({
 
     noteHold: "Hold Note",
     noteHoldStartNormal: "Hold Start Normal",
-    noteHoldChallenge: "Hold Start Challenge",
+    noteHoldStartChallenge: "Hold Start Challenge",
     noteHoldConnectorNormal: "Hold Connector Normal",
     noteHoldConnectorChallenge: "Hold Connector Challenge",
 

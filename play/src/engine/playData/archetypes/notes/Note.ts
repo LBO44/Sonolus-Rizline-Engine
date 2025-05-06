@@ -1,4 +1,4 @@
-import { game, spawnBeatToTime, toLineX, toLineY} from "../shared"
+import { game, spawnBeatToTime, toLineX, toLineY } from "../shared"
 
 export abstract class Note extends Archetype {
   hasInput = true
@@ -15,15 +15,13 @@ export abstract class Note extends Archetype {
   inputTime = this.entityMemory(Range)
   pos = this.entityMemory({ x: Number, y: Number })
 
-  abstract sprite: SkinSprite
   abstract bucket: Bucket
   abstract judgementWindow: {
     perfect: Range
     great: Range
     good: Range
   }
-  abstract noteRadius: number
-
+  abstract draw(): void
 
   preprocess() {
     this.spawnTime = spawnBeatToTime(this.import.Beat)
@@ -41,10 +39,6 @@ export abstract class Note extends Archetype {
     this.pos.y = toLineY(this.import.Beat, this.import.LastPoint, this.import.NextPoint)
   }
 
-  draw() {
-    const noteLayout = Rect.one.mul(this.noteRadius)
-    this.sprite.draw(noteLayout.translate(this.pos.x, this.pos.y), 5, 1)
-  }
 
   updateSequential() {
     if (this.inputTime.max < time.now) this.despawn = true

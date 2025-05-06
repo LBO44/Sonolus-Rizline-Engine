@@ -42,7 +42,7 @@ type RizColorKeyPoint = {
 
 export enum RizNoteType {
   Tap,
-  Catch,
+  Drag,
   Hold
 }
 
@@ -85,7 +85,7 @@ export type RizChart = { //incomplete
   }
 }
 
-export const hexColor= (color: RizColor): string => {
+export const hexColor = (color: RizColor): string => {
   const toHex = (value: number) => value.toString(16).padStart(2, "0")
   return `#${toHex(color.r)}${toHex(color.g)}${toHex(color.b)}`
 }
@@ -98,6 +98,15 @@ const BpmChangeEntity = (beat: number, bpm: number): LevelDataEntity => {
     data: [
       { name: EngineArchetypeDataName.Beat, value: beat },
       { name: EngineArchetypeDataName.Bpm, value: bpm }]
+  }
+}
+
+const ChallengeEntity = (beat: number, type: "Start" | "End"): LevelDataEntity => {
+  return {
+    archetype: `Challenge${type}`,
+    data: [
+      { name: "Beat", value: beat }
+    ]
   }
 }
 
@@ -277,6 +286,7 @@ export const convertsChart = (chart: RizChart): { data: LevelData, info: chartIn
 
   //entity array to populate
   let bpmEntities: (LevelDataEntity)[] = new Array
+  let ChallengeEntities: (LevelDataEntity)[] = new Array
   let LineEntities: (LevelDataEntity)[] = new Array
   let LinePointEntities: (LevelDataEntity)[] = new Array
   let NoteEntities: (LevelDataEntity)[] = new Array
@@ -285,6 +295,13 @@ export const convertsChart = (chart: RizChart): { data: LevelData, info: chartIn
 
   //bpm change entities
   chart.bpmShifts.forEach((element) => bpmEntities.push(BpmChangeEntity(element.time, element.value * chart.bPM)))
+
+  //challenge time
+  chart.challengeTimes.forEach(ct => {
+    ChallengeEntities.push(ChallengeEntity(ct.start, "Start"))
+    ChallengeEntities.push(ChallengeEntity(ct.end, "End"))
+  })
+
 
   //line, line point, and note
   chart.lines.forEach((line, lineIndex) => {
@@ -353,6 +370,8 @@ export const convertsChart = (chart: RizChart): { data: LevelData, info: chartIn
   //merge all the enties in a single array
   let convertedEntities = [
     ...bpmEntities,
+    ...ChallengeEntities,
+
     ...LineEntities,
     ...LinePointEntities,
     ...LineColorEntities,
@@ -377,18 +396,7 @@ export const convertsChart = (chart: RizChart): { data: LevelData, info: chartIn
   //add the "default" entities present in every level
   const entities: LevelDataEntity[] = [
     { archetype: 'Initialization', data: [] },
-    {
-      archetype: 'Stage', data: [
-        { name: "Challenge1StartBeat", value: chart.challengeTimes[0].start },
-        { name: "Challenge1EndBeat", value: chart.challengeTimes[0].end },
-        { name: "Challenge1TransBeat", value: chart.challengeTimes[0].transTime },
-        ...(chart.challengeTimes[1]) ? [
-          { name: "Challenge2StartBeat", value: chart.challengeTimes[1].start },
-          { name: "Challenge2EndBeat", value: chart.challengeTimes[1].end },
-          { name: "Challenge2TransBeat", value: chart.challengeTimes[1].transTime },
-        ] : []
-      ]
-    },
+    { archetype: 'Stage', data: [] },
     ...convertedEntities
   ]
 

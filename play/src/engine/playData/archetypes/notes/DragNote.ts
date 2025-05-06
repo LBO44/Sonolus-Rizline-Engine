@@ -5,8 +5,9 @@ import { buckets } from "../../buckets";
 import { effect } from "../../effect";
 import { particle } from "../../particle";
 import { game } from "../shared";
+import { options } from "../../../configuration/options";
 
-export class CatchNote extends Note {
+export class DragNote extends Note {
   sprite = skin.sprites.noteDrag
   bucket = buckets.DragNote
   judgementWindow = {
@@ -15,7 +16,11 @@ export class CatchNote extends Note {
     good: Range.one.mul(0.000)
   }
 
-  noteRadius = 0.045
+  draw() {
+    const noteRadius = 0.045 * options.NoteSize
+    const noteLayout = Rect.one.mul(noteRadius)
+    this.sprite.draw(noteLayout.translate(this.pos.x, this.pos.y), 5, 1)
+  }
 
   touch() {
     if (this.inputTime.min > time.now) return
@@ -28,7 +33,7 @@ export class CatchNote extends Note {
       this.result.bucket.index = this.bucket.index
       this.result.bucket.value = this.result.accuracy * 1000
 
-      effect.clips.Catch.play(0.02)
+      effect.clips.Drag.play(0.02)
 
       const layout = Rect.one.mul(0.2).translate(game.XMax, this.pos.y)
       particle.effects.note.spawn(layout, 0.5, false)
