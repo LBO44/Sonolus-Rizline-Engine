@@ -19,6 +19,10 @@ export class Line extends Archetype {
     }
   })
 
+  pos = this.defineSharedMemory({
+    y:Number
+  })
+
   spawnTime = this.entityMemory(Number)
   despawnTime = this.entityMemory(Number)
 

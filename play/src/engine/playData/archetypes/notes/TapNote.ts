@@ -1,4 +1,3 @@
-import { Bucket, Range } from "@sonolus/sonolus.js-compiler/play";
 import { buckets } from "../../buckets";
 import { effect } from "../../effect";
 import { particle } from "../../particle";
@@ -7,16 +6,14 @@ import { Note } from "./Note";
 import { skin } from "../../skin";
 import { game, levelMem } from "../shared";
 import { options } from "../../../configuration/options";
+import { bucketWindows, judgeWindows } from "./windows";
 
 export class TapNote extends Note {
 
   bucket = buckets.TapNote
-  judgementWindow = {
-    perfect: Range.one.mul(0.045),
-    great: Range.one.mul(0.09),
-    good: Range.one.mul(0.09)
-  }
 
+  judgementWindow = judgeWindows.tapNote
+  bucketWindow = bucketWindows.tapNote
 
   draw() {
     const noteRadius = 0.07 * options.NoteSize

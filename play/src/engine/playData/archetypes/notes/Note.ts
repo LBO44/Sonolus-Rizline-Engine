@@ -1,3 +1,5 @@
+import { archetypes } from ".."
+import { options } from "../../../configuration/options"
 import { game, spawnBeatToTime, toLineX, toLineY } from "../shared"
 
 export abstract class Note extends Archetype {
@@ -21,13 +23,23 @@ export abstract class Note extends Archetype {
     great: Range
     good: Range
   }
+  abstract bucketWindow: JudgmentWindows
   abstract draw(): void
+
+  globalPreprocess() {
+    this.bucket.set(this.bucketWindow)
+    this.life.set({
+    perfect: 10,    
+    great: 0,       
+    good: -12,       
+    miss: -60,   
+})
+  }
 
   preprocess() {
     this.spawnTime = spawnBeatToTime(this.import.Beat)
     this.hitTime = bpmChanges.at(this.import.Beat).time
     this.inputTime.copyFrom(this.judgementWindow.good.add(this.hitTime).add(input.offset))
-    this.bucket.set(this.judgementWindow)
   }
 
   shouldSpawn() {
@@ -39,11 +51,15 @@ export abstract class Note extends Archetype {
     this.pos.y = toLineY(this.import.Beat, this.import.LastPoint, this.import.NextPoint)
   }
 
-
-  updateSequential() {
-    if (this.inputTime.max < time.now) this.despawn = true
+  updateParallel() {
+    if (this.inputTime.max < time.now) {
+      if (options.MissEffect) archetypes.MissEffect.spawn({ startTime: time.now, yPos: this.pos.y })
+      this.result.judgment = Judgment.Miss
+      this.despawn = true
+    }
     this.getPos()
     if (this.pos.x < game.Xmin) return
     this.draw()
   }
+
 }

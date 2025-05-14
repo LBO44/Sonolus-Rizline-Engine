@@ -24,7 +24,7 @@ enum RizEaseType {
 type RizKeyPoint = {
   time: number,
   value: number,
-  easeType: number
+  easeType: RizEaseType
 }
 
 type RizColor = {
@@ -177,20 +177,42 @@ const NoteEntity = (
   line: number,
   LastPoint: number,
   type: RizNoteType,
-  otherInformations: number[]): LevelDataEntity => {
+  noteId: number): LevelDataEntity => {
   return {
     archetype: `${RizNoteType[type]}Note`,
+    ...(type == RizNoteType.Hold) ? {
+      name: `Note ${noteId}`
+    } : {},
     data: [
       { name: "Beat", value: beat },
       { name: "LastPoint", ref: `Line${line}-Point${LastPoint}` },
       { name: "NextPoint", ref: `Line${line}-Point${LastPoint + 1}` },
-      ...(type == RizNoteType.Hold) ? [
-        { name: "HoldEndBeat", value: otherInformations[0] },
-        { name: "HoldDurationBeat", value: otherInformations[1] }
-      ] : []
+      ...(type == RizNoteType.Hold) ? [{name:"HoldEnd", ref: `Hold Note ${noteId}`}]:[],
     ]
   }
 }
+
+const NoteHoldEndEntity = (
+  beat: number,
+  endBeat: number,
+  LastPoint: number,
+  lineId: number,
+  noteId: number,
+): LevelDataEntity => {
+  return {
+    name: `Hold Note ${noteId}`,
+    archetype: `HoldEndNote`,
+    data: [
+      { name: "Beat", value: beat },
+      { name: "EndBeat", value: endBeat },
+      { name: "Line", ref: `Line${lineId}` },
+      { name: "HoldStart", ref: `Note ${noteId}` },
+      { name: "LastPoint", ref: `Line${lineId}-Point${LastPoint}` },
+      { name: "NextPoint", ref: `Line${lineId}-Point${LastPoint + 1}` },
+    ]
+  }
+}
+
 
 const CanvasMoveEntity = (
   beat: number,
@@ -305,10 +327,9 @@ export const convertsChart = (chart: RizChart): { data: LevelData, info: chartIn
 
   //line, line point, and note
   chart.lines.forEach((line, lineIndex) => {
-    //if (line.notes.length == 0 || line.linePoints.length == 0) return //igore lines without notes
 
     // add lines, line names are `LineN`, line start and ends are first and last points time
-    LineEntities.push(LineEntity(lineIndex, line.linePoints[0].time, line.linePoints[line.linePoints.length - 1].time))
+    LineEntities.push(LineEntity(lineIndex, line.judgeRingColor[0].time, line.linePoints[line.linePoints.length - 1].time))
 
     //add points, a lane is made of a bunch of points
     let spawnTime = line.linePoints[0].time
@@ -331,12 +352,17 @@ export const convertsChart = (chart: RizChart): { data: LevelData, info: chartIn
     })
 
     //add notes, during runtime we calculate the note's sonolus y/ rizline x based on the position of the 2 points(on the same line) it's between
-    line.notes.forEach((note) => {
+    line.notes.forEach((note, noteIndex) => {
 
       const LastLinePoint = line.linePoints.findIndex((p, i) => (p.time <= note.time && line.linePoints[i + 1].time >= note.time))
+      const noteId = lineIndex * 100000 + noteIndex //only used for hold notes
 
-      NoteEntities.push(NoteEntity(note.time, lineIndex, LastLinePoint, note.type, note.otherInformations))
+      NoteEntities.push(NoteEntity(note.time, lineIndex, LastLinePoint, note.type, noteId))
 
+      if (note.type === RizNoteType["Hold"]) {
+        const LastLinePoint = line.linePoints.findIndex((p, i) => (p.time <= note.otherInformations[0] && line.linePoints[i + 1].time >= note.otherInformations[0]))
+        NoteEntities.push(NoteHoldEndEntity(note.time, note.otherInformations[0], LastLinePoint, lineIndex, noteId))
+      }
     })
   })
 

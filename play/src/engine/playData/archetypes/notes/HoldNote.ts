@@ -1,125 +1,70 @@
+import { archetypes } from "..";
 import { options } from "../../../configuration/options";
 import { buckets } from "../../buckets";
 import { effect } from "../../effect";
 import { particle } from "../../particle";
 import { skin } from "../../skin";
 import { isUsed, markAsUsed } from "../InputManager";
-import { game, levelMem, scaleX, toLineX, toLineY } from "../shared";
+import { game, levelMem } from "../shared";
 import { Note } from "./Note";
+import { bucketWindows, judgeWindows } from "./windows";
 
 export class HoldNote extends Note {
 
-  import = this.defineImport({
-    Line: { name: "Line", type: Number },
-    Beat: { name: "Beat", type: Number },
-    LastPoint: { name: "LastPoint", type: Number },
-    NextPoint: { name: "NextPoint", type: Number },
-    HoldEndBeat: { name: "HoldEndBeat", type: Number },
+
+holdEnd = this.defineImport({
+    Entity: {name: "HoldEnd", type: Number}
   })
 
-  bucket = buckets.HoldNote
-  judgementWindow = {
-    perfect: Range.one.mul(0.045),
-    great: Range.one.mul(0.09),
-    good: Range.one.mul(0.09)
-  }
+  bucket = buckets.HoldNoteStart
+  judgementWindow = judgeWindows.tapNote
+  bucketWindow = bucketWindows.tapNote
 
-  failed = this.entityMemory(Boolean)
-  pos = this.entityMemory({ x: Number, y: Number, xEnd: Number })
-  endTime = this.entityMemory(Number)
+  sharedMemory = this.defineSharedMemory({
+    pos: { x: Number, y: Number },
+  })
 
-  preprocess(): void {
-    super.preprocess()
-
-    this.inputTime.copyFrom(this.judgementWindow.good.add(this.hitTime).add(input.offset))
-    this.endTime = bpmChanges.at(this.import.HoldEndBeat).time
-  }
-
-
-  touchId = this.entityMemory(Number)
-  touchStarted = this.entityMemory(Boolean)
   touch() {
     if (this.inputTime.min > time.now) return
 
     for (const touch of touches) {
-      if (!this.touchStarted) {
-        if (touch.started) continue
-        if (isUsed(touch)) continue
-        this.touchStart(touch)
-        return
-      }
-      else {
-        if (touch.id === this.touchId) {
-          if (!touch.ended) {
-            this.touchHold(touch)
-            return
-          }
-          else {
-            this.touchEnd(touch)
-          }
-        }
-      }
+      if (!touch.started) continue
+      if (isUsed(touch)) continue
+
+      markAsUsed(touch)
+
+      archetypes.HoldEndNote.sharedMemory.get(this.holdEnd.Entity).touchId = touch.id
+      archetypes.HoldEndNote.sharedMemory.get(this.holdEnd.Entity).fakeY = this.pos.y
+
+      this.result.accuracy = touch.startTime - this.hitTime
+      this.result.judgment = input.judge(touch.startTime, this.hitTime, this.judgementWindow)
+
+      this.result.bucket.index = this.bucket.index
+      this.result.bucket.value = this.result.accuracy * 1000
+
+      effect.clips.Tap.play(0.02)
+
+      const layout = Rect.one.mul(0.2).translate(game.XMax, this.pos.y)
+      particle.effects.note.spawn(layout, 0.5, false)
+
+      this.despawn = true
+      return
     }
-  }
-
-  touchEnd(touch: Touch) {
-    this.despawn
-  }
-
-  touchHold(touch: Touch) {
-    markAsUsed(touch)
-  }
-
-  touchStart(touch: Touch) {
-    markAsUsed(touch)
-    this.touchId = this.touchId
-    this.touchStarted = true
-    this.result.accuracy = touch.startTime - this.hitTime
-    this.result.judgment = input.judge(touch.startTime, this.hitTime, this.judgementWindow)
-
-    this.result.bucket.index = this.bucket.index
-    this.result.bucket.value = this.result.accuracy * 1000
-
-    effect.clips.Tap.play(0.02)
-
-    const layout = Rect.one.mul(0.2).translate(game.XMax, this.pos.y)
-    particle.effects.note.spawn(layout, 0.5, false)
-
-
-  }
-
-
-
-  getPos() {
-    if (this.touchStarted) this.pos.x = game.XMax
-    else this.pos.x = toLineX(this.import.Beat, this.import.LastPoint, this.import.NextPoint)
-    this.pos.xEnd = toLineX(this.import.HoldEndBeat, this.import.LastPoint, this.import.NextPoint)
-    this.pos.y = toLineY(this.import.Beat, this.import.LastPoint, this.import.NextPoint)
   }
 
   draw() {
     const noteRadius = 0.07 * options.NoteSize
-    const startLayout = Rect.one.mul(noteRadius)
-    const holdLayout = new Rect({
-      l: this.pos.xEnd,
-      r: this.pos.x - noteRadius,
-      b: this.pos.y - noteRadius,
-      t: this.pos.y + noteRadius
-    })
-    skin.sprites.noteHold.draw(startLayout.translate(Math.max(this.pos.x, game.Xmin), this.pos.y), 5, 1)
-    if (levelMem.isChallenge) {
-      skin.sprites.noteHoldConnectorChallenge.draw(holdLayout, 10, 1)
-      skin.sprites.noteHoldStartChallenge.draw(startLayout.translate(Math.max(this.pos.x, game.Xmin), this.pos.y), 6, 1)
-    } else {
-      skin.sprites.noteHoldConnectorNormal.draw(holdLayout, 10, 1)
-      skin.sprites.noteHoldStartNormal.draw(startLayout.translate(Math.max(this.pos.x, game.Xmin), this.pos.y), 6, 1)
-    }
+    const noteLayout = Rect.one.mul(noteRadius)
+    const x = Math.min(this.pos.x, game.XMax)
+    skin.sprites.noteHold.draw(noteLayout.translate(Math.max(x, game.Xmin), this.pos.y), 5, 1)
+
+    const spriteId = levelMem.isChallenge ? skin.sprites.noteHoldStartChallenge.id : skin.sprites.noteHoldStartNormal.id
+    skin.sprites.draw(spriteId, noteLayout.translate(x, this.pos.y), 5, 1)
   }
+
   updateSequential() {
-    if (this.endTime + input.offset < time.now) this.despawn = true
-    this.getPos()
-    if (this.pos.x < game.Xmin) return
-    this.draw()
+    this.sharedMemory.pos.x = this.pos.x
+    this.sharedMemory.pos.y = this.pos.y
   }
 
 }

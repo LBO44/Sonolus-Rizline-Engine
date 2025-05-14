@@ -22,6 +22,8 @@ export class LinePoint extends Archetype {
   hitTime = this.entityMemory(Number)
   nextA = this.entityMemory(Number)
 
+  lineY = this.entityMemory(Number)
+
   pos = this.defineSharedMemory({
     x: Number,
     y: Number,
@@ -42,6 +44,7 @@ export class LinePoint extends Archetype {
   updateSequential() {
     this.pos.x = scaleX(this.hitTime, this.import.Canvas)
     this.pos.y = scaleY(this.import.YPos, this.import.Canvas)
+    this.lineY = this.updateLineYPos()
   }
 
 
@@ -67,20 +70,22 @@ export class LinePoint extends Archetype {
     }
   }
 
-  drawJudgeRing() {
+  drawJudgeRing(lineY: number) {
+    const lineColor = archetypes.Line.color.get(this.import.Line)
+    const alpha = (entityInfos.get(this.import.Line).state==1) ?  lineColor.judgeRing.alpha : 1
+    const layout = Rect.one.mul(0.1)
+      .translate(game.XMax, lineY)
+    const spriteId = skin.sprites.judgeRing0.id + Math.min(31, lineColor.judgeRing.colorIndex) as SkinSpriteId
+    skin.sprites.draw(spriteId, layout, 100, alpha)
+  }
+
+  updateLineYPos(): number {
     const n = archetypes.LinePoint.pos.get(this.import.NextPoint)
     const t = Math.clamp((game.XMax - this.pos.x) / (n.x - this.pos.x), 0, 1)
     const e = ease(t, this.import.EaseType)
     const y = /**(this.pos.x === n.x) ? this.pos.y :*/ this.pos.y + e * (n.y - this.pos.y)
-
-
-    const lineColor = archetypes.Line.color.get(this.import.Line)
-    const alpha = 1 // lineColor.judgeRing.alpha
-    const layout = Rect.one.mul(0.1)
-      .translate(game.XMax, y)
-    const spriteId = skin.sprites.judgeRing0.id + Math.min(31, lineColor.judgeRing.colorIndex) as SkinSpriteId
-    skin.sprites.draw(spriteId, layout, 100, alpha)
-
+    archetypes.Line.pos.get(this.import.Line).y = y
+    return y
   }
 
   updateParallel() {
@@ -91,6 +96,6 @@ export class LinePoint extends Archetype {
 
     if (this.pos.x > game.Xmin) this.drawLineToNextPoint()
 
-    if (this.pos.x >= game.XMax) this.drawJudgeRing()
+    if (this.pos.x >= game.XMax) this.drawJudgeRing(this.lineY)
   }
 }

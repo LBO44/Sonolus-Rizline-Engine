@@ -1,8 +1,8 @@
 import { EngineConfigurationUI } from '@sonolus/core'
 
 export const ui: EngineConfigurationUI = {
-  primaryMetric: 'arcade',
-  secondaryMetric: 'life',
+  primaryMetric: 'life',
+  secondaryMetric: 'accuracy',
   menuVisibility: {
     scale: 1,
     alpha: 1,
@@ -37,30 +37,30 @@ export const ui: EngineConfigurationUI = {
   },
   judgmentAnimation: {
     scale: {
-      from: 0.75,
-      to: 1.75,
-      duration: 0.4,
-      ease: 'outSine',
+      from: 0.6,
+      to: 1,
+      duration: 0.1,
+      ease: 'inSine',
     },
     alpha: {
-      from: 0,
+      from: 0.6,
       to: 1,
-      duration: 0.7,
-      ease: 'outSine',
+      duration: 0.1,
+      ease: 'inSine',
     },
   },
   comboAnimation: {
     scale: {
-      from: 0.75,
-      to: 1.75,
-      duration: 0.4,
-      ease: 'outSine',
+      from: 0.6,
+      to: 1,
+      duration: 0.1,
+      ease: 'inSine',
     },
     alpha: {
-      from: 0,
+      from: 0.6,
       to: 1,
-      duration: 0.7,
-      ease: 'outSine',
+      duration: 0.1,
+      ease: 'linear',
     },
   },
   judgmentErrorStyle: 'none',

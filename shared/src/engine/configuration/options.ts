@@ -30,5 +30,11 @@ export const optionsDefinition = {
     step: 0.05,
     scope: "Rizline",
     unit: "#PERCENTAGE_UNIT"
+  },
+  MissEffect: {
+    name: "Show Miss Effect",
+    type: "toggle",
+    def: 1,
+    scope: "Rizline",
   }
 } satisfies Record<string, EngineConfigurationOption>

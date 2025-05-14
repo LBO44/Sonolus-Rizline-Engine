@@ -22,12 +22,6 @@ export const game = {
   speed: configuration.options.NoteSpeed
 }
 
-export const judgementWindow = {
-  perfect: Range.one.mul(0.045),
-  great: Range.one.mul(0.09),
-  good: Range.one.mul(0.09)
-}
-
 
 export const ease = (t: number, easeType: number): number => {
   switch (easeType) {
