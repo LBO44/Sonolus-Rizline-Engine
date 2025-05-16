@@ -1,0 +1,44 @@
+[
+  {
+    "level_id": "PastelLines.RekuMochizuki.0",
+    "title": "Pastel Lines",
+    "artist": "Reku Mochizuki",
+    "illustration_id": "illustration.PastelLines.RekuMochizuki.0",
+    "music_id": "PastelLines.RekuMochizuki.0",
+    "chart_hd": {
+      "id": "chart.PastelLines.RekuMochizuki.0.HD",
+      "difficulty": 6,
+      "charter": "Barbarianerman"
+    },
+    "bgmHash": "55b05dc461b783a1d9f5d955c7c366ea66508a58",
+    "coverHash": "f59409eedc87c0d7c5ab52a4c4f86118e9228b20"
+  },
+  {
+    "level_id": "Gleam.Uske.0",
+    "title": "Gleam feat. ふわまろ",
+    "artist": "U-ske",
+    "illustration_id": "illustration.Gleam.Uske.0",
+    "music_id": "Gleam.Uske.0",
+    "chart_hd": {
+      "id": "chart.Gleam.Uske.0.HD",
+      "difficulty": 6,
+      "charter": "Pcat"
+    },
+    "bgmHash": "54bc00825c17962aad0c37b3a61939033d01f58c",
+    "coverHash": "187d09b13f3b1a525f620e91b929696af97b5044"
+  },
+  {
+    "level_id": "PowerAttack.EBIMAYO.0",
+    "title": "Power Attack",
+    "artist": "EBIMAYO",
+    "illustration_id": "illustration.PowerAttack.EBIMAYO.0",
+    "music_id": "PowerAttack.EBIMAYO.0",
+    "chart_hd": {
+      "id": "chart.PowerAttack.EBIMAYO.0.HD",
+      "difficulty": 8,
+      "charter": "Power cat"
+    },
+    "bgmHash": "7fbd7c211149a71102fd78bb075cfe4e0af782ab",
+    "coverHash": "b78548f4765567c7aa929811d1b9c52cd10f40c7"
+  }
+]
