@@ -3,8 +3,11 @@ import { levelMem, } from "./shared"
 
 export class Stage extends Archetype {
 
+  spawnOrder() {
+    return 1
+  }
   shouldSpawn() {
-    return true
+    return entityInfos.get(0).state === EntityState.Despawned
   }
 
   updateParallel() {

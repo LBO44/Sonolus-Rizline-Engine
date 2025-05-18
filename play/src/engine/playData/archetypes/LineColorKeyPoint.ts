@@ -20,9 +20,15 @@ export class LineColorKeyPoint extends Archetype {
     this.nextTime = bpmChanges.at(archetypes.LineColorKeyPoint.import.get(this.import.NextPoint).Beat).time
   }
 
+  spawnOrder() {
+    return 1000 + this.spawnTime
+  }
+
   shouldSpawn() {
     return time.now >= this.spawnTime
   }
+
+  updateSequentialOrder = 5
 
   updateSequential() {
     if (entityInfos.get(this.import.Line).state === EntityState.Waiting) return

@@ -329,7 +329,7 @@ export const convertsChart = (chart: RizChart): { data: LevelData, info: chartIn
   chart.lines.forEach((line, lineIndex) => {
 
     // add lines, line names are `LineN`, line start and ends are first and last points time
-    LineEntities.push(LineEntity(lineIndex, line.judgeRingColor[0].time, line.linePoints[line.linePoints.length - 1].time))
+    LineEntities.push(LineEntity(lineIndex, line.linePoints[0].time, line.linePoints[line.linePoints.length - 1].time))
 
     //add points, a lane is made of a bunch of points
     let spawnTime = line.linePoints[0].time
@@ -409,15 +409,15 @@ export const convertsChart = (chart: RizChart): { data: LevelData, info: chartIn
     //...CameraScaleEntities
   ]
 
-  //sort entities based on their spawn time 
-  convertedEntities.sort((a, b) => {
+  //sort entities based on their spawn time, not actually needed for Play Mode
+  /** convertedEntities.sort((a, b) => {
     const timeA: number = (a.data.find(item => item.name === "Beat" || item.name === "SpawnBeat" || item.name == EngineArchetypeDataName.Beat) as { name: string, value: number }).value
     const timeB: number = (b.data.find(item => item.name === "Beat" || item.name === "SpawnBeat" || item.name == EngineArchetypeDataName.Beat) as { name: string, value: number }).value
     if (timeA === undefined || timeB === undefined) return 0
     if (timeA < timeB) return -1
     if (timeA > timeB) return 1
     return 0
-  })
+  })*/
 
   //add the "default" entities present in every level
   const entities: LevelDataEntity[] = [

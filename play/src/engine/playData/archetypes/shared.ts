@@ -50,7 +50,7 @@ export const easeValue = (v1: number, v2: number, easeType: number, x: number, x
 }
 
 
-export const spawnBeatToTime = (spawnBeat: number) => bpmChanges.at(spawnBeat).time - 10 / game.speed
+export const spawnBeatToTime = (spawnBeat: number) => Math.max(0, bpmChanges.at(spawnBeat).time - 10 / game.speed)
 
 /** the judgeline is on the y axis
  * in rizline -0.5 is left and 0.5 is right edge of screen */

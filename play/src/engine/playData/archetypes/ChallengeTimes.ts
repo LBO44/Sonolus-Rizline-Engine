@@ -1,4 +1,4 @@
-import { levelMem, spawnBeatToTime } from "./shared"
+import { levelMem } from "./shared"
 
 abstract class ChallengeTime extends Archetype {
   abstract value: boolean
@@ -7,14 +7,24 @@ abstract class ChallengeTime extends Archetype {
     Beat: { name: "Beat", type: Number }
   })
 
+  spawnTime = this.entityMemory(Number)
+
+  preprocess() {
+    this.spawnTime = bpmChanges.at(this.import.Beat).time
+  }
+
+  spawnOrder() {
+    return 1000 + this.spawnTime
+  }
+
   shouldSpawn() {
-    return time.now >= spawnBeatToTime(this.import.Beat)
+    return time.now >= this.spawnTime
   }
 
   updateSequential() {
-    if (time.now < bpmChanges.at(this.import.Beat).time) return
     levelMem.isChallenge = this.value
   }
+
 }
 
 export class ChallengeStart extends ChallengeTime {

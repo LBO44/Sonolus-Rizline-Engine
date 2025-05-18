@@ -29,12 +29,17 @@ export abstract class Note extends Archetype {
   globalPreprocess() {
     this.bucket.set(this.bucketWindow)
     this.life.set({
-    perfect: 10,    
-    great: 0,       
-    good: -12,       
-    miss: -60,   
-})
+      perfect: 10,
+      great: 0,
+      good: -12,
+      miss: -60,
+    })
   }
+
+  spawnOrder() {
+    return 1000 + this.spawnTime
+  }
+
 
   preprocess() {
     this.spawnTime = spawnBeatToTime(this.import.Beat)

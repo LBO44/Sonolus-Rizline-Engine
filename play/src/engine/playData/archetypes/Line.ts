@@ -1,4 +1,3 @@
-import { skin } from "../skin"
 import { spawnBeatToTime } from "./shared"
 
 export class Line extends Archetype {
@@ -20,21 +19,22 @@ export class Line extends Archetype {
   })
 
   pos = this.defineSharedMemory({
-    y:Number
+    y: Number
   })
 
   spawnTime = this.entityMemory(Number)
   despawnTime = this.entityMemory(Number)
 
+  spawnOrder() {
+    return 1000 + this.spawnTime
+  }
 
   preprocess() {
     this.spawnTime = spawnBeatToTime(this.import.SpawnBeat)
     this.despawnTime = bpmChanges.at(this.despawnTime).time
   }
-  spawnOrder() {
-    return 0
-  }
+
   shouldSpawn() {
-    return true || time.now >= this.spawnTime
+    return time.now >= this.spawnTime
   }
 }

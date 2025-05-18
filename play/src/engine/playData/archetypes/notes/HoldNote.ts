@@ -12,8 +12,8 @@ import { bucketWindows, judgeWindows } from "./windows";
 export class HoldNote extends Note {
 
 
-holdEnd = this.defineImport({
-    Entity: {name: "HoldEnd", type: Number}
+  holdEnd = this.defineImport({
+    Entity: { name: "HoldEnd", type: Number }
   })
 
   bucket = buckets.HoldNoteStart
@@ -23,6 +23,10 @@ holdEnd = this.defineImport({
   sharedMemory = this.defineSharedMemory({
     pos: { x: Number, y: Number },
   })
+
+  spawnOrder() {
+    return 1000 + this.spawnTime
+  }
 
   touch() {
     if (this.inputTime.min > time.now) return

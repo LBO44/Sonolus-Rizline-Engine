@@ -1,4 +1,4 @@
-import { canvas, ease, easeValue, spawnBeatToTime } from "../shared"
+import { canvas, easeValue } from "../shared"
 
 export abstract class CanvasEntity extends Archetype {
 
@@ -10,7 +10,6 @@ export abstract class CanvasEntity extends Archetype {
     EaseType: { name: "EaseType", type: Number }
   })
 
-  spawnTime = this.entityMemory(Number)
   nextTime = this.entityMemory(Number)
   nextValue = this.entityMemory(Number)
   hitTime = this.entityMemory(Number)
@@ -20,17 +19,22 @@ export abstract class CanvasEntity extends Archetype {
   abstract getNextValue(): void
 
   preprocess() {
-    this.spawnTime = spawnBeatToTime(this.import.Beat)
     this.hitTime = bpmChanges.at(this.import.Beat).time
     this.getNextValue()
   }
 
-  shouldSpawn() {
-    return this.spawnTime <= time.now
+  spawnOrder() {
+    return 1000 + this.hitTime
   }
 
+
+  shouldSpawn() {
+    return this.hitTime <= time.now
+  }
+
+  updateSequentialOrder = 1
+
   updateSequential() {
-    if (this.hitTime >= time.now) return
     if (this.nextTime <= time.now) this.despawn = true
 
     if (this.nextTime === 0) {

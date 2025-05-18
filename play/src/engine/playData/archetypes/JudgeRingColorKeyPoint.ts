@@ -1,4 +1,3 @@
-
 import { archetypes } from "."
 import { spawnBeatToTime } from "./shared"
 
@@ -20,12 +19,16 @@ export class JudgeRingColorKeyPoint extends Archetype {
     this.spawnTime = spawnBeatToTime(this.import.Beat)
     this.nextTime = bpmChanges.at(archetypes.JudgeRingColorKeyPoint.import.get(this.import.NextPoint).Beat).time
   }
+
   spawnOrder(): number {
-    return 0
+    return 1000 + this.spawnTime
   }
+
   shouldSpawn() {
-    return true || time.now >= this.spawnTime
+    return time.now >= this.spawnTime
   }
+
+  updateSequentialOrder = 5
 
   updateSequential() {
     if (entityInfos.get(this.import.Line).state === EntityState.Waiting) return

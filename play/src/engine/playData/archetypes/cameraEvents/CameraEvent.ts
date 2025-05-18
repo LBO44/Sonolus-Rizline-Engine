@@ -1,4 +1,4 @@
-import { camera, ease, easeValue, spawnBeatToTime } from "../shared"
+import { camera, easeValue, spawnBeatToTime } from "../shared"
 
 export abstract class CameraEvent extends Archetype {
 
@@ -17,6 +17,10 @@ export abstract class CameraEvent extends Archetype {
   abstract cameraVaraible: (typeof camera)[keyof typeof camera]
   /** Should update this.nextValue and this.nextTime */
   abstract getNextValue(): void
+
+  spawnOrder() {
+    return 1000 + this.spawnTime
+  }
 
   preprocess() {
     this.spawnTime = spawnBeatToTime(this.import.Beat)
