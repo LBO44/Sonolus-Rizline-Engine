@@ -187,7 +187,7 @@ const NoteEntity = (
       { name: "Beat", value: beat },
       { name: "LastPoint", ref: `Line${line}-Point${LastPoint}` },
       { name: "NextPoint", ref: `Line${line}-Point${LastPoint + 1}` },
-      ...(type == RizNoteType.Hold) ? [{name:"HoldEnd", ref: `Hold Note ${noteId}`}]:[],
+      ...(type == RizNoteType.Hold) ? [{ name: "HoldEnd", ref: `Hold Note ${noteId}` }] : [],
     ]
   }
 }
@@ -195,7 +195,6 @@ const NoteEntity = (
 const NoteHoldEndEntity = (
   beat: number,
   endBeat: number,
-  LastPoint: number,
   lineId: number,
   noteId: number,
 ): LevelDataEntity => {
@@ -207,8 +206,6 @@ const NoteHoldEndEntity = (
       { name: "EndBeat", value: endBeat },
       { name: "Line", ref: `Line${lineId}` },
       { name: "HoldStart", ref: `Note ${noteId}` },
-      { name: "LastPoint", ref: `Line${lineId}-Point${LastPoint}` },
-      { name: "NextPoint", ref: `Line${lineId}-Point${LastPoint + 1}` },
     ]
   }
 }
@@ -328,8 +325,14 @@ export const convertsChart = (chart: RizChart): { data: LevelData, info: chartIn
   //line, line point, and note
   chart.lines.forEach((line, lineIndex) => {
 
+    //sort events because somehow they are sometimes not sorted
+    line.linePoints.sort((a, b) => a.time - b.time)
+    line.lineColor.sort((a, b) => a.time - b.time)
+    line.judgeRingColor.sort((a, b) => a.time - b.time)
+
     // add lines, line names are `LineN`, line start and ends are first and last points time
-    LineEntities.push(LineEntity(lineIndex, line.linePoints[0].time, line.linePoints[line.linePoints.length - 1].time))
+    const lineStart = Math.min(line.linePoints[0].time || 0, line.lineColor[0]?.time || 0, line.judgeRingColor[0]?.time || 0)
+    LineEntities.push(LineEntity(lineIndex, lineStart, line.linePoints[line.linePoints.length - 1].time))
 
     //add points, a lane is made of a bunch of points
     let spawnTime = line.linePoints[0].time
@@ -360,8 +363,7 @@ export const convertsChart = (chart: RizChart): { data: LevelData, info: chartIn
       NoteEntities.push(NoteEntity(note.time, lineIndex, LastLinePoint, note.type, noteId))
 
       if (note.type === RizNoteType["Hold"]) {
-        const LastLinePoint = line.linePoints.findIndex((p, i) => (p.time <= note.otherInformations[0] && line.linePoints[i + 1].time >= note.otherInformations[0]))
-        NoteEntities.push(NoteHoldEndEntity(note.time, note.otherInformations[0], LastLinePoint, lineIndex, noteId))
+        NoteEntities.push(NoteHoldEndEntity(note.time, note.otherInformations[0], lineIndex, noteId))
       }
     })
   })
