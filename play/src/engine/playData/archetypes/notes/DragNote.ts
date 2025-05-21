@@ -1,4 +1,3 @@
-import { Bucket } from "@sonolus/sonolus.js-compiler/play";
 import { skin } from "../../skin";
 import { Note } from "./Note";
 import { buckets } from "../../buckets";

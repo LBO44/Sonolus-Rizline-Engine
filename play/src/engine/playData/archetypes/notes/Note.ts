@@ -36,15 +36,14 @@ export abstract class Note extends Archetype {
     })
   }
 
-  spawnOrder() {
-    return 1000 + this.spawnTime
-  }
-
-
   preprocess() {
     this.spawnTime = spawnBeatToTime(this.import.Beat)
     this.hitTime = bpmChanges.at(this.import.Beat).time
     this.inputTime.copyFrom(this.judgementWindow.good.add(this.hitTime).add(input.offset))
+  }
+
+  spawnOrder() {
+    return 1000 + this.spawnTime
   }
 
   shouldSpawn() {

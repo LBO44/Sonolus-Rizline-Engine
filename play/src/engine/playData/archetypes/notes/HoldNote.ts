@@ -1,16 +1,13 @@
 import { archetypes } from "..";
-import { options } from "../../../configuration/options";
 import { buckets } from "../../buckets";
 import { effect } from "../../effect";
 import { particle } from "../../particle";
-import { skin } from "../../skin";
 import { isUsed, markAsUsed } from "../InputManager";
-import { game, levelMem } from "../shared";
+import { game } from "../shared";
 import { Note } from "./Note";
 import { bucketWindows, judgeWindows } from "./windows";
 
 export class HoldNote extends Note {
-
 
   holdEnd = this.defineImport({
     Entity: { name: "HoldEnd", type: Number }
@@ -21,12 +18,8 @@ export class HoldNote extends Note {
   bucketWindow = bucketWindows.tapNote
 
   sharedMemory = this.defineSharedMemory({
-    pos: { x: Number, y: Number },
+    pos: { x: Number },
   })
-
-  spawnOrder() {
-    return 1000 + this.spawnTime
-  }
 
   touch() {
     if (this.inputTime.min > time.now) return
@@ -57,18 +50,13 @@ export class HoldNote extends Note {
   }
 
   draw() {
-    const noteRadius = 0.07 * options.NoteSize
-    const noteLayout = Rect.one.mul(noteRadius)
-    const x = Math.min(this.pos.x, game.XMax)
-    skin.sprites.noteHold.draw(noteLayout.translate(Math.max(x, game.Xmin), this.pos.y), 5, 1)
-
-    const spriteId = levelMem.isChallenge ? skin.sprites.noteHoldStartChallenge.id : skin.sprites.noteHoldStartNormal.id
-    skin.sprites.draw(spriteId, noteLayout.translate(x, this.pos.y), 5, 1)
+    //draw is handled by End entity since we need to still draw it after judgment
   }
 
   updateSequential() {
     this.sharedMemory.pos.x = this.pos.x
-    this.sharedMemory.pos.y = this.pos.y
+
+    archetypes.HoldEndNote.sharedMemory.get(this.holdEnd.Entity).fakeY = this.pos.y
   }
 
 }
