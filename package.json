@@ -15,9 +15,11 @@
   "devDependencies": {
     "@sonolus/sonolus.js": "~9.5.5",
     "@types/node": "^22.14.1",
-    "typescript": "~5.8.3"
+    "typescript": "~5.8.3",
+    "@types/pngjs": "^6.0.5"
   },
   "dependencies": {
-    "@sonolus/core": "~7.13.0"
+    "@sonolus/core": "~7.13.0",
+    "pngjs": "^7.0.0"
   }
 }

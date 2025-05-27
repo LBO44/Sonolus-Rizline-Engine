@@ -1,6 +1,5 @@
 import { copyFileSync, existsSync, mkdirSync } from 'node:fs'
 import levelList from "../shared/rizlineAssets/level_list.json" with { type: "json" }
-
 /** @type {import('@sonolus/sonolus.js').SonolusCLIConfig} */
 export default {
   type: 'play',
@@ -8,7 +7,13 @@ export default {
   devServer(sonolus) {
     process.env.MODE = this.mode
     const shouldCopyAssets = !existsSync("./.dev/assets")
-    if (shouldCopyAssets) mkdirSync("./.dev/assets")
+    if (shouldCopyAssets) {
+      mkdirSync("./.dev/assets")
+      mkdirSync("./.dev/level")
+      mkdirSync("./.dev/skin")
+    }
+
+    const skinDataSrl = sonolus.add("./lib/skin/skinData")
 
     levelList.forEach((rizLevel, i) => {
 
@@ -21,7 +26,7 @@ export default {
       level.artists = { en: rizLevel.artist }
       level.author = { en: rizLevel.chart_hd.charter }
       level.rating = rizLevel.chart_hd.difficulty
-      level.useSkin = { useDefault: false, item: "pixel" } //pixel skin won't work with the engine
+      level.useSkin = { useDefault: false, item: rizLevel.chart_hd.id }
 
 
       if (shouldCopyAssets) copyFileSync(`./shared/rizlineAssets/covers/${rizLevel.illustration_id}.png`, `./.dev/assets/${rizLevel.illustration_id}.png`)
@@ -32,6 +37,17 @@ export default {
       level.data = { url: `/level/${rizLevel.level_id}` }
 
       i == 0 ? sonolus.level.items[0] = level : sonolus.level.items.push(level)
+
+      let skin = { ...sonolus.skin.items[0] }
+      skin.name = rizLevel.chart_hd.id
+      skin.title = { en: rizLevel.title }
+      skin.subtitle = { en: "" }
+      skin.author = { en: rizLevel.chart_hd.charter }
+      skin.thumbnail = { url: `/assets/${rizLevel.illustration_id}.png`, hash: rizLevel.coverHash }
+      skin.data = skinDataSrl
+      skin.texture = { url: `/skin/${rizLevel.chart_hd.id}.png` }
+
+      sonolus.skin.items.push(skin)
     })
 
   }
