@@ -36,5 +36,16 @@ export const optionsDefinition = {
     type: "toggle",
     def: 1,
     scope: "Rizline",
+  },
+  BackgroundOpacity: {
+    name: "Colour Background Opacity",
+    type: "slider",
+    def: 1,
+    min: 0,
+    max: 1,
+    step: 0.05,
+    description: "In case you want to use a custom background.",
+    scope: "Rizline",
+    unit: "#PERCENTAGE_UNIT"
   }
 } satisfies Record<string, EngineConfigurationOption>
