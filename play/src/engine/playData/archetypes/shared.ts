@@ -19,7 +19,7 @@ export const levelMem = levelMemory({
 export const game = {
   XMax: 0.9, //aka judgeLineX
   Xmin: -1.5,
-  speed: configuration.options.NoteSpeed
+  speed: configuration.options.noteSpeed
 }
 
 

@@ -1,8 +1,8 @@
-import { EngineConfigurationOption } from '@sonolus/core'
+import { EngineConfigurationOption, Text } from '@sonolus/core'
 
 export const optionsDefinition = {
   speed: {
-    name: "#SPEED",
+    name: Text.Speed,
     standard: true,
     advanced: true,
     type: 'slider',
@@ -10,10 +10,10 @@ export const optionsDefinition = {
     min: 0.5,
     max: 2,
     step: 0.01,
-    unit: "#PERCENTAGE_UNIT",
+    unit: Text.PercentageUnit,
   },
-  NoteSpeed: {
-    name: "#NOTE_SPEED",
+  noteSpeed: {
+    name: Text.NoteSpeed,
     min: 1,
     max: 10,
     def: 3,
@@ -21,23 +21,23 @@ export const optionsDefinition = {
     step: 0.1,
     scope: "Rizline",
   },
-  NoteSize: {
-    name: "#NOTE_SIZE",
+  noteSize: {
+    name: Text.NoteSize,
     min: 0.1,
     max: 2,
     def: 1,
     type: "slider",
     step: 0.05,
     scope: "Rizline",
-    unit: "#PERCENTAGE_UNIT"
+    unit: Text.PercentageUnit
   },
-  MissEffect: {
+  missEffect: {
     name: "Show Miss Effect",
     type: "toggle",
     def: 1,
     scope: "Rizline",
   },
-  BackgroundOpacity: {
+  backgroundOpacity: {
     name: "Colour Background Opacity",
     type: "slider",
     def: 1,
@@ -46,6 +46,6 @@ export const optionsDefinition = {
     step: 0.05,
     description: "In case you want to use a custom background.",
     scope: "Rizline",
-    unit: "#PERCENTAGE_UNIT"
+    unit: Text.PercentageUnit
   }
 } satisfies Record<string, EngineConfigurationOption>

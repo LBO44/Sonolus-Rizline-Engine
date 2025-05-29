@@ -57,7 +57,7 @@ export abstract class Note extends Archetype {
 
   updateParallel() {
     if (this.inputTime.max < time.now) {
-      if (options.MissEffect) archetypes.MissEffect.spawn({ startTime: time.now, yPos: this.pos.y })
+      if (options.missEffect) archetypes.MissEffect.spawn({ startTime: time.now, yPos: this.pos.y })
       this.result.judgment = Judgment.Miss
       this.despawn = true
     }

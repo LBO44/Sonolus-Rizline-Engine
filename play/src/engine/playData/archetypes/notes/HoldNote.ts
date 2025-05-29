@@ -1,11 +1,11 @@
-import { archetypes } from "..";
-import { buckets } from "../../buckets";
-import { effect } from "../../effect";
-import { particle } from "../../particle";
-import { isUsed, markAsUsed } from "../InputManager";
-import { game } from "../shared";
-import { Note } from "./Note";
-import { bucketWindows, judgeWindows } from "./windows";
+import { archetypes } from ".."
+import { buckets } from "../../buckets"
+import { effect } from "../../effect"
+import { particle } from "../../particle"
+import { isUsed, markAsUsed } from "../InputManager"
+import { game } from "../shared"
+import { Note } from "./Note"
+import { bucketWindows, judgeWindows } from "./windows"
 
 export class HoldNote extends Note {
 

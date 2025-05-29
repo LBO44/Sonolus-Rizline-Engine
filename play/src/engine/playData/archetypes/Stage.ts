@@ -13,7 +13,7 @@ export class Stage extends Archetype {
   }
 
   updateParallel() {
-    const a = options.BackgroundOpacity
+    const a = options.backgroundOpacity
 
     if (a === 0) return
 

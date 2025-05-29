@@ -83,11 +83,11 @@ export class HoldEndNote extends Archetype {
   }
 
   missEffect(time: number) {
-    if (options.MissEffect) archetypes.MissEffect.spawn({ startTime: time, yPos: this.pos.y })
+    if (options.missEffect) archetypes.MissEffect.spawn({ startTime: time, yPos: this.pos.y })
   }
 
   drawLine() {
-    const noteRadius = 0.07 * options.NoteSize
+    const noteRadius = 0.07 * options.noteSize
     const layout = new Rect({
       t: noteRadius,
       b: -noteRadius,
@@ -100,7 +100,7 @@ export class HoldEndNote extends Archetype {
   }
 
   drawStartNote() {
-    const noteRadius = 0.07 * options.NoteSize
+    const noteRadius = 0.07 * options.noteSize
     const noteLayout = Rect.one.mul(noteRadius)
     const x = Math.min(this.pos.xStart, game.XMax)
     skin.sprites.noteHold.draw(noteLayout.translate(Math.max(x, game.Xmin), this.pos.y), 5, 1)

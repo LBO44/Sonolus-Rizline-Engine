@@ -16,7 +16,7 @@ export class TapNote extends Note {
   bucketWindow = bucketWindows.tapNote
 
   draw() {
-    const noteRadius = 0.07 * options.NoteSize
+    const noteRadius = 0.07 * options.noteSize
     const noteLayout = Rect.one.mul(noteRadius)
     const spriteId = levelMem.isChallenge ? skin.sprites.noteTapChallenge.id : skin.sprites.noteTapNormal.id
     skin.sprites.draw(spriteId, noteLayout.translate(this.pos.x, this.pos.y), 5, 1)

@@ -1,11 +1,11 @@
-import { skin } from "../../skin";
-import { Note } from "./Note";
-import { buckets } from "../../buckets";
-import { effect } from "../../effect";
-import { particle } from "../../particle";
-import { game } from "../shared";
-import { options } from "../../../configuration/options";
-import { bucketWindows, judgeWindows } from "./windows";
+import { options } from "../../../configuration/options"
+import { buckets } from "../../buckets"
+import { effect } from "../../effect"
+import { particle } from "../../particle"
+import { skin } from "../../skin"
+import { game } from "../shared"
+import { Note } from "./Note"
+import { bucketWindows, judgeWindows } from "./windows"
 
 export class DragNote extends Note {
   bucket = buckets.DragNote
@@ -13,7 +13,7 @@ export class DragNote extends Note {
   bucketWindow = bucketWindows.dragNote
 
   draw() {
-    const noteRadius = 0.045 * options.NoteSize
+    const noteRadius = 0.045 * options.noteSize
     const noteLayout = Rect.one.mul(noteRadius)
     skin.sprites.noteDrag.draw(noteLayout.translate(this.pos.x, this.pos.y), 5, 1)
   }
