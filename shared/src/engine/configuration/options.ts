@@ -21,6 +21,11 @@ export const optionsDefinition = {
     step: 0.1,
     scope: "Rizline",
   },
+  mirror: {
+    name: Text.Mirror,
+    type: 'toggle',
+    def: 0,
+  },
   noteSize: {
     name: Text.NoteSize,
     min: 0.1,

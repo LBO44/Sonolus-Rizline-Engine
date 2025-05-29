@@ -1,4 +1,5 @@
 import { archetypes } from "."
+import { options } from "../../configuration/options"
 import { skin } from "../skin"
 import { drawCurvedLine, ease, game, lineToQuad, scaleX, scaleY, spawnBeatToTime } from "./shared"
 
@@ -31,6 +32,7 @@ export class LinePoint extends Archetype {
   })
 
   preprocess() {
+    if (options.mirror) this.import.YPos *= -1
     this.spawnTime = this.import.SpawnBeat == 0 ? spawnBeatToTime(this.import.HitBeat) : spawnBeatToTime(this.import.SpawnBeat)
     this.hitTime = bpmChanges.at(this.import.HitBeat).time
     this.nextTime = archetypes.LinePoint.import.get(this.import.NextPoint).NextPoint
