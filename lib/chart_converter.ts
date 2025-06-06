@@ -222,7 +222,7 @@ const CanvasMoveEntity = (
     archetype: 'CanvasMove',
     data: [
       { name: "Beat", value: beat },
-      { name: "NextCanvasEntity", ref: `CanvasMove${canvas}-${index + 1}` },
+      { name: "NextEventEntity", ref: `CanvasMove${canvas}-${index + 1}` },
       { name: "Canvas", value: canvas },
       { name: "Value", value: yPos },
       { name: "EaseType", value: easeType }]
@@ -240,7 +240,7 @@ const CanvasSpeedEntity = (
     archetype: 'CanvasSpeed',
     data: [
       { name: "Beat", value: beat },
-      { name: "NextCanvasEntity", ref: `CanvasSpeed${canvas}-${index + 1}` },
+      { name: "NextEventEntity", ref: `CanvasSpeed${canvas}-${index + 1}` },
       { name: "Canvas", value: canvas },
       { name: "Value", value: speed },
       { name: "EaseType", value: easeType }]
@@ -257,7 +257,7 @@ const CameraMoveEntity = (
     archetype: 'CameraMove',
     data: [
       { name: "Beat", value: beat },
-      { name: "NextCameraEntity", ref: `CameraMove-${index + 1}` },
+      { name: "NextEventEntity", ref: `CameraMove-${index + 1}` },
       { name: "Value", value: yPos },
       { name: "EaseType", value: easeType }]
   }
@@ -273,7 +273,7 @@ const CameraScaleEntity = (
     archetype: 'CameraScale',
     data: [
       { name: "Beat", value: beat },
-      { name: "NextCameraEntity", ref: `CameraScale-${index + 1}` },
+      { name: "NextEventEntity", ref: `CameraScale-${index + 1}` },
       { name: "Value", value: scale },
       { name: "EaseType", value: easeType }]
   }
@@ -331,7 +331,7 @@ export const convertsChart = (chart: RizChart): { data: LevelData, info: chartIn
     line.judgeRingColor.sort((a, b) => a.time - b.time)
 
     // add lines, line names are `LineN`, line start and ends are first and last points time
-    const lineStart = Math.min(line.linePoints[0].time || 0, line.lineColor[0]?.time || 0, line.judgeRingColor[0]?.time || 0)
+    const lineStart = Math.min(line.linePoints[0].time || 0, line.lineColor[0]?.time || Infinity, line.judgeRingColor[0]?.time || Infinity)
     LineEntities.push(LineEntity(lineIndex, lineStart, line.linePoints[line.linePoints.length - 1].time))
 
     //add points, a lane is made of a bunch of points
@@ -351,7 +351,8 @@ export const convertsChart = (chart: RizChart): { data: LevelData, info: chartIn
 
     line.judgeRingColor.forEach((ringColor, pointIndex) => {
       const colorIndex = getColorIndex(ringColor.startColor, judgeRingColors)
-      JudgeRingColorEntities.push(ColorKeyPoint(Math.max(ringColor.time, line.linePoints[0].time), "JudgeRing", lineIndex, pointIndex, colorIndex, ringColor.startColor.a))
+      // JudgeRingColorEntities.push(ColorKeyPoint(Math.max(ringColor.time, line.linePoints[0].time), "JudgeRing", lineIndex, pointIndex, colorIndex, ringColor.startColor.a))
+      JudgeRingColorEntities.push(ColorKeyPoint(ringColor.time, "JudgeRing", lineIndex, pointIndex, colorIndex, ringColor.startColor.a))
     })
 
     //add notes, during runtime we calculate the note's sonolus y/ rizline x based on the position of the 2 points(on the same line) it's between

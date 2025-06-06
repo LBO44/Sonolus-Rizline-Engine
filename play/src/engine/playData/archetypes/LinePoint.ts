@@ -79,7 +79,7 @@ export class LinePoint extends Archetype {
 
   drawJudgeRing(lineY: number) {
     const lineColor = archetypes.Line.color.get(this.import.Line)
-    const alpha = (entityInfos.get(this.import.Line).state == 1) ? lineColor.judgeRing.alpha : 1
+    const alpha = lineColor.judgeRing.alpha
     const layout = Rect.one.mul(0.1)
       .translate(game.XMax, lineY)
     const spriteId = skin.sprites.judgeRing0.id + Math.min(31, lineColor.judgeRing.colorIndex) as SkinSpriteId

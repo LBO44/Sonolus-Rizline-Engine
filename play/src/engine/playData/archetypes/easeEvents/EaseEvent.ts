@@ -1,11 +1,11 @@
-import { canvas, easeValue } from "../shared"
+import { easeValue } from "../shared"
 
-export abstract class CanvasEntity extends Archetype {
+/** lerp/ease a variable according to time.now between 2 points*/
+export abstract class easeEvent extends Archetype {
 
   import = this.defineImport({
     Beat: { name: "Beat", type: Number },
-    NextCanvasEntity: { name: "NextCanvasEntity", type: Number },
-    Canvas: { name: "Canvas", type: Number },
+    NextEventEntity: { name: "NextEventEntity", type: Number },
     Value: { name: "Value", type: Number },
     EaseType: { name: "EaseType", type: Number }
   })
@@ -14,33 +14,35 @@ export abstract class CanvasEntity extends Archetype {
   nextValue = this.entityMemory(Number)
   hitTime = this.entityMemory(Number)
 
-  abstract canvasVaraible: (typeof canvas)[keyof typeof canvas]
-  /** Should update this.nextValue and this.nextTime */
-  abstract getNextValue(): void
+  abstract setVariable(value: number): void
+
+  getNextValues() {
+    const nextEntity = this.import.get(this.import.NextEventEntity)
+    this.nextTime = bpmChanges.at(nextEntity.Beat).time
+    this.nextValue = nextEntity.Value
+  }
 
   preprocess() {
     this.hitTime = bpmChanges.at(this.import.Beat).time
-    this.getNextValue()
+    this.getNextValues()
+
+    //not sure if this is good
+    if (this.nextTime === 0 || this.import.EaseType === 0) {
+      this.setVariable(this.import.Value)
+      this.despawn = true
+    }
   }
 
   spawnOrder() {
     return 1000 + this.hitTime
   }
 
-
   shouldSpawn() {
     return this.hitTime <= time.now
   }
 
-  updateSequentialOrder = 1
-
   updateSequential() {
     if (this.nextTime <= time.now) this.despawn = true
-
-    if (this.nextTime === 0) {
-      this.canvasVaraible.set(this.import.Canvas, this.import.Value)
-      this.despawn = true
-    }
 
     const lt = this.hitTime
     const ly = this.import.Value
@@ -49,6 +51,6 @@ export abstract class CanvasEntity extends Archetype {
     const ny = this.nextValue
 
     const y = easeValue(ly, ny, this.import.EaseType, time.now, lt, nt)
-    this.canvasVaraible.set(this.import.Canvas, y)
+    this.setVariable(y)
   }
 }

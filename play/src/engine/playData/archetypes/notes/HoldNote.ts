@@ -3,10 +3,11 @@ import { buckets } from "../../buckets"
 import { effect } from "../../effect"
 import { particle } from "../../particle"
 import { isUsed, markAsUsed } from "../InputManager"
-import { game } from "../shared"
+import { game, spawnBeatToTime } from "../shared"
 import { Note } from "./Note"
 import { bucketWindows, judgeWindows } from "./windows"
 
+/** Only for inputs and calculating pos */
 export class HoldNote extends Note {
 
   holdEnd = this.defineImport({
@@ -20,6 +21,13 @@ export class HoldNote extends Note {
   sharedMemory = this.defineSharedMemory({
     pos: { x: Number },
   })
+
+  preprocess() {
+    super.preprocess()
+
+    //Best way i could think of to not draw it before the start entity spawned
+    this.spawnTime = spawnBeatToTime(this.import.Beat) - 1
+  }
 
   touch() {
     if (this.inputTime.min > time.now) return

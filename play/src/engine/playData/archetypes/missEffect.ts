@@ -26,7 +26,7 @@ export class MissEffect extends SpawnableArchetype({
       return
     }
 
-    const a = Math.remap(this.spawnData.startTime,this.endTime,0.3,0,time.now)
+    const a = Math.remap(this.spawnData.startTime, this.endTime, 0.3, 0, time.now)
     skin.sprites.line0.draw(this.layout, 1000, a)
   }
 

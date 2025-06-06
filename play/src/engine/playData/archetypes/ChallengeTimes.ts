@@ -23,6 +23,7 @@ abstract class ChallengeTime extends Archetype {
 
   updateSequential() {
     levelMem.isChallenge = this.value
+    this.despawn = true
   }
 
 }

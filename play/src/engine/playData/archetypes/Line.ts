@@ -1,5 +1,5 @@
-import { spawnBeatToTime } from "./shared"
 
+/** Only used to store line color*/
 export class Line extends Archetype {
 
   import = this.defineImport({
@@ -30,11 +30,17 @@ export class Line extends Archetype {
   }
 
   preprocess() {
-    this.spawnTime = spawnBeatToTime(this.import.SpawnBeat)
-    this.despawnTime = bpmChanges.at(this.despawnTime).time
+    this.spawnTime = bpmChanges.at(this.import.SpawnBeat).time
+    this.despawnTime = bpmChanges.at(this.import.EndBeat).time
+    this.color.judgeRing.alpha = 1 //ehh not sure
   }
 
   shouldSpawn() {
     return time.now >= this.spawnTime
+  }
+
+  updateParallel() {
+    debug.log(this.import.SpawnBeat * 10000 + time.now)
+    if (this.despawnTime <= time.now) this.despawn = true
   }
 }

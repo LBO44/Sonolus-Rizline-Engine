@@ -1,5 +1,4 @@
 import { archetypes } from "."
-import { spawnBeatToTime } from "./shared"
 
 export class JudgeRingColorKeyPoint extends Archetype {
   import = this.defineImport({
@@ -13,14 +12,13 @@ export class JudgeRingColorKeyPoint extends Archetype {
   spawnTime = this.entityMemory(Number)
   nextTime = this.entityMemory(Number)
   nextValue = this.entityMemory(Number)
-  hitTime = this.entityMemory(Number)
 
   preprocess() {
-    this.spawnTime = spawnBeatToTime(this.import.Beat)
-    this.nextTime = bpmChanges.at(archetypes.JudgeRingColorKeyPoint.import.get(this.import.NextPoint).Beat).time
+    this.spawnTime = bpmChanges.at(this.import.Beat).time
+    this.nextTime = bpmChanges.at(archetypes.JudgeRingColorKeyPoint.import.get(this.import.NextPoint).Beat).time || this.spawnTime
   }
 
-  spawnOrder(): number {
+  spawnOrder() {
     return 1000 + this.spawnTime
   }
 
@@ -28,14 +26,10 @@ export class JudgeRingColorKeyPoint extends Archetype {
     return time.now >= this.spawnTime
   }
 
-  updateSequentialOrder = 5
-
   updateSequential() {
     if (entityInfos.get(this.import.Line).state === EntityState.Waiting) return
-    if (time.now > this.nextTime) this.despawn = true
-    if (time.now >= bpmChanges.at(this.import.Beat).time) {
-      archetypes.Line.color.get(this.import.Line).judgeRing.colorIndex = this.import.ColorIndex
-      archetypes.Line.color.get(this.import.Line).judgeRing.alpha = this.import.Alpha
-    }
+    if (time.now >= this.nextTime) this.despawn = true
+    archetypes.Line.color.get(this.import.Line).judgeRing.colorIndex = this.import.ColorIndex
+    archetypes.Line.color.get(this.import.Line).judgeRing.alpha = this.import.Alpha
   }
 }

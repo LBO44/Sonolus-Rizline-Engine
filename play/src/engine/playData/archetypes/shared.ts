@@ -125,10 +125,11 @@ export function drawCurvedLine(
   const dx = endX - startX
 
   // Compute t‑range 
-  let t0 = (game.XMax - startX) / dx
-  let t1 = (game.Xmin - startX) / dx
-  t0 = Math.max(0, Math.min(1, t0))
-  t1 = Math.max(0, Math.min(1, t1))
+  const r0 = (game.XMax - startX) / dx
+  const r1 = (game.Xmin - startX) / dx
+
+  const t0 = Math.clamp(r0, 0, 1)
+  const t1 = Math.clamp(r1, 0, 1)
   if (t0 >= t1) return  // nothing to draw
 
   const segments = (easeType === 0) ? 1 : 32

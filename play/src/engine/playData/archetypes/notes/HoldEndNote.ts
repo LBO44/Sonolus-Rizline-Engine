@@ -42,7 +42,7 @@ export class HoldEndNote extends Archetype {
   }
 
   spawnOrder() {
-    return 1001 + this.spawnTime
+    return 1000 + this.spawnTime
   }
 
   shouldSpawn() {
@@ -75,15 +75,17 @@ export class HoldEndNote extends Archetype {
   }
 
   getPos() {
-    this.pos.y = this.sharedMemory.fakeY //ToDo: make it use the Line Y when Start despasn
+    const lineY = archetypes.Line.pos.get(this.import.Line).y //TODO - not working
+    // this.pos.y = (time.now <= this.startTime) ? this.sharedMemory.fakeY : lineY
+    this.pos.y = this.sharedMemory.fakeY
 
     const StartExist = entityInfos.get(this.import.HoldStart).state == EntityState.Active
     this.pos.xStart = StartExist ? archetypes.HoldNote.sharedMemory.get(this.import.HoldStart).pos.x : game.XMax
     this.pos.xEnd = scaleX(this.hitTime, archetypes.LinePoint.import.get(archetypes.HoldNote.import.get(this.import.HoldStart).LastPoint).Canvas)
   }
 
-  missEffect(time: number) {
-    if (options.missEffect) archetypes.MissEffect.spawn({ startTime: time, yPos: this.pos.y })
+  missEffect(startTime: number) {
+    if (options.missEffect) archetypes.MissEffect.spawn({ startTime, yPos: this.pos.y })
   }
 
   drawLine() {
@@ -91,9 +93,9 @@ export class HoldEndNote extends Archetype {
     const layout = new Rect({
       t: noteRadius,
       b: -noteRadius,
-      l: Math.max(game.Xmin, Math.min(this.pos.xEnd, game.XMax)),
+      l: Math.clamp(this.pos.xEnd, game.Xmin, game.XMax),
       r: Math.min(this.pos.xStart, game.XMax)
-    }).translate(0, this.pos.y)
+    }).translate(-noteRadius, this.pos.y)
 
     const spriteId = levelMem.isChallenge ? skin.sprites.noteHoldConnectorChallenge.id : skin.sprites.noteHoldConnectorNormal.id
     skin.sprites.draw(spriteId, layout, 50, 1)
@@ -103,7 +105,7 @@ export class HoldEndNote extends Archetype {
     const noteRadius = 0.07 * options.noteSize
     const noteLayout = Rect.one.mul(noteRadius)
     const x = Math.min(this.pos.xStart, game.XMax)
-    skin.sprites.noteHold.draw(noteLayout.translate(Math.max(x, game.Xmin), this.pos.y), 5, 1)
+    skin.sprites.noteHold.draw(noteLayout.translate(x, this.pos.y), 5, 1)
 
     const spriteId = levelMem.isChallenge ? skin.sprites.noteHoldStartChallenge.id : skin.sprites.noteHoldStartNormal.id
     skin.sprites.draw(spriteId, noteLayout.translate(x, this.pos.y), 100, 1)
@@ -115,9 +117,10 @@ export class HoldEndNote extends Archetype {
       this.despawn = true
     }
 
+    if (entityInfos.get(this.import.HoldStart).state === EntityState.Waiting) return
     this.getPos()
 
-    if (this.pos.xStart < game.Xmin) return
+    if (!this.pos.xStart || this.pos.xStart < game.Xmin) return
     this.drawStartNote()
     this.drawLine()
   }
