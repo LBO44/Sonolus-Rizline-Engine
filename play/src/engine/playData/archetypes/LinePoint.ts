@@ -46,12 +46,14 @@ export class LinePoint extends Archetype {
   shouldSpawn() {
     return this.spawnTime <= time.now
   }
-  updateSequentialOrder = 10
 
   updateSequential() {
     this.pos.x = scaleX(this.hitTime, this.import.Canvas)
     this.pos.y = scaleY(this.import.YPos, this.import.Canvas)
-    this.lineY = this.updateLineYPos()
+    if (this.pos.x >= game.XMax) {
+      this.lineY = this.getLineYPos()
+      archetypes.Line.pos.get(this.import.Line).y = this.lineY
+    }
   }
 
 
@@ -86,13 +88,11 @@ export class LinePoint extends Archetype {
     skin.sprites.draw(spriteId, layout, 100, alpha)
   }
 
-  updateLineYPos(): number {
+  getLineYPos(): number {
     const n = archetypes.LinePoint.pos.get(this.import.NextPoint)
     const t = Math.clamp((game.XMax - this.pos.x) / (n.x - this.pos.x), 0, 1)
     const e = ease(t, this.import.EaseType)
-    const y = /**(this.pos.x === n.x) ? this.pos.y :*/ this.pos.y + e * (n.y - this.pos.y)
-    archetypes.Line.pos.get(this.import.Line).y = y
-    return y
+    return this.pos.y + e * (n.y - this.pos.y)
   }
 
   updateParallel() {

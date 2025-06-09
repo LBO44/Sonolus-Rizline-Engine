@@ -76,8 +76,7 @@ export class HoldEndNote extends Archetype {
 
   getPos() {
     const lineY = archetypes.Line.pos.get(this.import.Line).y //TODO - not working
-    // this.pos.y = (time.now <= this.startTime) ? this.sharedMemory.fakeY : lineY
-    this.pos.y = this.sharedMemory.fakeY
+    this.pos.y = (time.now <= this.startTime) ? this.sharedMemory.fakeY : lineY
 
     const StartExist = entityInfos.get(this.import.HoldStart).state == EntityState.Active
     this.pos.xStart = StartExist ? archetypes.HoldNote.sharedMemory.get(this.import.HoldStart).pos.x : game.XMax

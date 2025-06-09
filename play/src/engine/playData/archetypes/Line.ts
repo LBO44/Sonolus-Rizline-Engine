@@ -40,7 +40,6 @@ export class Line extends Archetype {
   }
 
   updateParallel() {
-    debug.log(this.import.SpawnBeat * 10000 + time.now)
     if (this.despawnTime <= time.now) this.despawn = true
   }
 }
