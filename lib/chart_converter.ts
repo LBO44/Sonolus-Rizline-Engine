@@ -1,6 +1,6 @@
 import { EngineArchetypeDataName, EngineArchetypeName, LevelData, LevelDataEntity } from '@sonolus/core'
 
-//Rizline chart object type, incomplete, thanks to https://rgwiki.stary.pc.pl/wiki/Rizline:Chart_file
+//Rizline chart object type,(doesn't include some stuff not needed by the engine) thanks to https://rgwiki.stary.pc.pl/wiki/Rizline:Chart_file
 //All rizline `Time` are in beats
 enum RizEaseType {
   "Linear", //"Liner" in the game's files 😂
@@ -58,11 +58,11 @@ export type RizThemes = [
 ]
 
 
-export type RizChart = { //incomplete
-  fileVersion: number,
-  songsName: string,
+export type RizChart = {
+  fileVersion: 0,
+  songsName?: string,
   themes: RizThemes,
-  offset: number, //should always be 0
+  offset?: number, //should always be 0
   bPM: number,
   bpmShifts: RizKeyPoint[],
   challengeTimes: {
@@ -431,7 +431,7 @@ export const convertsChart = (chart: RizChart): { data: LevelData, info: chartIn
 
   //pack to level data and return
   const data: LevelData = {
-    bgmOffset: chart.offset,
+    bgmOffset: chart.offset || 0,
     entities: entities
   }
 
