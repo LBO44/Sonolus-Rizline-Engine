@@ -19,7 +19,7 @@
     "@types/pngjs": "^6.0.5"
   },
   "dependencies": {
-    "@sonolus/core": "~7.13.0",
+    "@sonolus/core": "~7.13.3",
     "pngjs": "^7.0.0"
   }
 }
