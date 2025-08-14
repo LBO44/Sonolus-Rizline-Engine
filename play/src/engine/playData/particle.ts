@@ -2,6 +2,8 @@ import { ParticleEffectName } from "@sonolus/core";
 
 export const particle = defineParticle({
     effects: {
-    note: ParticleEffectName.NoteCircularTapBlue
-  },
+        noteNormal: ParticleEffectName.NoteCircularTapBlue,
+        noteChallenge: ParticleEffectName.NoteCircularTapRed,
+        noteChalleneeExtended: ParticleEffectName.NoteLinearTapRed,
+    },
 })

@@ -1,11 +1,11 @@
-import { EngineConfigurationOption, Text } from '@sonolus/core'
+import { EngineConfigurationOption, Text } from "@sonolus/core"
 
 export const optionsDefinition = {
   speed: {
     name: Text.Speed,
     standard: true,
     advanced: true,
-    type: 'slider',
+    type: "slider",
     def: 1,
     min: 0.5,
     max: 2,
@@ -23,8 +23,20 @@ export const optionsDefinition = {
   },
   mirror: {
     name: Text.Mirror,
-    type: 'toggle',
+    type: "toggle",
     def: 0,
+  },
+  SfxEnabled: {
+    name: Text.Effect,
+    type: "toggle",
+    def: 1,
+    scope: "Rizline",
+  },
+  autoSfx: {
+    name: Text.EffectAuto,
+    type: "toggle",
+    def: 0,
+    scope: "Rizline",
   },
   noteSize: {
     name: Text.NoteSize,
@@ -34,7 +46,7 @@ export const optionsDefinition = {
     type: "slider",
     step: 0.05,
     scope: "Rizline",
-    unit: Text.PercentageUnit
+    unit: Text.PercentageUnit,
   },
   missEffect: {
     name: "Show Miss Effect",
@@ -51,6 +63,6 @@ export const optionsDefinition = {
     step: 0.05,
     description: "In case you want to use a custom background.",
     scope: "Rizline",
-    unit: Text.PercentageUnit
-  }
+    unit: Text.PercentageUnit,
+  },
 } satisfies Record<string, EngineConfigurationOption>
