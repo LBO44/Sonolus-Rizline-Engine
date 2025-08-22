@@ -1,17 +1,16 @@
 import { copyFileSync, existsSync, mkdirSync } from 'node:fs'
 import levelList from "../shared/rizlineAssets/level_list.json" with { type: "json" }
+
 /** @type {import('@sonolus/sonolus.js').SonolusCLIConfig} */
 export default {
   type: 'play',
 
   devServer(sonolus) {
     process.env.MODE = this.mode
-    const shouldCopyAssets = !existsSync("./.dev/assets")
-    if (shouldCopyAssets) {
-      mkdirSync("./.dev/assets")
-      mkdirSync("./.dev/level")
-      mkdirSync("./.dev/skin")
-    }
+    if (!existsSync("./.dev")) mkdirSync("./.dev")
+    if (!existsSync("./.dev/assets")) mkdirSync("./.dev/assets")
+    if (!existsSync("./.dev/level")) mkdirSync("./.dev/level")
+    if (!existsSync("./.dev/skin")) mkdirSync("./.dev/skin")
 
     const skinDataSrl = sonolus.add("./lib/skin/skinData")
 
@@ -29,10 +28,10 @@ export default {
       level.useSkin = { useDefault: false, item: rizLevel.chart_hd.id }
 
 
-      if (shouldCopyAssets) copyFileSync(`./shared/rizlineAssets/covers/${rizLevel.illustration_id}.png`, `./.dev/assets/${rizLevel.illustration_id}.png`)
+      copyFileSync(`./shared/rizlineAssets/covers/${rizLevel.illustration_id}.png`, `./.dev/assets/${rizLevel.illustration_id}.png`)
       level.cover = { url: `/assets/${rizLevel.illustration_id}.png`, hash: rizLevel.coverHash }
 
-      if (shouldCopyAssets) copyFileSync(`./shared/rizlineAssets/songs/${rizLevel.music_id}.mp3`, `./.dev/assets/${rizLevel.music_id}.mp3`)
+      copyFileSync(`./shared/rizlineAssets/songs/${rizLevel.music_id}.mp3`, `./.dev/assets/${rizLevel.music_id}.mp3`)
       level.bgm = { url: `/assets/${rizLevel.music_id}.mp3`, hash: rizLevel.bgmHash }
       level.data = { url: `/level/${rizLevel.level_id}` }
 
@@ -49,7 +48,5 @@ export default {
 
       sonolus.skin.items.push(skin)
     })
-
   }
-
 }
