@@ -15,7 +15,7 @@ export class LinePoint extends Archetype {
     Canvas: { name: "Canvas", type: Number },
     EaseType: { name: "EaseType", type: Number },
     Alpha: { name: "Alpha", type: Number },
-    ColorIndex: { name: "ColorIndex", type: Number },
+    ColorIndex: { name: "ColorIndex", type: SkinSpriteId },
   })
 
   spawnTime = this.entityMemory(Number)
@@ -60,9 +60,12 @@ export class LinePoint extends Archetype {
   drawLineToNextPoint() {
     const n = archetypes.LinePoint.pos.get(this.import.NextPoint)
 
-    const lineColor = archetypes.Line.color.get(this.import.Line)
-    const colorID = (this.import.Alpha < 0) ? this.import.ColorIndex : lineColor.line.colorIndex
-    const alpha = (this.import.Alpha > 0) ? this.import.Alpha : lineColor.line.alpha
+    const lineColor = archetypes.Line.color.get(this.import.Line).line
+    const useLineColour = this.import.ColorIndex == -1
+
+    const colorID = (useLineColour) ? lineColor.colorIndexA : this.import.ColorIndex
+    const alpha = (useLineColour) ? lineColor.alphaA : this.import.Alpha
+    if (alpha == 0) return
 
     const spriteId = skin.sprites.line0.id + Math.min(31, colorID) as SkinSpriteId
 
@@ -80,12 +83,15 @@ export class LinePoint extends Archetype {
   }
 
   drawJudgeRing(lineY: number) {
-    const lineColor = archetypes.Line.color.get(this.import.Line)
-    const alpha = lineColor.judgeRing.alpha
+    const ringColor = archetypes.Line.color.get(this.import.Line).judgeRing
     const layout = Rect.one.mul(0.1)
       .translate(game.XMax, lineY)
-    const spriteId = skin.sprites.judgeRing0.id + Math.min(31, lineColor.judgeRing.colorIndex) as SkinSpriteId
-    skin.sprites.draw(spriteId, layout, 100, alpha)
+
+    const spriteIdA = skin.sprites.judgeRing0.id + Math.min(31, ringColor.colorIndexA) as SkinSpriteId
+    const spriteIdB = skin.sprites.judgeRing0.id + Math.min(31, ringColor.colorIndexB) as SkinSpriteId
+
+    skin.sprites.draw(spriteIdA, layout, 10000 + this.info.index, ringColor.alphaA)
+    if (ringColor.alphaA != 1) skin.sprites.draw(spriteIdB, layout, 10000 + this.info.index, ringColor.alphaB)
   }
 
   getLineYPos(): number {

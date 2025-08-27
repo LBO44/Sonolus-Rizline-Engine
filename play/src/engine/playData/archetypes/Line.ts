@@ -1,20 +1,19 @@
 
-/** Only used to store line color*/
+/** Only used to store line data in shared memory, never spawn*/
 export class Line extends Archetype {
-
-  import = this.defineImport({
-    SpawnBeat: { name: "SpawnBeat", type: Number },
-    EndBeat: { name: "EndBeat", type: Number },
-  })
 
   color = this.defineSharedMemory({
     line: {
-      colorIndex: Number,
-      alpha: Number
+      colorIndexA: SkinSpriteId,
+      colorIndexB: SkinSpriteId,
+      alphaA: Number,
+      alphaB: Number,
     },
     judgeRing: {
-      colorIndex: Number,
-      alpha: Number
+      colorIndexA: SkinSpriteId,
+      colorIndexB: SkinSpriteId,
+      alphaA: Number,
+      alphaB: Number,
     }
   })
 
@@ -22,24 +21,15 @@ export class Line extends Archetype {
     y: Number
   })
 
-  spawnTime = this.entityMemory(Number)
-  despawnTime = this.entityMemory(Number)
-
   spawnOrder() {
-    return 1000 + this.spawnTime
+    return Number.MAX_SAFE_INTEGER
   }
 
+  preprocessOrder = 0
   preprocess() {
-    this.spawnTime = bpmChanges.at(this.import.SpawnBeat).time
-    this.despawnTime = bpmChanges.at(this.import.EndBeat).time
-    this.color.judgeRing.alpha = 1 //ehh not sure
+    this.color.judgeRing.alphaA = 1 //ehh not sure
+    this.color.judgeRing.alphaB = 0 //ehh not sure
+    // this.color.line.alpha = 1
   }
 
-  shouldSpawn() {
-    return time.now >= this.spawnTime
-  }
-
-  updateParallel() {
-    if (this.despawnTime <= time.now) this.despawn = true
-  }
 }

@@ -1,17 +1,9 @@
-import {
-  EngineArchetypeDataName,
-  EngineArchetypeName,
-  LevelData,
-  LevelDataEntity,
-} from "@sonolus/core"
+import { EngineArchetypeDataName, EngineArchetypeName, LevelData, LevelDataEntity, } from "@sonolus/core"
 
 //Rizline chart object type,(doesn't include some stuff not needed by the engine) thanks to https://rgwiki.stary.pc.pl/wiki/Rizline:Chart_file
 //All rizline `Time` are in beats
-enum RizEaseType {
-  "Linear", //"Liner" in the game's files 😂
-  "InSine",
-  "OutSine",
-  "InOutSine",
+export enum RizEaseType {
+  "Linear",
   "InQuad",
   "OutQuad",
   "InOutQuad",
@@ -21,9 +13,15 @@ enum RizEaseType {
   "InQuart",
   "OutQuart",
   "InOutQuart",
+  "InQuint",
+  "OutQuint",
+  "InOutQuint",
   "Zero",
   "One",
-  "AnimationCurve", //not sure what it is, but doesn't seem to be used anyway
+  "InCirc",
+  "OutCirc",
+  "OutSine",
+  "InSine"
 }
 
 type RizKeyPoint = {
@@ -41,7 +39,7 @@ type RizColor = {
 
 type RizColorKeyPoint = {
   startColor: RizColor
-  endColor: RizColor
+  endColor: RizColor //end color = start color of the next point; last point has same color for both
   time: number //start time
 }
 
@@ -51,7 +49,11 @@ export enum RizNoteType {
   Hold,
 }
 
-export type RizColorList = [background: RizColor, note: RizColor, particle: RizColor]
+export type RizColorList = [
+  background: RizColor,
+  note: RizColor,
+  particle: RizColor
+]
 
 export type RizThemes = [
   normal: { colorsList: RizColorList },
@@ -85,7 +87,7 @@ export type RizChart = {
       color: RizColor
     }[]
     notes: { type: RizNoteType; time: number; otherInformations: RizNoteOtherInformations }[]
-    judgeRingColor: RizColorKeyPoint[]
+    judgeRingColor: RizColorKeyPoint[] //first point can be way before or after the first line point
     lineColor: RizColorKeyPoint[]
   }[]
   canvasMoves: {
@@ -123,14 +125,11 @@ const ChallengeEntity = (beat: number, type: "Start" | "End"): LevelDataEntity =
 }
 
 //line entity only handles storing the line color
-const LineEntity = (line: number, startBeat: number, endBeat: number): LevelDataEntity => {
+const LineEntity = (line: number): LevelDataEntity => {
   return {
     name: `Line${line}`,
     archetype: "Line",
-    data: [
-      { name: "SpawnBeat", value: startBeat },
-      { name: "EndBeat", value: endBeat },
-    ],
+    data: [],
   }
 }
 
@@ -165,7 +164,8 @@ const LinePointEntity = (
 }
 
 const ColorKeyPoint = (
-  beat: number,
+  hitBeat: number,
+  spawnBeat: number,
   type: "JudgeRing" | "Line",
   line: number,
   pointIndex: number,
@@ -176,7 +176,8 @@ const ColorKeyPoint = (
     archetype: `${type}ColorKeyPoint`,
     name: `Line${line}-${type}ColorKeyPoint${pointIndex}`,
     data: [
-      { name: "Beat", value: beat },
+      { name: "HitBeat", value: hitBeat },
+      { name: "SpawnBeat", value: spawnBeat },
       { name: "Line", ref: `Line${line}` },
       { name: "ColorIndex", value: startColorIndex },
       { name: "Alpha", value: startAlpha / 255 },
@@ -311,6 +312,7 @@ export type chartInfo = {
 }
 
 const getColorIndex = (rizcolor: RizColor, colorArray: string[]) => {
+
   const color = hexColor(rizcolor)
   let index: number
 
@@ -349,7 +351,7 @@ export const convertsChart = (chart: RizChart): { data: LevelData; info: chartIn
   })
 
   //used to check if 2 notes are at the same time
-  let notesAtSameTime = new Map<number, number[]>() //note time - is double note
+  let notesAtSameTime = new Map<number, number[]>() //note time - note ids
 
   chart.lines.forEach((l, lIdx) =>
     l.notes.forEach((n, nIdx) => {
@@ -369,19 +371,15 @@ export const convertsChart = (chart: RizChart): { data: LevelData; info: chartIn
     line.judgeRingColor.sort((a, b) => a.time - b.time)
 
     // add lines, line names are `LineN`, line start and ends are first and last points time
-    const lineStart = Math.min(
-      line.linePoints[0].time || 0,
-      line.lineColor[0]?.time || Infinity,
-      line.judgeRingColor[0]?.time || Infinity,
-    )
-    LineEntities.push(
-      LineEntity(lineIndex, lineStart, line.linePoints[line.linePoints.length - 1].time),
-    )
+    LineEntities.push(LineEntity(lineIndex))
 
     //add points, a lane is made of a bunch of points
+
+    const hasLineColor = line.lineColor.length > 0
     let spawnTime = line.linePoints[0].time
     line.linePoints.forEach((point, pointIndex) => {
-      const colorIndex = getColorIndex(point.color, lineColors)
+      //if the line has lineColor then we should alwyas use it instead i think
+      const colorIndex = hasLineColor ? -1 : getColorIndex(point.color, lineColors)
 
       LinePointEntities.push(
         LinePointEntity(
@@ -401,10 +399,14 @@ export const convertsChart = (chart: RizChart): { data: LevelData; info: chartIn
     })
 
     line.lineColor.forEach((lineColor, pointIndex) => {
+      if (lineColor.startColor.a !== 255) console.log(lineColor.startColor.a)
       const colorIndex = getColorIndex(lineColor.startColor, lineColors)
+
+      let previousTime = line.linePoints[0].time
       LineColorEntities.push(
         ColorKeyPoint(
-          Math.max(lineColor.time, line.linePoints[0].time),
+          lineColor.time,
+          pointIndex == 0 ? line.linePoints[0].time : lineColor.time,
           "Line",
           lineIndex,
           pointIndex,
@@ -412,14 +414,17 @@ export const convertsChart = (chart: RizChart): { data: LevelData; info: chartIn
           lineColor.startColor.a,
         ),
       )
+      previousTime = lineColor.time
     })
 
     line.judgeRingColor.forEach((ringColor, pointIndex) => {
       const colorIndex = getColorIndex(ringColor.startColor, judgeRingColors)
-      // JudgeRingColorEntities.push(ColorKeyPoint(Math.max(ringColor.time, line.linePoints[0].time), "JudgeRing", lineIndex, pointIndex, colorIndex, ringColor.startColor.a))
+
+      let previousTime = line.linePoints[0].time
       JudgeRingColorEntities.push(
         ColorKeyPoint(
           ringColor.time,
+          pointIndex == 0 ? line.linePoints[0].time : ringColor.time,
           "JudgeRing",
           lineIndex,
           pointIndex,
@@ -427,6 +432,7 @@ export const convertsChart = (chart: RizChart): { data: LevelData; info: chartIn
           ringColor.startColor.a,
         ),
       )
+      previousTime = ringColor.time
     })
 
     //add notes, during runtime we calculate the note's sonolus y/ rizline x based on the position of the 2 points(on the same line) it's between

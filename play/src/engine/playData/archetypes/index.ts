@@ -7,9 +7,8 @@ import { CameraMove } from "./easeEvents/CameraMove.js"
 import { CanvasMove } from "./easeEvents/CanvasMove.js"
 import { CanvasSpeed } from "./easeEvents/CanvasSpeed.js"
 
-import { JudgeRingColorKeyPoint } from "./JudgeRingColorKeyPoint.js"
+import { JudgeRingColorKeyPoint, LineColorKeyPoint } from "./ColorKeyPoint.js"
 import { Line } from "./Line.js"
-import { LineColorKeyPoint } from "./LineColorKeyPoint.js"
 import { LinePoint } from "./LinePoint.js"
 
 import { MissEffect } from "./missEffect.js"

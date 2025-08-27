@@ -1,4 +1,5 @@
 import { archetypes } from "."
+import { RizEaseType } from "../../../../../lib/chart_converter"
 import { configuration } from "../../configuration"
 import { skin } from "../skin"
 
@@ -25,21 +26,25 @@ export const game = {
 
 export const ease = (t: number, easeType: number): number => {
   switch (easeType) {
-    case 0: return t
-    case 1: return Math.ease("In", "Sine", t)
-    case 2: return Math.ease("Out", "Sine", t)
-    case 3: return Math.ease("InOut", "Sine", t)
-    case 4: return Math.ease("In", "Quad", t)
-    case 5: return Math.ease("Out", "Quad", t)
-    case 6: return Math.ease("InOut", "Quad", t)
-    case 7: return Math.ease("In", "Cubic", t)
-    case 8: return Math.ease("Out", "Cubic", t)
-    case 9: return Math.ease("InOut", "Cubic", t)
-    case 10: return Math.ease("In", "Quart", t)
-    case 11: return Math.ease("Out", "Quart", t)
-    case 12: return Math.ease("InOut", "Quart", t)
-    case 13: return 0
-    case 14: return 1
+    case RizEaseType.Linear: return t
+    case RizEaseType.InQuad: return Math.ease("In", "Quad", t)
+    case RizEaseType.OutQuad: return Math.ease("Out", "Quad", t)
+    case RizEaseType.InOutQuad: return Math.ease("InOut", "Quad", t)
+    case RizEaseType.InCubic: return Math.ease("In", "Cubic", t)
+    case RizEaseType.OutCubic: return Math.ease("Out", "Cubic", t)
+    case RizEaseType.InOutCubic: return Math.ease("InOut", "Cubic", t)
+    case RizEaseType.InQuart: return Math.ease("In", "Quart", t)
+    case RizEaseType.OutQuart: return Math.ease("Out", "Quart", t)
+    case RizEaseType.InOutQuart: return Math.ease("InOut", "Quart", t)
+    case RizEaseType.InQuint: return Math.ease("In", "Quint", t)
+    case RizEaseType.OutQuint: return Math.ease("Out", "Quint", t)
+    case RizEaseType.InOutQuint: return Math.ease("InOut", "Quint", t)
+    case RizEaseType.Zero: return 0
+    case RizEaseType.One: return 1
+    case RizEaseType.InCirc: return Math.ease("In", "Circ", t)
+    case RizEaseType.OutCirc: return Math.ease("Out", "Circ", t)
+    case RizEaseType.OutSine: return Math.ease("Out", "Sine", t)
+    case RizEaseType.InSine: return Math.ease("In", "Sine", t)
     default: return t
   }
 }
