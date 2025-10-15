@@ -40,5 +40,20 @@
     },
     "bgmHash": "7fbd7c211149a71102fd78bb075cfe4e0af782ab",
     "coverHash": "b78548f4765567c7aa929811d1b9c52cd10f40c7"
+  },
+  {
+    "level_id": "Vrtuaresort.seatrus.0",
+    "title": "V!rtuaresort",
+    "artist": "seatrus",
+    "disc": "Disc 1",
+    "illustration_id": "illustration.Vrtuaresort.seatrus.0",
+    "music_id": "Vrtuaresort.seatrus.0",
+    "chart_hd": {
+      "id": "chart.Vrtuaresort.seatrus.0.HD",
+      "difficulty": 9,
+      "charter": "Snorkel & StupiGGy"
+    },
+    "bgmHash": "21956368ef6ce1a0a3ce6c9211902caf761bd033",
+    "coverHash": "46332efba16b1b62b3404cbab436797da4681d5f"
   }
 ]

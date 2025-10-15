@@ -44,6 +44,7 @@ export const devServer = (sonolus) => {
     skin.data = skinDataSrl
     skin.texture = { url: `/skin/${rizLevel.chart_hd.id}.png` }
 
+    console.log(level)
     sonolus.skin.items.push(skin)
   })
 }

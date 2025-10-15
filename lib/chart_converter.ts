@@ -479,11 +479,13 @@ export const convertsChart = (chart: RizChart): { data: LevelData; info: chartIn
   let CanvasSpeedEntities: LevelDataEntity[] = new Array()
 
   chart.canvasMoves.forEach((canvas) => {
+
     canvas.xPositionKeyPoints.forEach((point, index) => {
       CanvasMoveEntities.push(
         CanvasMoveEntity(point.time, index, canvas.index, point.value, point.easeType),
       )
     })
+
     canvas.speedKeyPoints.forEach((point, index) => {
       //That easeType probably ain't correct, however it seems that every `speedKeyPoints` has an `easeType` of 0
       CanvasSpeedEntities.push(
@@ -523,7 +525,7 @@ export const convertsChart = (chart: RizChart): { data: LevelData; info: chartIn
     ...CanvasMoveEntities,
     ...CanvasSpeedEntities,
     ...CameraMoveEntities,
-    //...CameraScaleEntities
+    ...CameraScaleEntities
   ]
 
   //sort entities based on their spawn time, not actually needed for Play Mode

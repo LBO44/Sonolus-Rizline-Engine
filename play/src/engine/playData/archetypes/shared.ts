@@ -1,7 +1,7 @@
 import { archetypes } from "."
-import { RizEaseType } from "../../../../../lib/chart_converter"
 import { configuration } from "../../configuration"
 import { skin } from "../skin"
+import { ease as rizEase } from "../../../../../shared/src/utilities"
 
 export const canvas = levelMemory({
   yPos: Tuple(256, Number),
@@ -23,31 +23,7 @@ export const game = {
   speed: configuration.options.noteSpeed
 }
 
-
-export const ease = (t: number, easeType: number): number => {
-  switch (easeType) {
-    case RizEaseType.Linear: return t
-    case RizEaseType.InQuad: return Math.ease("In", "Quad", t)
-    case RizEaseType.OutQuad: return Math.ease("Out", "Quad", t)
-    case RizEaseType.InOutQuad: return Math.ease("InOut", "Quad", t)
-    case RizEaseType.InCubic: return Math.ease("In", "Cubic", t)
-    case RizEaseType.OutCubic: return Math.ease("Out", "Cubic", t)
-    case RizEaseType.InOutCubic: return Math.ease("InOut", "Cubic", t)
-    case RizEaseType.InQuart: return Math.ease("In", "Quart", t)
-    case RizEaseType.OutQuart: return Math.ease("Out", "Quart", t)
-    case RizEaseType.InOutQuart: return Math.ease("InOut", "Quart", t)
-    case RizEaseType.InQuint: return Math.ease("In", "Quint", t)
-    case RizEaseType.OutQuint: return Math.ease("Out", "Quint", t)
-    case RizEaseType.InOutQuint: return Math.ease("InOut", "Quint", t)
-    case RizEaseType.Zero: return 0
-    case RizEaseType.One: return 1
-    case RizEaseType.InCirc: return Math.ease("In", "Circ", t)
-    case RizEaseType.OutCirc: return Math.ease("Out", "Circ", t)
-    case RizEaseType.OutSine: return Math.ease("Out", "Sine", t)
-    case RizEaseType.InSine: return Math.ease("In", "Sine", t)
-    default: return t
-  }
-}
+export const ease = rizEase //TODO: import from utilities instead
 
 export const easeValue = (v1: number, v2: number, easeType: number, x: number, x1: number, x2: number): number => {
   const t = Math.remapClamped(x1, x2, 0, 1, x)
