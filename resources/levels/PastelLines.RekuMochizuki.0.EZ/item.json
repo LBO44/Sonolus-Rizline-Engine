@@ -1,0 +1,32 @@
+{
+    "version": 1,
+    "rating": 9,
+    "engine": "pyline",
+    "useSkin": {
+        "useDefault": false,
+        "item": "PastelLines.RekuMochizuki.0.EZ"
+    },
+    "useBackground": {
+        "useDefault": true
+    },
+    "useEffect": {
+        "useDefault": true
+    },
+    "useParticle": {
+        "useDefault": false,
+        "item": "PastelLines.RekuMochizuki.0.EZ"
+    },
+    "title": {
+        "en": "Pastel Lines"
+    },
+    "artists": {
+        "en": "Reku Mochizuki"
+    },
+    "author": {
+        "en": "NerSAN"
+    },
+    "tags": [],
+    "description": {
+        "en": ""
+    }
+}

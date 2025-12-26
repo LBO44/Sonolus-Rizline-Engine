@@ -1,0 +1,63 @@
+name: Sync Engine
+
+on:
+  workflow_dispatch:
+  push:
+      branches:
+        - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+        with:
+          version: "latest"
+
+      - name: Install dependencies
+        run: uv sync
+
+      - name: Build engine
+        run: uv run sonolus-py build
+
+      - name: Upload engine artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: pyline-engine
+          path: build/dist/engine/
+
+      - name: Checkout Server Repo
+        uses: actions/checkout@v4
+        with:
+          repository: LBO44/Sonolus-Rizline-Server
+          token: ${{ secrets.SERVER_REPO_TOKEN }}
+          path: server
+          sparse-checkout: |
+            engine
+          sparse-checkout-cone-mode: false
+
+      - name: Copy Engine Assets
+        run: |
+          mkdir server/engine/data -p
+          cp build/dist/engine/EnginePlayData server/engine/data/playData
+          cp build/dist/engine/EngineWatchData server/engine/data/watchData
+          cp build/dist/engine/EnginePreviewData server/engine/data/previewData
+          cp build/dist/engine/EngineTutorialData server/engine/data/tutorialData
+          cp build/dist/engine/EngineConfiguration server/engine/data/configuration
+          cp build/dist/engine/EngineRom server/engine/data/rom
+
+          cp -r convert/. server/engine/
+
+      - name: Commit Updated Engine to Server Repo
+        working-directory: server
+        run: |
+          git config --global user.name "github-actions"
+          git config --global user.email "actions@github.com"
+          git add --sparse .
+          git commit -m "Update engine assets with ${GITHUB_SHA}"
+          git push

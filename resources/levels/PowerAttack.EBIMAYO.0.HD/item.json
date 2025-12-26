@@ -1,0 +1,32 @@
+{
+    "version": 1,
+    "rating": 8,
+    "engine": "pyline",
+    "useSkin": {
+        "useDefault": false,
+        "item": "PowerAttack.EBIMAYO.0.HD"
+    },
+    "useBackground": {
+        "useDefault": true
+    },
+    "useEffect": {
+        "useDefault": true
+    },
+    "useParticle": {
+        "useDefault": false,
+        "item": "PowerAttack.EBIMAYO.0.HD"
+    },
+    "title": {
+        "en": "Power Attack"
+    },
+    "artists": {
+        "en": "EBIMAYO"
+    },
+    "author": {
+        "en": "Power cat"
+    },
+    "tags": [],
+    "description": {
+        "en": ""
+    }
+}
