@@ -2,6 +2,10 @@
 <h1 align=center>sonolus Rizline Engine</h1>
 <p align="center">My attempt at recreating <b>Rizline</b> in <a href="https://sonolus.com/">Sonolus</a> using <a href="https://github.com/Sonolus/sonolus.js">Sonolus.js</a>.</p>
 
+> [!WARNING]
+> This branch contains the code of the first version of the engine (which is pretty buggy and not really usable) made using sonolus.js.
+> Check out the new engine made with sonolus.py (which is overall nicer to use) instead at the [main branch](https://github.com/LBO44/Sonolus-Rizline-Engine/tree/main)!
+
 ## Todo List
 - [ ] Play Mode & General:
   - [x] Correct line shape
