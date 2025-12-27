@@ -46,7 +46,8 @@ readdirSync("./resources/levels/").forEach((level) => {
 
 	// add skin
 	const skinPath = `./resources/skins/${level}/`
-	if (!existsSync(skinPath)) mkdirSync(skinPath, { mode: 1 })
+	if (!existsSync(skinPath))
+		mkdirSync(skinPath, { recursive: true, mode: 0o777 })
 	const spritesColors = chartInfoToSpritesColors(converted.info)
 
 	const skinItem: Partial<DatabaseSkinItem> = {
@@ -70,7 +71,8 @@ readdirSync("./resources/levels/").forEach((level) => {
 
 	// add paricles
 	const particlePath = `./resources/particles/${level}/`
-	if (!existsSync(particlePath)) mkdirSync(particlePath, { mode: 1 })
+	if (!existsSync(particlePath))
+		mkdirSync(particlePath, { recursive: true, mode: 0o777 })
 
 	const paricleItem: Partial<DatabaseParticleItem> = {
 		name: level,
