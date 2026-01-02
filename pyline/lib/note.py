@@ -17,7 +17,6 @@ from pyline.lib.ease import remap_ease
 from pyline.lib.effect import Effects
 from pyline.lib.layer import (
     LAYER_HOLD_NOTE,
-    LAYER_HOLD_NOTE_MISS_EFFECT,
     LAYER_MISS_EFFECT,
     LAYER_NOTE,
     z_offset,
@@ -26,6 +25,7 @@ from pyline.lib.layout import (
     X_JUDGE,
     X_NOTE_DISAPPEAR,
     X_SPAWN,
+    floor_to_x,
     is_in_challenge,
 )
 from pyline.lib.line import LinePoint
@@ -64,6 +64,7 @@ class NoteKind(IntEnum):
 
 class Note(Protocol):
     beat: float
+    floor_position: float
     target_time: float
     kind: NoteKind
 
@@ -117,19 +118,16 @@ def play_note_sfx(kind: NoteKind) -> None:
 
 
 def get_note_pos(note: Note) -> Vec2:
-    x = remap(
-        note.point.beat,
-        note.point.next.beat,
-        note.point.pos.x,
-        note.point.next.pos.x,
-        note.beat,
+    x = floor_to_x(
+        note.floor_position,
+        note.point.canvas.floor_position,
     )
     y = remap_ease(
-        note.point.beat,
-        note.point.next.beat,
+        note.point.target_time,
+        note.point.next.target_time,
         note.point.pos.y,
         note.point.next.pos.y,
-        note.beat,
+        note.target_time,
         note.point.ease_type,
     )
     return Vec2(x, y)
@@ -240,15 +238,11 @@ def draw_hold_note_despawn(start_time: float, pos_y: float) -> None:
 def draw_hold_note_miss_effect(
     start_time: float, pos_y: float, start_tail_x: float
 ) -> None:
-    z = LAYER_HOLD_NOTE_MISS_EFFECT
-    radius = NOTE_HOLD_RADIUS * camera.scale * Options.note_size
-
     x_offset = NOTE_HOLD_MISS_SPEED * (time() - start_time)
 
     head_x = X_JUDGE + x_offset
     tail_x = start_tail_x + x_offset
 
-    a = clamp((X_NOTE_DISAPPEAR - start_tail_x + x_offset) / 0.04, 0, 1)
     draw_hold_note(pos_y, head_x, tail_x, draw_index=start_time)
 
 

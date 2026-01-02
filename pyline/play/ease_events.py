@@ -11,7 +11,6 @@ from sonolus.script.archetype import (
     imported,
     shared_memory,
 )
-from sonolus.script.interval import remap
 from sonolus.script.runtime import time
 from sonolus.script.timing import beat_to_time
 
@@ -113,22 +112,13 @@ class CanvasSpeed(CanvasEvent):
         self.canvas.floor_position = value
 
     # we need to interpolate floor_position and not value
-    def interpolate_value(self, max_time) -> float:
-        if self.is_last_point:
-            return self.floor_position + self.value * (time() - self.time)
-        else:
-            return remap(
-                self.time,
-                self.next.time,
-                self.floor_position,
-                self.next.floor_position,
-                max_time,
-            )
+    def interpolate_value(self, max_time: float) -> float:
+        return self.floor_position + self.value * (max_time - self.time)
 
     def update_sequential(self):
         self.update_value(self.interpolate_value(max(time(), self.time)))
 
-        # last point still needs to updtate canvas floor linearly
+        # last point still needs to updtate canvas floor
         if (not self.is_last_point) and time() >= self.next.time:
             self.despawn = True
 

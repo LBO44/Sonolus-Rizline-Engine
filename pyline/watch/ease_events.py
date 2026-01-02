@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from abc import ABC
+from abc import ABC, abstractmethod
 from typing import Any, Self
 
 from sonolus.script.archetype import (
@@ -11,7 +11,6 @@ from sonolus.script.archetype import (
     imported,
     shared_memory,
 )
-from sonolus.script.interval import remap
 from sonolus.script.runtime import time
 from sonolus.script.timing import beat_to_time
 
@@ -30,13 +29,15 @@ class Canvas(WatchArchetype):
     def first_speed(self) -> CanvasSpeed:
         return self.first_speed_ref.get(check=False)
 
+    # floor and y at current time
     y_pos: float = shared_memory()
     floor_position: float = shared_memory()
 
 
-class EaseEvent(ABC, WatchArchetype):
+class EaseEvent(WatchArchetype, ABC):
     beat: StandardImport.BEAT
     value: float = imported()
+    ease_type: int = imported(name="easeType")  # won't exist on canvas speed
     is_first_point: bool = imported(name="isFirstPoint")
     next_point_ref: EntityRef[Any] = imported(name="nextPoint")
 
@@ -59,94 +60,68 @@ class EaseEvent(ABC, WatchArchetype):
     def despawn_time(self) -> float:
         return 1e8 if self.is_last_point else self.next.time
 
+    # different implementation in canvas speed
+    def interpolate_value(self, max_time: float) -> float:
+        if self.is_last_point:
+            return self.value
+        else:
+            return remap_ease(
+                self.time,
+                self.next.time,
+                self.value,
+                self.next.value,
+                max_time,
+                self.ease_type,
+            )
 
-class CanvasMove(EaseEvent):
-    name = "Canvas Move"
+    @abstractmethod
+    def update_value(self, value: float) -> None:
+        raise NotImplementedError
 
+    def update_sequential(self):
+        self.update_value(self.interpolate_value(max(time(), self.time)))
+
+
+class CanvasEvent(EaseEvent, ABC):
     canvas_ref: EntityRef[Canvas] = imported(name="canvas")
-    ease_type: int = imported(name="easeType")
 
     @property
     def canvas(self) -> Canvas:
         return self.canvas_ref.get()
 
+
+class CanvasMove(CanvasEvent):
+    name = "Canvas Move"
+
     def preprocess(self):
         super().preprocess()
         if Options.mirror:
             self.value = -self.value
-
-    def update_sequential(self):
-        if self.is_last_point:
-            self.update_value(self.value)
-        else:
-            self.update_value(
-                remap_ease(
-                    self.time,
-                    self.next.time,
-                    self.value,
-                    self.next.value,
-                    max(time(), self.time),
-                    self.ease_type,
-                )
-            )
 
     def update_value(self, value: float) -> None:
         self.canvas.y_pos = value
 
 
-class CanvasSpeed(EaseEvent):
+class CanvasSpeed(CanvasEvent):
     name = "Canvas Speed"
 
-    canvas_ref: EntityRef[Canvas] = imported(name="canvas")
     floor_position: float = imported(name="floorPosition")
-
-    @property
-    def canvas(self) -> Canvas:
-        return self.canvas_ref.get()
 
     def update_value(self, value: float) -> None:
         self.canvas.floor_position = value
 
     # we need to interpolate floor_position and not value
-    def update_sequential(self):
-        if self.is_last_point:
-            self.update_value(self.floor_position + self.value * (time() - self.time))
-        else:
-            self.update_value(
-                remap(
-                    self.time,
-                    self.next.time,
-                    self.floor_position,
-                    self.next.floor_position,
-                    max(time(), self.time),
-                )
-            )
+    def interpolate_value(self, max_time: float) -> float:
+        return self.floor_position + self.value * (max_time - self.time)
 
 
 class CameraMove(EaseEvent):
     name = "Camera Move"
 
-    ease_type: int = imported(name="easeType")
-
     def preprocess(self):
         super().preprocess()
         if Options.mirror:
             self.value = -self.value
-
-    def update_sequential(self):
-        if self.is_last_point:
-            self.update_value(self.value)
-        else:
-            self.update_value(
-                remap_ease(
-                    self.time,
-                    self.next.time,
-                    self.value,
-                    self.next.value,
-                    max(time(), self.time),
-                    self.ease_type,
-                )
-            )
 
     def update_value(self, value: float) -> None:
         camera.y_pos = value
@@ -154,23 +129,6 @@ class CameraMove(EaseEvent):
 
 class CameraScale(EaseEvent):
     name = "Camera Scale"
-
-    ease_type: int = imported(name="easeType")
-
-    def update_sequential(self):
-        if self.is_last_point:
-            self.update_value(self.value)
-        else:
-            self.update_value(
-                remap_ease(
-                    self.time,
-                    self.next.time,
-                    self.value,
-                    self.next.value,
-                    max(time(), self.time),
-                    self.ease_type,
-                )
-            )
 
     def update_value(self, value: float) -> None:
         camera.scale = value

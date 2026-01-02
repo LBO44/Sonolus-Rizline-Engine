@@ -64,7 +64,9 @@ type RizColorKeyPoint = {
 }
 
 type RizColorList = [background: RizColor, note: RizColor, particle: RizColor]
-/** Colors of used by the level, changes during challenge time */
+/** Colors of the level, changes during challenge time.
+ * First color list is for "normal" time, second one for 1st challenge time, third one for 2nd challenge time...
+ * However only Brave Road has challenge times with different colours for now*/
 type RizThemes = [
 	normal: { colorsList: RizColorList },
 	challenge: { colorsList: RizColorList },
@@ -334,11 +336,10 @@ export const convertsChart = (
 
 		//add notes
 		line.notes.forEach((note, noteIndex) => {
-			//at runtime note pos is calculated by interpolating the pos of the 2 points it's between
-			const previousLinePointIndex = line.linePoints.findIndex(
-				(p, i) =>
-					p.time <= note.time && line.linePoints[i + 1].time >= note.time
-			)
+			//at runtime note vertical pos is calculated by interpolating the pos of the 2 points it's between
+			const previousLinePointIndex = line.linePoints
+				.slice(0, -1)
+				.findLastIndex((p) => p.time <= note.time)
 
 			const noteName = `Line ${lineIndex} Note ${noteIndex}`
 
@@ -358,6 +359,7 @@ export const convertsChart = (
 					`Note ${isChallenge ? "Challenge" : "Normal"}`,
 					{
 						"#BEAT": note.time,
+						floorPosition: note.floorPosition,
 						previousLinePoint: `Line ${lineIndex} Point ${previousLinePointIndex}`,
 						partnerNote: partnerNoteName,
 						kind: note.type,

@@ -42,6 +42,7 @@ class Note(WatchArchetype):
     is_scored = True
 
     beat: StandardImport.BEAT
+    floor_position: float = imported(name="floorPosition")
     kind: NoteKind = imported()
     previous_line_point_ref: EntityRef[LinePoint] = imported(name="previousLinePoint")
 

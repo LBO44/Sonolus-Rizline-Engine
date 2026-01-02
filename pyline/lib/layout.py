@@ -124,13 +124,21 @@ def get_visual_start_time(floor_position: float, min_speed: CanvasSpeed) -> floa
     while True:
         speed = min_speed.at(speed_point_index, check=False)
 
-        if speed.is_last_point:
-            assert floor_position < 0 or target_floor > speed.floor_position, (
-                "Last Point Invalid positive floor"
-            )
-            assert floor_position > 0 or target_floor < speed.floor_position, (
-                "Last Point Invalid negative floor"
-            )
+        if (
+            speed.is_last_point
+            or (speed.floor_position <= target_floor <= speed.next.floor_position)
+            or (speed.next.floor_position <= target_floor <= speed.floor_position)
+        ):
+            assert (
+                (not speed.is_last_point)
+                or floor_position < 0
+                or target_floor > speed.floor_position
+            ), "Last Point Invalid positive floor"
+            assert (
+                (not speed.is_last_point)
+                or floor_position > 0
+                or target_floor < speed.floor_position
+            ), "Last Point Invalid negative floor"
 
             if target_floor == speed.floor_position:
                 return speed.time
@@ -139,16 +147,4 @@ def get_visual_start_time(floor_position: float, min_speed: CanvasSpeed) -> floa
             return max(t, -2)
 
         else:
-            if (speed.floor_position <= target_floor <= speed.next.floor_position) or (
-                speed.next.floor_position <= target_floor <= speed.floor_position
-            ):
-                t = remap(
-                    speed.floor_position,
-                    speed.next.floor_position,
-                    speed.time,
-                    speed.next.time,
-                    target_floor,
-                )
-                return max(t, -2)
-            else:
-                speed_point_index = speed.next.index
+            speed_point_index = speed.next.index
