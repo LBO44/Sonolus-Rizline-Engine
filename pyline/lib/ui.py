@@ -49,7 +49,7 @@ def init_ui():
         background=False,
     )
     ui.judgment.update(
-        anchor=(screen().tl + screen().bl) / 2 + Vec2(0.3, 0),
+        anchor=screen().ml + Vec2(0.3, 0),
         pivot=Vec2(0, 1),
         dimensions=Vec2(0, 0.1) * ui.judgment_config.scale,
         rotation=90,
@@ -73,5 +73,32 @@ def init_ui():
         rotation=90,
         alpha=ui.progress_config.alpha,
         horizontal_align=HorizontalAlign.CENTER,
+        background=True,
+    )
+    ui.instruction.update(
+        anchor=(screen().ml) + Vec2(0.3, -0.3),
+        pivot=Vec2(0, 1),
+        dimensions=Vec2(0.6, 0.1) * ui.instruction_config.scale,
+        rotation=90,
+        alpha=ui.instruction_config.alpha,
+        horizontal_align=HorizontalAlign.CENTER,
+        background=True,
+    )
+    ui.previous.update(
+        anchor=screen().mb + Vec2(0, 0.1),
+        pivot=Vec2(0, 1),
+        dimensions=Vec2(0.1, 0.1) * ui.navigation_config.scale,
+        rotation=90,
+        alpha=ui.navigation_config.alpha,
+        horizontal_align=HorizontalAlign.LEFT,
+        background=True,
+    )
+    ui.next.update(
+        anchor=screen().mt + Vec2(0, -0.2),
+        pivot=Vec2(0, 1),
+        dimensions=Vec2(0.1, 0.1) * ui.navigation_config.scale,
+        rotation=90,
+        alpha=ui.navigation_config.alpha,
+        horizontal_align=HorizontalAlign.RIGHT,
         background=True,
     )

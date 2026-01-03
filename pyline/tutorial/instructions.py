@@ -1,6 +1,7 @@
 from sonolus.script.instruction import (
-    StandardInstruction,
+    Instruction,
     StandardInstructionIcon,
+    instruction,
     instruction_icons,
     instructions,
 )
@@ -8,7 +9,11 @@ from sonolus.script.instruction import (
 
 @instructions
 class Instructions:
-    tap: StandardInstruction.TAP
+    tap: Instruction = instruction("Tap Anywhere")
+    drag: Instruction = instruction("Touch Anywhere")
+    hold: Instruction = instruction(
+        "Tap and hold until the end. You don't need to release."
+    )
 
 
 @instruction_icons

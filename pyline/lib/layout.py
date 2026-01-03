@@ -1,7 +1,7 @@
 from sonolus.script.globals import level_memory
 from sonolus.script.interval import Interval, lerp, remap
 from sonolus.script.quad import Rect
-from sonolus.script.runtime import screen, time
+from sonolus.script.runtime import is_tutorial, screen, time
 from sonolus.script.sprite import Sprite
 from sonolus.script.vec import Vec2
 
@@ -82,6 +82,9 @@ def draw_background() -> None:
 
 def is_in_challenge(pos: Vec2) -> bool:
     """Takes into account the transition, hence why we can't just use archetype name"""
+    if is_tutorial():
+        return False
+
     if time() in Challenge.inside:
         return True
 
