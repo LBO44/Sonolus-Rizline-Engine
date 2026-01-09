@@ -200,6 +200,16 @@ export const convertsChart = (
 	entities.push(entity("Stage", { challengeTotalHitCount: 0 }))
 
 	//bpm change entities
+	// some chart have a first bpm shifts that are not at beat 0
+	if (!chart.bpmShifts.some((event) => event.time == 0)) {
+		entities.push(
+			entity(EngineArchetypeName.BpmChange, {
+				"#BEAT": 0,
+				"#BPM": chart.bPM,
+			})
+		)
+	}
+
 	chart.bpmShifts.forEach((event) =>
 		entities.push(
 			entity(EngineArchetypeName.BpmChange, {

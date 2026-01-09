@@ -252,7 +252,7 @@ def draw_curved_line(
     global_transition_top_alpha: float = -1,
 ) -> None:
     """
-    Draw a curved line between splitting it into mode, with local alpha gradient
+    Draw a curved line between 2 Vec2, splitting it into segments, with local alpha gradient
     mode: simple: Draw Just one sprite
     mode: global: color transition over time, 2 sprites + 1 for transparency
     mode: local: color gradient from a to b, 2 sprites + 1 for transparency
