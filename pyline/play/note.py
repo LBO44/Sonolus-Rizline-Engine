@@ -183,7 +183,7 @@ class Note(PlayArchetype):
                 break
 
     def should_skip_touch_for_partner(self, touch: Touch) -> bool:
-        if self.partner_note.index == -1 or self.skipped_touch_for_partner:
+        if self.partner_note.index == 0 or self.skipped_touch_for_partner:
             return False
 
         partner_note = self.partner_note.get()

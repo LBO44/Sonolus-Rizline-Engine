@@ -230,23 +230,10 @@ export const convertsChart = (
 		)
 	})
 
-	//line, line point, and note
-	/**Map each note to its beat to find double notes*/
-	const notesAtSameTime = new Map<number, string[]>()
-
-	chart.lines.forEach((line, lineIndex) =>
-		line.notes.forEach((note, noteIndex) => {
-			if (note.type == RizNoteType.Drag) return
-			const noteName = `Line ${lineIndex} Note ${noteIndex}`
-			const noteNames = notesAtSameTime.get(note.time) ?? []
-			noteNames.push(noteName)
-			notesAtSameTime.set(note.time, noteNames)
-		})
-	)
-
+	//line, line point, colors
 	chart.lines.forEach((line, lineIndex) => {
 		// Sometimes not sorted by default, no idea if that's intentional or not
-		// line.linePoints.sort((a, b) => a.time - b.time)
+		line.linePoints.sort((a, b) => a.time - b.time)
 
 		const lastBeat = Math.max(...line.linePoints.map((point) => point.time))
 
@@ -343,53 +330,80 @@ export const convertsChart = (
 				})
 			)
 		})
+	})
 
-		//add notes
-		line.notes.forEach((note, noteIndex) => {
-			//at runtime note vertical pos is calculated by interpolating the pos of the 2 points it's between
-			const previousLinePointIndex = line.linePoints
-				.slice(0, -1)
-				.findLastIndex((p) => p.time <= note.time)
+	//add notes, they need to be sorted beat-wise for inputs
 
-			const noteName = `Line ${lineIndex} Note ${noteIndex}`
+	const notes = chart.lines
+		.flatMap((line, lineIndex) => {
+			const slicedLinePoints = line.linePoints.slice(0, -1)
 
-			const isDoubleNote = notesAtSameTime.get(note.time)?.length >= 2
-			const partnerNoteName = isDoubleNote
-				? notesAtSameTime.get(note.time).filter((v) => v != noteName)[0]
-				: -1
-
-			const isChallenge = chart.challengeTimes.some(
-				(ct) => note.time >= ct.start && note.time <= ct.end
-			)
-
-			if (isChallenge) challengeTotalHitCount++
-
-			entities.push(
-				entity(
-					`Note ${isChallenge ? "Challenge" : "Normal"}`,
-					{
-						"#BEAT": note.time,
-						floorPosition: note.floorPosition,
-						previousLinePoint: `Line ${lineIndex} Point ${previousLinePointIndex}`,
-						partnerNote: partnerNoteName,
-						kind: note.type,
-					},
-					...(isDoubleNote || note.type == RizNoteType.Hold ? [noteName] : [])
-				)
-			)
-
-			if (note.type == RizNoteType.Hold) {
-				if (isChallenge) challengeTotalHitCount++
-				entities.push(
-					entity(`Note Hold Tail ${isChallenge ? "Challenge" : "Normal"}`, {
-						"#BEAT": note.otherInformations[0],
-						floorPosition: note.otherInformations[2],
-						canvas: `Canvas ${note.otherInformations[1]}`,
-						holdStart: noteName,
-					})
-				)
-			}
+			return line.notes.map((note) => {
+				return {
+					...note,
+					slicedLinePoints,
+					lineIndex,
+				}
+			})
 		})
+		.sort((a, b) => a.time - b.time)
+
+	/**Map each note to its beat to find double notes*/
+	const notesAtSameTime = new Map<number, string[]>()
+
+	notes.forEach((note, noteIndex) => {
+		if (note.type == RizNoteType.Drag) return
+		const noteName = `Note ${noteIndex}`
+		const noteNames = notesAtSameTime.get(note.time) ?? []
+		noteNames.push(noteName)
+		notesAtSameTime.set(note.time, noteNames)
+	})
+
+	notes.forEach((note, noteIndex) => {
+		//at runtime note vertical pos is calculated by interpolating the pos of the 2 points it's between
+		//note: should use the point that has the exact same beat as the note if there is one
+		const previousLinePointIndex = note.slicedLinePoints.findLastIndex(
+			(p) => p.time <= note.time
+		)
+
+		const noteName = `Note ${noteIndex}`
+
+		const partnerNote =
+			note.type == RizNoteType.Drag
+				? undefined
+				: notesAtSameTime.get(note.time).find((v) => v != noteName)
+
+		const isChallenge = chart.challengeTimes.some(
+			(ct) => note.time >= ct.start && note.time <= ct.end
+		)
+
+		if (isChallenge) challengeTotalHitCount++
+
+		entities.push(
+			entity(
+				`Note ${isChallenge ? "Challenge" : "Normal"}`,
+				{
+					"#BEAT": note.time,
+					floorPosition: note.floorPosition,
+					previousLinePoint: `Line ${note.lineIndex} Point ${previousLinePointIndex}`,
+					...(partnerNote ? { partnerNote } : {}),
+					kind: note.type,
+				},
+				...(partnerNote || note.type == RizNoteType.Hold ? [noteName] : [])
+			)
+		)
+
+		if (note.type == RizNoteType.Hold) {
+			if (isChallenge) challengeTotalHitCount++
+			entities.push(
+				entity(`Note Hold Tail ${isChallenge ? "Challenge" : "Normal"}`, {
+					"#BEAT": note.otherInformations[0],
+					floorPosition: note.otherInformations[2],
+					canvas: `Canvas ${note.otherInformations[1]}`,
+					holdStart: noteName,
+				})
+			)
+		}
 	})
 
 	//canvas entities
@@ -480,9 +494,9 @@ export const convertsChart = (
 	})
 
 	//for debugging
-	entities
-		.filter((entity) => !entity.archetype.startsWith("#"))
-		.forEach((entity, i) => (entity.__index = i))
+	// entities
+	// 	.filter((entity) => !entity.archetype.startsWith("#"))
+	// 	.forEach((entity, i) => (entity.__index = i))
 
 	//pack to level data and return
 	const data: LevelData = {
