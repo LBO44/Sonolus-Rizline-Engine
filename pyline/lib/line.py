@@ -194,49 +194,33 @@ def draw_line(point: LinePoint) -> None:
     base_sprite = Skin.lines[base_color_index]
     top_sprite = Skin.lines[top_color_index]
 
-    # Horizontal line, not supported by draw curved, missing local gradient (not that much needed)
-    if point.pos.x == point.next.pos.x:
-        line_layout = points_to_quad(point.pos, point.next.pos)
-
-        if mode == DrawMode.Global:
-            base_sprite.draw(line_layout, z + z_offset(point.line.index), 1)
-            top_sprite.draw(
-                line_layout,
-                z + z_offset(point.line.index, 1),
-                global_transition_top_alpha,
-            )
-        else:
-            base_sprite.draw(line_layout, z + z_offset(point.line.index), point.alpha)
-
-    # Other lines
+    # vertical/horizontal lines also need fade out and gradients
+    if point.pos.x > point.next.pos.x:
+        draw_curved_line(
+            a=point.pos,
+            b=point.next.pos,
+            alpha_a=point.alpha,
+            alpha_b=point.next.alpha,
+            ease_type=point.ease_type,
+            z_index=z + z_offset(point.line.index),
+            base_sprite=base_sprite,
+            top_sprite=top_sprite,
+            mode=mode,
+            global_transition_top_alpha=global_transition_top_alpha,
+        )
     else:
-        # vertical lines also need fade out, drawCurvedLine can't handle horizontal lines
-        if point.pos.x > point.next.pos.x:
-            draw_curved_line(
-                a=point.pos,
-                b=point.next.pos,
-                alpha_a=point.alpha,
-                alpha_b=point.next.alpha,
-                ease_type=point.ease_type,
-                z_index=z + z_offset(point.line.index),
-                base_sprite=base_sprite,
-                top_sprite=top_sprite,
-                mode=mode,
-                global_transition_top_alpha=global_transition_top_alpha,
-            )
-        else:
-            draw_curved_line(
-                b=point.pos,
-                a=point.next.pos,
-                alpha_b=point.alpha,
-                alpha_a=point.next.alpha,
-                ease_type=point.ease_type,
-                z_index=z + z_offset(point.line.index),
-                base_sprite=base_sprite,
-                top_sprite=top_sprite,
-                mode=mode,
-                global_transition_top_alpha=global_transition_top_alpha,
-            )
+        draw_curved_line(
+            b=point.pos,
+            a=point.next.pos,
+            alpha_b=point.alpha,
+            alpha_a=point.next.alpha,
+            ease_type=point.ease_type,
+            z_index=z + z_offset(point.line.index),
+            base_sprite=base_sprite,
+            top_sprite=top_sprite,
+            mode=mode,
+            global_transition_top_alpha=global_transition_top_alpha,
+        )
 
 
 def draw_curved_line(
@@ -258,18 +242,29 @@ def draw_curved_line(
     mode: local: color gradient from a to b, 2 sprites + 1 for transparency
     """
     # clip the line between the 2 limits
-    t0 = unlerp_clamped(a.x, b.x, X_LINE_DISAPPEAR)
-    t1 = unlerp_clamped(a.x, b.x, X_SPAWN)
+    if a.x == b.x:
+        if a.x < X_SPAWN or a.x > X_LINE_DISAPPEAR:
+            return
+        t0, t1 = 0, 1
+    else:
+        t0 = unlerp_clamped(a.x, b.x, X_LINE_DISAPPEAR)
+        t1 = unlerp_clamped(a.x, b.x, X_SPAWN)
 
-    # outside the area
-    if t0 >= t1:
-        return
+        # outside the area
+        if t0 >= t1:
+            return
 
     lengh = (a - b).magnitude
     segments = (
-        32
-        if lengh > 1
-        else (16 if lengh > 0.5 or alpha_a != alpha_b else (8 if lengh > 0.2 else 4))
+        1
+        if a.x == b.x and alpha_a == alpha_b
+        else (
+            32
+            if lengh > 1
+            else (
+                16 if lengh > 0.5 or alpha_a != alpha_b else (8 if lengh > 0.2 else 4)
+            )
+        )
     )
 
     for i in range(segments):
