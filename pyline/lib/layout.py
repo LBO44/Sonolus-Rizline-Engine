@@ -114,40 +114,82 @@ def floor_to_x(point_floor_position: float, canvas_floor_position: float) -> flo
     return lerp(X_JUDGE, X_SPAWN, progress)
 
 
-def get_visual_start_time(floor_position: float, min_speed: CanvasSpeed) -> float:
-    if floor_position == 0:
-        return -2
+def get_visual_start_time(floor_position: float, first_speed: CanvasSpeed) -> float:
+    target_max = floor_position
+    target_min = floor_position - note_speed_distance()
 
-    if floor_position > 0:
-        target_floor = max(floor_position - note_speed_distance(), 0.0001)
-    else:
-        target_floor = min(floor_position + note_speed_distance(), -0.0001)
+    speed_idx = first_speed.index
 
-    speed_point_index = min_speed.index
     while True:
-        speed = min_speed.at(speed_point_index, check=False)
+        speed = first_speed.at(speed_idx, check=False)
 
-        if (
-            speed.is_last_point
-            or (speed.floor_position <= target_floor <= speed.next.floor_position)
-            or (speed.next.floor_position <= target_floor <= speed.floor_position)
-        ):
-            assert (
-                (not speed.is_last_point)
-                or floor_position < 0
-                or target_floor > speed.floor_position
-            ), "Last Point Invalid positive floor"
-            assert (
-                (not speed.is_last_point)
-                or floor_position > 0
-                or target_floor < speed.floor_position
-            ), "Last Point Invalid negative floor"
+        # check if it's already visible, else check if it will become visible
+        if target_min <= speed.floor_position <= target_max:
+            return speed.time
 
-            if target_floor == speed.floor_position:
-                return speed.time
-
-            t = speed.time + (target_floor - speed.floor_position) / speed.value
-            return max(t, -2)
+        elif speed.is_last_point:
+            if speed.value >= 0 and speed.floor_position < target_min:
+                return speed.time + (target_min - speed.floor_position) / speed.value
+            elif speed.value < 0 and speed.floor_position > target_max:
+                return speed.time + (target_max - speed.floor_position) / speed.value
 
         else:
-            speed_point_index = speed.next.index
+            seg_min = min(speed.floor_position, speed.next.floor_position)
+            seg_max = max(speed.floor_position, speed.next.floor_position)
+
+            if max(target_min, seg_min) <= min(target_max, seg_max):
+                # if speed.value < 0, it first appears at X_JUDGE
+                return (
+                    speed.time
+                    + (
+                        (target_min if speed.value >= 0 else target_max)
+                        - speed.floor_position
+                    )
+                    / speed.value
+                )
+
+        if speed.is_last_point:
+            # notify("Could not find visual start time")
+            return -2
+
+        speed_idx = speed.next.index
+
+
+def get_visual_end_time(floor_position: float, last_speed: CanvasSpeed) -> float:
+    target_min = floor_position - note_speed_distance()
+    target_max = floor_position
+
+    speed_idx = last_speed.index
+
+    while True:
+        speed = last_speed.at(speed_idx, check=False)
+
+        if speed.is_last_point:
+            if speed.value >= 0 and speed.floor_position <= target_max:
+                return speed.time + (target_max - speed.floor_position) / speed.value
+            elif speed.value < 0 and speed.floor_position >= target_min:
+                return speed.time + (target_min - speed.floor_position) / speed.value
+
+        else:
+            if target_min <= speed.next.floor_position <= target_max:
+                return speed.next.time
+
+            seg_min = min(speed.floor_position, speed.next.floor_position)
+            seg_max = max(speed.floor_position, speed.next.floor_position)
+
+            if max(target_min, seg_min) <= min(target_max, seg_max):
+                # if speed.value > 0, it passed x_judge normally, else passed x_spawn backward
+                return (
+                    speed.time
+                    + (
+                        (target_max if speed.value >= 0 else target_min)
+                        - speed.floor_position
+                    )
+                    / speed.value
+                )
+
+        if speed.is_first_point:
+            # notify("Could not find visual find end time")
+            return -2.0
+
+        speed_idx = speed.previous.index

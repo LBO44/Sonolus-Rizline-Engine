@@ -44,11 +44,14 @@ class CanvasSpeed(Protocol):
     value: float
     floor_position: float
     time: float
+    is_first_point: bool
 
     @property
     def index(self) -> int: ...
     @property
     def next(self) -> CanvasSpeed: ...
+    @property
+    def previous(self) -> CanvasSpeed: ...
     @property
     def is_last_point(self) -> bool: ...
 

@@ -11,11 +11,17 @@ from sonolus.script.archetype import (
     imported,
     shared_memory,
 )
+from sonolus.script.debug import notify
 from sonolus.script.runtime import time
 from sonolus.script.timing import beat_to_time
 from sonolus.script.vec import Vec2
 
-from pyline.lib.layout import X_JUDGE, floor_to_x, get_visual_start_time
+from pyline.lib.layout import (
+    X_JUDGE,
+    floor_to_x,
+    get_visual_end_time,
+    get_visual_start_time,
+)
 from pyline.lib.line import (
     draw_judge_ring,
     draw_line,
@@ -30,12 +36,11 @@ class Line(PlayArchetype):
 
     name = "Line"
 
-    last_beat: float = imported(name="lastBeat")
     first_point_ref: EntityRef[LinePoint] = imported(name="firstPoint")
+    last_point_ref: EntityRef[LinePoint] = imported(name="lastPoint")
     has_hold_notes: bool = imported(name="hasHoldNotes")
 
     visual_start_time: float = entity_data()
-    end_time: float = entity_data()
 
     judge_ring_ref: EntityRef[JudgeRingColor] = shared_memory()
     line_color_ref: EntityRef[LineColor] = shared_memory()
@@ -71,7 +76,6 @@ class Line(PlayArchetype):
         # WARN: no guarantee first point is first visual point beacuse time change
         self.pos_y_point_ref = self.first_point_ref
         self.visual_start_time = self.first_point_ref.get().visual_start_time
-        self.end_time = beat_to_time(self.last_beat)
 
 
 class ColorChange(ABC, PlayArchetype):
@@ -190,6 +194,10 @@ class LinePoint(PlayArchetype):
                 self.floor_position,
                 self.canvas.first_speed,
             )
+            self.visual_end_time = get_visual_end_time(
+                self.next.floor_position,
+                self.next.canvas.last_speed,
+            )
 
         # Line are drawn from a point to its next. However next point (including last point) might appear before this point.
         # So we need to take the first visual start time
@@ -198,13 +206,26 @@ class LinePoint(PlayArchetype):
             self.next.canvas.first_speed,
         )
 
+        self.next.visual_end_time = (
+            -2  # don't matter in Play mode
+            if self.next.is_last_point
+            else get_visual_end_time(
+                self.next.next.floor_position,
+                self.next.next.canvas.last_speed,
+            )
+        )
+
+        if self.visual_start_time <= -2:
+            # most likely invalid, usually better if point doesn't not appear
+            notify("Invalid start time")
+            self.visual_end_time = -1e7
+            return
+
         self.visual_start_time = min(
             self.visual_start_time, self.next.visual_start_time
         )
 
-        self.visual_end_time = (
-            self.target_time if self.is_last_point else beat_to_time(self.next.beat)
-        )
+        self.visual_end_time = max(self.visual_end_time, self.next.visual_end_time)
 
     def spawn_order(self) -> float:
         # last point has nothing to draw and can't update line y pos so no need to spawn it
@@ -222,7 +243,7 @@ class LinePoint(PlayArchetype):
 
         draw_line(self)
 
-        if self.pos.x > X_JUDGE:
+        if self.pos.x >= X_JUDGE and self.next.pos.x <= X_JUDGE:
             draw_judge_ring(self)
 
     def update_sequential(self):

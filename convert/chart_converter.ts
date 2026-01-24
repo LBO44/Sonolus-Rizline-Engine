@@ -235,14 +235,12 @@ export const convertsChart = (
 		// Sometimes not sorted by default, no idea if that's intentional or not
 		line.linePoints.sort((a, b) => a.time - b.time)
 
-		const lastBeat = Math.max(...line.linePoints.map((point) => point.time))
-
 		// add lines, line names are `LineN`, used at runtime to store line info
 		entities.push(
 			entity(
 				"Line",
 				{
-					lastBeat: lastBeat,
+					lastPoint: `Line ${lineIndex} Point ${line.linePoints.length - 1}`,
 					firstPoint: `Line ${lineIndex} Point 0`,
 					hasHoldNotes: +line.notes.some(
 						(note) => note.type == RizNoteType.Hold
@@ -414,6 +412,7 @@ export const convertsChart = (
 				"Canvas",
 				{
 					firstSpeed: `Canvas ${canvas.index} Speed 0`,
+					lastSpeed: `Canvas ${canvas.index} Speed ${canvas.speedKeyPoints.length - 1}`,
 				},
 				`Canvas ${canvas.index}`
 			)
@@ -447,6 +446,7 @@ export const convertsChart = (
 						isFirstPoint: +(pointIndex == 0),
 						canvas: `Canvas ${canvas.index}`,
 						nextPoint: `Canvas ${canvas.index} Speed ${pointIndex + 1}`,
+						previousPoint: `Canvas ${canvas.index} Speed ${pointIndex - 1}`,
 					},
 					`Canvas ${canvas.index} Speed ${pointIndex}`
 				)
@@ -493,7 +493,7 @@ export const convertsChart = (
 		difficulty: { ez: 0, hd: 1, in: 2, at: 2 }[difficulty] ?? 2,
 	})
 
-	//for debugging
+	// for debugging
 	// entities
 	// 	.filter((entity) => !entity.archetype.startsWith("#"))
 	// 	.forEach((entity, i) => (entity.__index = i))

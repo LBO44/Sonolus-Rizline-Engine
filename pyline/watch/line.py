@@ -11,11 +11,17 @@ from sonolus.script.archetype import (
     imported,
     shared_memory,
 )
+from sonolus.script.debug import notify
 from sonolus.script.runtime import time
 from sonolus.script.timing import beat_to_time
 from sonolus.script.vec import Vec2
 
-from pyline.lib.layout import X_JUDGE, floor_to_x, get_visual_start_time
+from pyline.lib.layout import (
+    X_JUDGE,
+    floor_to_x,
+    get_visual_end_time,
+    get_visual_start_time,
+)
 from pyline.lib.line import (
     draw_judge_ring,
     draw_line,
@@ -30,12 +36,12 @@ class Line(WatchArchetype):
 
     name = "Line"
 
-    last_beat: float = imported(name="lastBeat")
     first_point_ref: EntityRef[LinePoint] = imported(name="firstPoint")
+    last_point_ref: EntityRef[LinePoint] = imported(name="lastPoint")
     has_hold_notes: bool = imported(name="hasHoldNotes")
 
     visual_start_time: float = entity_data()
-    end_time: float = entity_data()
+    visual_end_time: float = entity_data()
 
     judge_ring_ref: EntityRef[JudgeRingColor] = shared_memory()
     line_color_ref: EntityRef[LineColor] = shared_memory()
@@ -51,7 +57,7 @@ class Line(WatchArchetype):
         """Only used by hold notes"""
         point_index = (
             self.pos_y_point_ref.index
-            if time() < self.end_time
+            if time() < self.visual_end_time
             else self.last_pos_y_point_ref.index
         )
         return get_y_at_judge_line(LinePoint.at(point_index))
@@ -74,10 +80,11 @@ class Line(WatchArchetype):
 
     @callback(order=2)  # need to run after LinePoint
     def preprocess(self):
-        # WARN: no guarantee first point is first visual point beacuse time change
+        # WARN: no guarantee first point is first visual point beacuse time change,
+        # I should probably make each point set it with min()
         self.pos_y_point_ref = self.first_point_ref
         self.visual_start_time = self.first_point_ref.get().visual_start_time
-        self.end_time = beat_to_time(self.last_beat)
+        self.visual_end_time = self.last_point_ref.get().visual_end_time
 
 
 class ColorChange(ABC, WatchArchetype):
@@ -114,7 +121,7 @@ class ColorChange(ABC, WatchArchetype):
         return self.line.visual_start_time if self.is_first_point else self.time
 
     def despawn_time(self) -> float:
-        return self.line.end_time if self.is_last_point else self.next_time
+        return self.line.visual_end_time if self.is_last_point else self.next_time
 
 
 class JudgeRingColor(ColorChange):
@@ -185,6 +192,10 @@ class LinePoint(WatchArchetype):
                 self.floor_position,
                 self.canvas.first_speed,
             )
+            self.visual_end_time = get_visual_end_time(
+                self.next.floor_position,
+                self.next.canvas.last_speed,
+            )
 
         # Line are drawn from a point to its next. However next point (including last point) might appear before this point.
         # So we need to take the first visual start time
@@ -193,20 +204,37 @@ class LinePoint(WatchArchetype):
             self.next.canvas.first_speed,
         )
 
+        self.next.visual_end_time = (
+            get_visual_end_time(
+                self.next.floor_position,
+                self.next.canvas.last_speed,
+            )
+            if self.next.is_last_point
+            else get_visual_end_time(
+                self.next.next.floor_position,
+                self.next.next.canvas.last_speed,
+            )
+        )
+
+        if self.visual_start_time <= -2:
+            # most likely invalid, usually better if point doesn't not appear
+            notify("Invalid start time")
+            self.visual_end_time = -1e7
+            return
+
         self.visual_start_time = min(
             self.visual_start_time, self.next.visual_start_time
         )
 
-        assert self.target_time >= self.visual_start_time or self.floor_position >= 0, (
-            "Spawn Time after Target Time, point with negative floor pos"
-        )
-        assert self.target_time >= self.visual_start_time or self.floor_position < 0, (
-            "Spawn Time after Target Time, point with positive floor pos"
-        )
+        self.visual_end_time = max(self.visual_end_time, self.next.visual_end_time)
 
-        self.visual_end_time = (
-            self.target_time if self.is_last_point else beat_to_time(self.next.beat)
-        )
+        assert (
+            self.visual_end_time >= self.visual_start_time or self.floor_position >= 0
+        ), "Spawn Time after Despawn Time, point with negative floor pos"
+
+        assert (
+            self.visual_end_time >= self.visual_start_time or self.floor_position < 0
+        ), "Spawn Time after Despawn Time, point with positive floor pos"
 
         # In watch mode,user might directly jump to a time where a hold despawn effect exists
         # but no LinePoint is active and so line.pos_y_point_ref would have been empty
@@ -226,7 +254,7 @@ class LinePoint(WatchArchetype):
 
         draw_line(self)
 
-        if self.pos.x > X_JUDGE:
+        if self.pos.x >= X_JUDGE and self.next.pos.x <= X_JUDGE:
             draw_judge_ring(self)
 
     def update_sequential(self):

@@ -24,10 +24,15 @@ class Canvas(WatchArchetype):
     name = "Canvas"
 
     first_speed_ref: EntityRef[CanvasSpeed] = imported(name="firstSpeed")
+    last_speed_ref: EntityRef[CanvasSpeed] = imported(name="lastSpeed")
 
     @property
     def first_speed(self) -> CanvasSpeed:
         return self.first_speed_ref.get(check=False)
+
+    @property
+    def last_speed(self) -> CanvasSpeed:
+        return self.last_speed_ref.get()
 
     # floor and y at current time
     y_pos: float = shared_memory()
@@ -106,6 +111,11 @@ class CanvasSpeed(CanvasEvent):
     name = "Canvas Speed"
 
     floor_position: float = imported(name="floorPosition")
+    previous_point_ref: EntityRef[CanvasSpeed] = imported(name="previousPoint")
+
+    @property
+    def previous(self) -> CanvasSpeed:
+        return self.previous_point_ref.get()
 
     def update_value(self, value: float) -> None:
         self.canvas.floor_position = value
