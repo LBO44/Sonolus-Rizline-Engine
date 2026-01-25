@@ -118,6 +118,10 @@ class CanvasSpeed(CanvasEvent):
     def previous(self) -> CanvasSpeed:
         return self.previous_point_ref.get()
 
+    def preprocess(self):
+        super().preprocess()
+        self.value *= Options.speed
+
     def update_value(self, value: float) -> None:
         self.canvas.floor_position = value
 
