@@ -58,6 +58,11 @@ class Options:
         default=False,
         scope="Rizline",
     )
+    haptic: bool = toggle_option(
+        name=StandardText.HAPTIC,
+        default=False,
+        scope="Rizline",
+    )
     disable_background: bool = toggle_option(
         name="Disable Color Background",
         description="In case you wish to use a custom Sonolus background instead.",

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from sonolus.script.archetype import (
     EntityRef,
+    HapticType,
     PlayArchetype,
     StandardImport,
     callback,
@@ -230,6 +231,13 @@ class Note(PlayArchetype):
             if judgment != Judgment.GOOD:
                 play_note_particle(self.pos)
 
+        if Options.haptic:
+            match self.kind:
+                case NoteKind.DRAG:
+                    self.result.haptic = HapticType.LIGHT
+                case NoteKind.TAP | NoteKind.HOLD_START:
+                    self.result.haptic = HapticType.MEDIUM
+
         self.despawn = True
 
     def terminate(self):
@@ -346,6 +354,8 @@ class NoteHoldTail(PlayArchetype):
             if not self.was_judged:
                 self.set_result(self.tail_target_time)
             play_note_particle(Vec2(X_JUDGE, self.pos_y))
+            if Options.haptic:
+                self.result.haptic = HapticType.LIGHT
             NoteHoldDespawnEffect.spawn(
                 start_time=self.tail_target_time, line_ref=self.head.point.line_ref
             )

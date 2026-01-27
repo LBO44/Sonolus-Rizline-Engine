@@ -5,5 +5,5 @@ description = "A Sonolus Rizline Engine"
 readme = "README.md"
 requires-python = ">=3.12.5"
 dependencies = [
-    "sonolus-py>=0.13.2",
+    "sonolus-py>=0.14.1",
 ]

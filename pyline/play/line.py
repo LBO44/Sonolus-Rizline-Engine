@@ -37,7 +37,6 @@ class Line(PlayArchetype):
     name = "Line"
 
     first_point_ref: EntityRef[LinePoint] = imported(name="firstPoint")
-    last_point_ref: EntityRef[LinePoint] = imported(name="lastPoint")
     has_hold_notes: bool = imported(name="hasHoldNotes")
 
     visual_start_time: float = entity_data()
