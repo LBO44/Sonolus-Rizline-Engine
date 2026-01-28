@@ -195,9 +195,10 @@ export const convertsChart = (
 
 	/** Used to calculate the amount of life challenge notes heal when hit*/
 	let challengeTotalHitCount = 0
+	let TotalHitCount = 0
 
 	// adding the satge now but we'll modify at the end
-	entities.push(entity("Stage", { challengeTotalHitCount: 0 }))
+	entities.push(entity("Stage", {}))
 
 	//bpm change entities
 	// some chart have a first bpm shifts that are not at beat 0
@@ -375,16 +376,18 @@ export const convertsChart = (
 			(ct) => note.time >= ct.start && note.time <= ct.end
 		)
 
+		TotalHitCount++
 		if (isChallenge) challengeTotalHitCount++
 
 		entities.push(
 			entity(
-				`Note ${isChallenge ? "Challenge" : "Normal"}`,
+				`Note`,
 				{
 					"#BEAT": note.time,
 					floorPosition: note.floorPosition,
 					previousLinePoint: `Line ${note.lineIndex} Point ${previousLinePointIndex}`,
 					...(partnerNote ? { partnerNote } : {}),
+					isChallenge: +isChallenge,
 					kind: note.type,
 				},
 				...(partnerNote || note.type == RizNoteType.Hold ? [noteName] : [])
@@ -392,13 +395,15 @@ export const convertsChart = (
 		)
 
 		if (note.type == RizNoteType.Hold) {
+			TotalHitCount++
 			if (isChallenge) challengeTotalHitCount++
 			entities.push(
-				entity(`Note Hold Tail ${isChallenge ? "Challenge" : "Normal"}`, {
+				entity(`Note Hold Tail`, {
 					"#BEAT": note.otherInformations[0],
 					floorPosition: note.otherInformations[2],
 					canvas: `Canvas ${note.otherInformations[1]}`,
 					holdStart: noteName,
+					isChallenge: +isChallenge,
 				})
 			)
 		}
@@ -490,6 +495,7 @@ export const convertsChart = (
 
 	entities[0] = entity("Stage", {
 		challengeTotalHitCount: challengeTotalHitCount,
+		rizlineMaxCombo: TotalHitCount * 4 - 6,
 		difficulty: { ez: 0, hd: 1, in: 2, at: 2 }[difficulty] ?? 2,
 	})
 
@@ -499,7 +505,7 @@ export const convertsChart = (
 	// 	.forEach((entity, i) => (entity.__index = i))
 
 	//pack to level data and return
-	const data: LevelData = {
+	const data = {
 		//also for debugging
 		__colors: {
 			line: lineColors.map((c, i) => `${i} - ${c}`),
@@ -508,6 +514,6 @@ export const convertsChart = (
 
 		bgmOffset: chart.offset ?? 0,
 		entities: entities,
-	}
+	} as LevelData
 	return { data, info: { themes: chart.themes, lineColors, judgeRingColors } }
 }

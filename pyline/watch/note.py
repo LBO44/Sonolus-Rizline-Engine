@@ -20,8 +20,8 @@ from pyline.lib.note import (
     NOTE_HOLD_DESPAWN_DURATION,
     NOTE_HOLD_MISS_SPEED,
     NOTE_MISS_EFFECT_DURATION,
+    LevelNoteStats,
     NoteKind,
-    NoteType,
     draw_hold_note,
     draw_hold_note_despawn,
     draw_hold_note_miss_effect,
@@ -29,6 +29,7 @@ from pyline.lib.note import (
     draw_note,
     get_note_bucket,
     get_note_pos,
+    init_challenge_note_entity_life,
     play_bad_particle,
     play_note_particle,
     schedule_note_sfx,
@@ -39,12 +40,14 @@ from pyline.watch.line import Line, LinePoint
 
 
 class Note(WatchArchetype):
+    name = "Note"
     is_scored = True
 
     beat: StandardImport.BEAT
     floor_position: float = imported(name="floorPosition")
     kind: NoteKind = imported()
     previous_line_point_ref: EntityRef[LinePoint] = imported(name="previousLinePoint")
+    is_challenge: bool = imported(name="isChallenge")
 
     end_time: float = imported(name="endTime")
     end_y: float = imported(name="endY")
@@ -76,6 +79,10 @@ class Note(WatchArchetype):
 
         # note might spawn a bit too soon, but sligthly faster level loading
         self.visual_start_time = self.point.visual_start_time
+
+        if self.is_challenge:
+            init_challenge_note_entity_life(self)
+            self.entity_score_multiplier = LevelNoteStats.challenge_score_multiplier
 
         if is_replay() and self.end_time != 0:
             if self.jugement == Judgment.MISS:
@@ -110,10 +117,14 @@ class Note(WatchArchetype):
 
 
 class NoteHoldTail(WatchArchetype):
+    name = "Note Hold Tail"
+    is_scored = True
+
     beat: StandardImport.BEAT
     floor_position: float = imported(name="floorPosition")
     head_ref: EntityRef[Note] = imported(name="holdStart")
     canvas_ref: EntityRef[Canvas] = imported(name="canvas")
+    is_challenge: bool = imported(name="isChallenge")
 
     tail_target_time: float = entity_data()
 
@@ -151,6 +162,10 @@ class NoteHoldTail(WatchArchetype):
 
         self.tail_target_time = beat_to_time(self.beat)
         self.result.target_time = self.tail_target_time
+
+        if self.is_challenge:
+            init_challenge_note_entity_life(self)
+            self.entity_score_multiplier = LevelNoteStats.challenge_score_multiplier
 
         if is_replay():
             self.result.bucket_value = self.accuracy * 1000
@@ -263,10 +278,8 @@ class NoteBadParticleSchedule(WatchArchetype):
 
 
 NOTES_ARCHETYPES = (
-    Note.derive("Note Normal", True, key=NoteType.NORMAL),
-    Note.derive("Note Challenge", True, key=NoteType.CHALLENGE),
-    NoteHoldTail.derive("Note Hold Tail Normal", True, key=NoteType.NORMAL),
-    NoteHoldTail.derive("Note Hold Tail Challenge", True, key=NoteType.CHALLENGE),
+    Note,
+    NoteHoldTail,
     NoteHoldDespawnEffect,
     NoteHoldMissEffect,
     NoteMissEffect,

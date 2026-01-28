@@ -2,10 +2,14 @@ from enum import IntEnum
 from math import floor, sin
 from typing import Protocol
 
-from sonolus.script.archetype import PlayArchetype, WatchArchetype
+from sonolus.script.archetype import (
+    PlayArchetype,
+    WatchArchetype,
+)
 from sonolus.script.bucket import Bucket, JudgmentWindow
 from sonolus.script.easing import ease_in_back, ease_in_quad, ease_out_cubic
 from sonolus.script.effect import Effect
+from sonolus.script.globals import level_data
 from sonolus.script.interval import clamp, remap, remap_clamped
 from sonolus.script.quad import Rect
 from sonolus.script.runtime import time
@@ -45,11 +49,6 @@ NOTE_MISS_EFFECT_DURATION = 0.6
 
 
 # only used to define life
-class NoteType(IntEnum):
-    NORMAL = 0
-    CHALLENGE = 1
-
-
 class ChartDifficulty(IntEnum):
     EZ = 0
     HD = 1
@@ -89,6 +88,12 @@ class HoldTailNote(Protocol):
     def tail_x(self) -> float: ...
     @property
     def head_x(self) -> float: ...
+
+
+@level_data
+class LevelNoteStats:
+    challenge_hit_count: int
+    challenge_score_multiplier: float
 
 
 def schedule_note_sfx(kind: NoteKind, target_time: float) -> None:
@@ -316,9 +321,8 @@ def get_note_judgement_window(kind: NoteKind) -> JudgmentWindow:
     return result
 
 
-def init_note_life(
+def init_note_archetype_life(
     archetype: type[PlayArchetype | WatchArchetype],
-    challenge_hit_count: int,
     difficulty: ChartDifficulty,
 ):
     # from rizwiki.cn
@@ -334,17 +338,14 @@ def init_note_life(
         case ChartDifficulty.IN:
             good = -12
             miss = -60
+    archetype.archetype_life.update(
+        good_increment=good,
+        miss_increment=miss,
+    )
 
-    match archetype.key:
-        case NoteType.NORMAL:
-            archetype.life.update(
-                good_increment=good,
-                miss_increment=miss,
-            )
-        case NoteType.CHALLENGE:
-            archetype.life.update(
-                perfect_increment=floor(1300 / challenge_hit_count),
-                great_increment=floor(1100 / challenge_hit_count),
-                good_increment=good,
-                miss_increment=miss,
-            )
+
+def init_challenge_note_entity_life(note: PlayArchetype | WatchArchetype):
+    note.entity_life.update(
+        perfect_increment=floor(1300 / LevelNoteStats.challenge_hit_count),
+        great_increment=floor(1100 / LevelNoteStats.challenge_hit_count),
+    )

@@ -10,7 +10,7 @@ from sonolus.script.timing import beat_to_time
 
 from pyline.lib.buckets import init_buckets
 from pyline.lib.layout import Challenge, draw_background
-from pyline.lib.note import ChartDifficulty, init_note_life
+from pyline.lib.note import ChartDifficulty, LevelNoteStats, init_note_archetype_life
 from pyline.lib.streams import Streams
 from pyline.lib.ui import init_ui
 from pyline.watch.note import NOTES_ARCHETYPES, NoteBadParticleSchedule
@@ -20,6 +20,7 @@ class Stage(WatchArchetype):
     name = "Stage"
 
     challenge_total_hit_count: int = imported(name="challengeTotalHitCount")
+    max_rizline_combo: int = imported(name="rizlineMaxCombo")
     difficulty: ChartDifficulty = imported()
 
     def preprocess(self):
@@ -28,7 +29,7 @@ class Stage(WatchArchetype):
         init_buckets()
         for note in NOTES_ARCHETYPES:
             if note.is_scored:  # skip note effects
-                init_note_life(note, self.challenge_total_hit_count, self.difficulty)
+                init_note_archetype_life(note, self.difficulty)
         level_score().update(
             perfect_multiplier=1.0,
             great_multiplier=0.8,
@@ -40,6 +41,12 @@ class Stage(WatchArchetype):
             consecutive_great_step=4,
             consecutive_great_cap=12,
         )
+
+        LevelNoteStats.challenge_hit_count = self.challenge_total_hit_count
+        LevelNoteStats.challenge_score_multiplier = self.max_rizline_combo / (
+            5 * self.challenge_total_hit_count
+        )
+
         for time, pos in Streams.bad_effects.iter_items_from(0):
             NoteBadParticleSchedule.spawn(start_time=time, pos=pos)
 

@@ -37,8 +37,8 @@ from pyline.lib.note import (
     NOTE_HOLD_DESPAWN_DURATION,
     NOTE_HOLD_MISS_SPEED,
     NOTE_MISS_EFFECT_DURATION,
+    LevelNoteStats,
     NoteKind,
-    NoteType,
     draw_hold_note,
     draw_hold_note_despawn,
     draw_hold_note_miss_effect,
@@ -47,6 +47,7 @@ from pyline.lib.note import (
     get_note_bucket,
     get_note_judgement_window,
     get_note_pos,
+    init_challenge_note_entity_life,
     play_bad_particle,
     play_note_particle,
     play_note_sfx,
@@ -60,12 +61,14 @@ from pyline.play.line import Line, LinePoint
 
 
 class Note(PlayArchetype):
+    name = "Note"
     is_scored = True
 
     beat: StandardImport.BEAT
     floor_position: float = imported(name="floorPosition")
     kind: NoteKind = imported()
     previous_line_point_ref: EntityRef[LinePoint] = imported(name="previousLinePoint")
+    is_challenge: bool = imported(name="isChallenge")
 
     partner_note: EntityRef[Note] = imported(name="partnerNote")
     """
@@ -114,6 +117,11 @@ class Note(PlayArchetype):
         self.input_interval = (
             self.judgment_window.good + self.target_time + input_offset()
         )
+
+        if self.is_challenge:
+            init_challenge_note_entity_life(self)
+            self.entity_score_multiplier = LevelNoteStats.challenge_score_multiplier
+
         self.result.bucket = get_note_bucket(self.kind)
         self.result.accuracy = 1.0
 
@@ -246,10 +254,14 @@ class Note(PlayArchetype):
 
 
 class NoteHoldTail(PlayArchetype):
+    name = "Note Hold Tail"
+    is_scored = True
+
     beat: StandardImport.BEAT
     floor_position: float = imported(name="floorPosition")
     head_ref: EntityRef[Note] = imported(name="holdStart")
     canvas_ref: EntityRef[Canvas] = imported(name="canvas")
+    is_challenge: bool = imported(name="isChallenge")
 
     tail_target_time: float = entity_data()
     start_time: float = entity_data()
@@ -293,6 +305,11 @@ class NoteHoldTail(PlayArchetype):
         self.input_interval = (
             self.judgment_window.good + self.tail_target_time + input_offset()
         )
+
+        if self.is_challenge:
+            init_challenge_note_entity_life(self)
+            self.entity_score_multiplier = LevelNoteStats.challenge_score_multiplier
+
         self.result.bucket = Buckets.hold_end
         self.result.accuracy = 1.0
         self.start_time = min(self.head.start_time, self.input_interval.start)
@@ -419,10 +436,8 @@ class NoteMissEffect(PlayArchetype):
 
 
 NOTES_ARCHETYPES = (
-    Note.derive("Note Normal", True, key=NoteType.NORMAL),
-    Note.derive("Note Challenge", True, key=NoteType.CHALLENGE),
-    NoteHoldTail.derive("Note Hold Tail Normal", True, key=NoteType.NORMAL),
-    NoteHoldTail.derive("Note Hold Tail Challenge", True, key=NoteType.CHALLENGE),
+    Note,
+    NoteHoldTail,
     NoteHoldDespawnEffect,
     NoteHoldMissEffect,
     NoteMissEffect,

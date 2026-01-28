@@ -6,7 +6,7 @@ from sonolus.script.timing import beat_to_time
 
 from pyline.lib.buckets import init_buckets
 from pyline.lib.layout import Challenge, draw_background
-from pyline.lib.note import ChartDifficulty, init_note_life
+from pyline.lib.note import ChartDifficulty, LevelNoteStats, init_note_archetype_life
 from pyline.lib.ui import init_ui
 from pyline.play.input import refresh_input_state
 from pyline.play.note import NOTES_ARCHETYPES
@@ -16,6 +16,7 @@ class Stage(PlayArchetype):
     name = "Stage"
 
     challenge_total_hit_count: int = imported(name="challengeTotalHitCount")
+    max_rizline_combo: int = imported(name="rizlineMaxCombo")
     difficulty: ChartDifficulty = imported()
 
     def preprocess(self):
@@ -24,7 +25,7 @@ class Stage(PlayArchetype):
         init_buckets()
         for note in NOTES_ARCHETYPES:
             if note.is_scored:  # skip note effects
-                init_note_life(note, self.challenge_total_hit_count, self.difficulty)
+                init_note_archetype_life(note, self.difficulty)
 
         level_score().update(
             perfect_multiplier=1.0,
@@ -32,10 +33,14 @@ class Stage(PlayArchetype):
             good_multiplier=0.5,
             consecutive_perfect_multiplier=1.0,
             consecutive_perfect_step=4,
-            consecutive_perfect_cap=12,
+            consecutive_perfect_cap=4,
             consecutive_great_multiplier=1.0,
             consecutive_great_step=4,
-            consecutive_great_cap=12,
+            consecutive_great_cap=4,
+        )
+        LevelNoteStats.challenge_hit_count = self.challenge_total_hit_count
+        LevelNoteStats.challenge_score_multiplier = self.max_rizline_combo / (
+            5 * self.challenge_total_hit_count
         )
 
     def spawn_order(self) -> float:
