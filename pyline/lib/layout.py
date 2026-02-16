@@ -1,3 +1,4 @@
+from sonolus.script.debug import notify
 from sonolus.script.globals import level_memory
 from sonolus.script.interval import Interval, lerp, remap
 from sonolus.script.quad import Rect
@@ -132,12 +133,22 @@ def get_visual_start_time(floor_position: float, first_speed: CanvasSpeed) -> fl
                 return speed.time + (target_min - speed.floor_position) / speed.value
             elif speed.value < 0 and speed.floor_position > target_max:
                 return speed.time + (target_max - speed.floor_position) / speed.value
+            notify("Could not find visual start time")
+            return -2
 
         else:
             seg_min = min(speed.floor_position, speed.next.floor_position)
             seg_max = max(speed.floor_position, speed.next.floor_position)
 
-            if max(target_min, seg_min) <= min(target_max, seg_max):
+            if (max(target_min, seg_min) <= min(target_max, seg_max)) or (
+                # sometimes there are points before the first speed point
+                speed.is_first_point
+                and (
+                    (speed.floor_position >= target_min)
+                    if speed.value >= 0
+                    else (speed.floor_position <= target_max)
+                )
+            ):
                 # if speed.value < 0, it first appears at X_JUDGE
                 return (
                     speed.time
@@ -147,10 +158,6 @@ def get_visual_start_time(floor_position: float, first_speed: CanvasSpeed) -> fl
                     )
                     / speed.value
                 )
-
-        if speed.is_last_point:
-            # notify("Could not find visual start time")
-            return -2
 
         speed_idx = speed.next.index
 
@@ -177,7 +184,14 @@ def get_visual_end_time(floor_position: float, last_speed: CanvasSpeed) -> float
             seg_min = min(speed.floor_position, speed.next.floor_position)
             seg_max = max(speed.floor_position, speed.next.floor_position)
 
-            if max(target_min, seg_min) <= min(target_max, seg_max):
+            if (max(target_min, seg_min) <= min(target_max, seg_max)) or (
+                speed.is_first_point
+                and (
+                    (speed.floor_position >= target_min)
+                    if speed.value >= 0
+                    else (speed.floor_position <= target_max)
+                )
+            ):
                 # if speed.value > 0, it passed x_judge normally, else passed x_spawn backward
                 return (
                     speed.time
@@ -189,7 +203,7 @@ def get_visual_end_time(floor_position: float, last_speed: CanvasSpeed) -> float
                 )
 
         if speed.is_first_point:
-            # notify("Could not find visual find end time")
+            notify("Could not find visual find end time")
             return -2.0
 
         speed_idx = speed.previous.index

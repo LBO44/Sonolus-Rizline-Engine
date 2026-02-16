@@ -127,12 +127,13 @@ def get_note_pos(note: Note) -> Vec2:
         note.floor_position,
         note.point.canvas.floor_position,
     )
+    # rizline remap using pos too, not time or beat
     y = remap_ease(
-        note.point.target_time,
-        note.point.next.target_time,
+        note.point.pos.x,
+        note.point.next.pos.x,
         note.point.pos.y,
         note.point.next.pos.y,
-        note.target_time,
+        x,
         note.point.ease_type,
     )
     return Vec2(x, y)

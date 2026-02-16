@@ -64,7 +64,7 @@ class EaseEvent(PlayArchetype, ABC):
     def should_spawn(self) -> float:
         return True if self.is_first_point else time() >= self.time
 
-    def interpolate_value(self, max_time: float) -> float:
+    def interpolate_value(self, time: float) -> float:
         if self.is_last_point:
             return self.value
         else:
@@ -73,7 +73,7 @@ class EaseEvent(PlayArchetype, ABC):
                 self.next.time,
                 self.value,
                 self.next.value,
-                max_time,
+                time,
                 self.ease_type,
             )
 
@@ -82,7 +82,8 @@ class EaseEvent(PlayArchetype, ABC):
         raise NotImplementedError
 
     def update_sequential(self):
-        self.update_value(self.interpolate_value(max(time(), self.time)))
+        # don't clamp time ( time() ≥ self.time ) for speed, idk about other events
+        self.update_value(self.interpolate_value(time()))
 
         if self.is_last_point or time() >= self.next.time:
             self.despawn = True
@@ -126,11 +127,11 @@ class CanvasSpeed(CanvasEvent):
         self.canvas.floor_position = value
 
     # we need to interpolate floor_position and not value
-    def interpolate_value(self, max_time: float) -> float:
-        return self.floor_position + self.value * (max_time - self.time)
+    def interpolate_value(self, time: float) -> float:
+        return self.floor_position + self.value * (time - self.time)
 
     def update_sequential(self):
-        self.update_value(self.interpolate_value(max(time(), self.time)))
+        self.update_value(self.interpolate_value(time()))
 
         # last point still needs to updtate canvas floor
         if (not self.is_last_point) and time() >= self.next.time:

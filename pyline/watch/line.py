@@ -11,7 +11,6 @@ from sonolus.script.archetype import (
     imported,
     shared_memory,
 )
-from sonolus.script.debug import notify
 from sonolus.script.runtime import time
 from sonolus.script.timing import beat_to_time
 from sonolus.script.vec import Vec2
@@ -216,17 +215,13 @@ class LinePoint(WatchArchetype):
             )
         )
 
-        if self.visual_start_time <= -2:
-            # most likely invalid, usually better if point doesn't not appear
-            notify("Invalid start time")
-            self.visual_end_time = -1e7
-            return
-
         self.visual_start_time = min(
             self.visual_start_time, self.next.visual_start_time
         )
 
         self.visual_end_time = max(self.visual_end_time, self.next.visual_end_time)
+
+        assert self.visual_end_time > -2, "Visual End Time before -2"
 
         assert (
             self.visual_end_time >= self.visual_start_time or self.floor_position >= 0

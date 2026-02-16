@@ -66,7 +66,7 @@ class EaseEvent(WatchArchetype, ABC):
         return 1e8 if self.is_last_point else self.next.time
 
     # different implementation in canvas speed
-    def interpolate_value(self, max_time: float) -> float:
+    def interpolate_value(self, time: float) -> float:
         if self.is_last_point:
             return self.value
         else:
@@ -75,7 +75,7 @@ class EaseEvent(WatchArchetype, ABC):
                 self.next.time,
                 self.value,
                 self.next.value,
-                max_time,
+                time,
                 self.ease_type,
             )
 
@@ -84,7 +84,8 @@ class EaseEvent(WatchArchetype, ABC):
         raise NotImplementedError
 
     def update_sequential(self):
-        self.update_value(self.interpolate_value(max(time(), self.time)))
+        # don't clamp time ( time() ≥ self.time ) for speed, idk about other events
+        self.update_value(self.interpolate_value(time()))
 
 
 class CanvasEvent(EaseEvent, ABC):
@@ -125,8 +126,8 @@ class CanvasSpeed(CanvasEvent):
         self.canvas.floor_position = value
 
     # we need to interpolate floor_position and not value
-    def interpolate_value(self, max_time: float) -> float:
-        return self.floor_position + self.value * (max_time - self.time)
+    def interpolate_value(self, time: float) -> float:
+        return self.floor_position + self.value * (time - self.time)
 
 
 class CameraMove(EaseEvent):
