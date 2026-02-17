@@ -161,6 +161,9 @@ def draw_line(point: LinePoint) -> None:
     top_color_index = point.next.color
     global_transition_top_alpha = -1
 
+    if Options.color_transition and point.color != point.next.color:
+        mode = DrawMode.Local
+
     if point.line.has_line_color:
         line_color = point.line.line_color
 
@@ -187,9 +190,8 @@ def draw_line(point: LinePoint) -> None:
                 global_transition_top_alpha = unlerp_clamped(
                     line_color.time, line_color.next_time, time()
                 )
-
-        elif Options.color_transition and point.color != point.next.color:
-            mode = DrawMode.Local
+            else:
+                mode = DrawMode.Simple
 
     base_sprite = Skin.lines[base_color_index]
     top_sprite = Skin.lines[top_color_index]
