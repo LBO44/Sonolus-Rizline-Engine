@@ -85,6 +85,8 @@ export type RizChart = {
 	songsName?: string
 	/** was always 0, removed from newer charts */
 	offset?: number
+	/** Only in charts from the editor */
+	chartDelayMs?: number
 	themes: RizThemes
 	bPM: number
 	bpmShifts: RizKeyPoint[]
@@ -512,7 +514,7 @@ export const convertsChart = (
 			judgeRing: judgeRingColors.map((c, i) => `${i} - ${c}`),
 		},
 
-		bgmOffset: chart.offset ?? 0,
+		bgmOffset: (chart.chartDelayMs ?? 0) / 1000,
 		entities: entities,
 	} as LevelData
 	return { data, info: { themes: chart.themes, lineColors, judgeRingColors } }
