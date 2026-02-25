@@ -31,6 +31,7 @@ from pyline.lib.layout import (
     X_SPAWN,
     floor_to_x,
     is_in_challenge,
+    note_speed_distance,
 )
 from pyline.lib.line import LinePoint
 from pyline.lib.options import Options
@@ -141,14 +142,20 @@ def get_note_pos(note: Note) -> Vec2:
 def draw_note(note: Note) -> None:
     if note.kind == NoteKind.HOLD_START:
         return
-    if note.pos.x < X_SPAWN:
+
+    remaining_dist = note.floor_position - note.point.canvas.floor_position
+
+    if remaining_dist > note_speed_distance():
         return
 
     sprite = Sprite(-1)
     radius = camera.scale * Options.note_size
 
-    dist = min(X_NOTE_DISAPPEAR - note.pos.x, note.pos.x - X_SPAWN)
-    fade = remap_clamped(0, 0.1, 0, 1, dist)
+    progress = remaining_dist / note_speed_distance()
+
+    fade_in = remap_clamped(1.0, 0.9, 0, 1, progress)
+    fade_out = remap_clamped(0.0, -0.1, 1, 0, progress)
+    fade = min(fade_in, fade_out)
 
     match note.kind:
         case NoteKind.DRAG:
@@ -174,10 +181,12 @@ def draw_hold_note(
 
     radius = NOTE_HOLD_RADIUS * camera.scale * Options.note_size
 
-    if tail_x > X_NOTE_DISAPPEAR or head_x < X_SPAWN:
+    if tail_x > camera.scaled_x_note_disappear or head_x < camera.scaled_x_spawn:
         return
 
-    head_dist = min(X_NOTE_DISAPPEAR - head_x, head_x - X_SPAWN)
+    head_dist = min(
+        camera.scaled_x_note_disappear - head_x, head_x - camera.scaled_x_spawn
+    )
     head_fade = remap_clamped(0, 0.05, 0, 1, head_dist)
 
     head_layout = Rect.from_margin(radius).translate(head_pos)
@@ -187,14 +196,18 @@ def draw_hold_note(
         head_layout, z + z_offset(draw_index, 2), head_fade
     )
 
-    line_left = clamp(tail_x - radius * 0.5, X_SPAWN, X_NOTE_DISAPPEAR)
-    line_right = clamp(head_x - radius * 0.5, X_SPAWN, X_NOTE_DISAPPEAR)
+    line_left = clamp(
+        tail_x - radius * 0.5, camera.scaled_x_spawn, camera.scaled_x_note_disappear
+    )
+    line_right = clamp(
+        head_x - radius * 0.5, camera.scaled_x_spawn, camera.scaled_x_note_disappear
+    )
 
     line_split_left = min(line_left + HOLD_FADE_LENGTH, line_right)
 
     z_connctor = z + z_offset(draw_index, 1)
 
-    if head_x <= X_NOTE_DISAPPEAR - radius:
+    if head_x <= camera.scaled_x_note_disappear - radius:
         line_split_right = line_right
     else:
         line_split_right = max(line_right - HOLD_FADE_LENGTH, line_split_left)

@@ -11,7 +11,13 @@ from sonolus.script.vec import Vec2
 
 from pyline.lib.ease import Canvas, camera, ease
 from pyline.lib.layer import LAYER_JUDGE_RING, LAYER_LINE, LAYER_LINE_GLOBAL, z_offset
-from pyline.lib.layout import X_JUDGE, X_LINE_DISAPPEAR, X_SPAWN, is_in_challenge
+from pyline.lib.layout import (
+    X_JUDGE,
+    X_LINE_DISAPPEAR,
+    X_SPAWN,
+    floor_to_x,
+    is_in_challenge,
+)
 from pyline.lib.options import Options
 from pyline.lib.skin import Skin
 
@@ -47,6 +53,7 @@ class Line(Protocol):
 class LinePoint(Protocol):
     beat: float
     alpha: float
+    y_pos: float
     ease_type: int
     color: int
 
@@ -63,6 +70,13 @@ class LinePoint(Protocol):
     def line(self) -> Line: ...
     @property
     def canvas(self) -> Canvas: ...
+
+
+def get_point_pos(point: LinePoint) -> Vec2:
+    x = floor_to_x(point.floor_position, point.canvas.floor_position)
+    unscaled_y = 2 * (point.y_pos + point.canvas.y_pos - camera.y_pos)
+    y = camera.y_pos + (unscaled_y - camera.y_pos) * camera.scale
+    return Vec2(x, y)
 
 
 def get_y_at_judge_line(point: LinePoint) -> float:
@@ -321,7 +335,9 @@ def draw_curved_line(
 
 def points_to_quad(a: Vec2, b: Vec2) -> Quad:
     """Get the quad that connect 2 coordinates"""
-    LINE_WIDTH = 0.01
+    # Rizline doesn't seem to scale width
+    # But it sometimes looks ugly in Sonolus if not scaled
+    LINE_WIDTH = 0.01 * min(1, camera.scale)
     x = b.x - a.x
     y = b.y - a.y
 

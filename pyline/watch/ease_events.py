@@ -15,6 +15,7 @@ from sonolus.script.runtime import time
 from sonolus.script.timing import beat_to_time
 
 from pyline.lib.ease import camera, remap_ease
+from pyline.lib.layout import X_JUDGE, X_NOTE_DISAPPEAR, X_SPAWN, camera_scale_x
 from pyline.lib.options import Options
 
 
@@ -147,6 +148,9 @@ class CameraScale(EaseEvent):
 
     def update_value(self, value: float) -> None:
         camera.scale = value
+        camera.scaled_x_spawn = camera_scale_x(X_SPAWN, value)
+        camera.scaled_x_judge = camera_scale_x(X_JUDGE, value)
+        camera.scaled_x_note_disappear = camera_scale_x(X_NOTE_DISAPPEAR, value)
 
 
 EASE_EVENT_ARCHETYPES = [

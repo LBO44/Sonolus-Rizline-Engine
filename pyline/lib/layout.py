@@ -6,7 +6,7 @@ from sonolus.script.runtime import is_tutorial, screen, time
 from sonolus.script.sprite import Sprite
 from sonolus.script.vec import Vec2
 
-from pyline.lib.ease import CanvasSpeed
+from pyline.lib.ease import CanvasSpeed, camera
 from pyline.lib.layer import (
     LAYER_BACKGROUND,
     LAYER_BACKGROUND_FADE_JUDGE,
@@ -29,13 +29,18 @@ class Challenge:
     transition: Interval
 
 
+def camera_scale_x(x: float, scale: float) -> float:
+    return X_JUDGE + (x - X_JUDGE) * scale
+
+
 def draw_background() -> None:
     """draw the coloured background with transition animations"""
 
     if Options.disable_background:
         return
 
-    fade_layout = Rect.from_margin(screen().t, screen().t / 2)
+    # ideally should cover up to the side of the screen
+    fade_layout = Rect.from_margin(screen().t, screen().t * 0.625)
     challenge = -1
 
     if i := time() in Challenge.inside:
@@ -47,12 +52,12 @@ def draw_background() -> None:
     if o or i:
         Skin.background[challenge].draw(screen(), LAYER_BACKGROUND, 1)
         Skin.background_fade_spawn[challenge].draw(
-            fade_layout.translate(Vec2(X_SPAWN + 0.1, 0)),
+            fade_layout.translate(Vec2(camera.scaled_x_spawn + 0.1, 0)),
             LAYER_BACKGROUND_FADE_SPAWN,
             1.5,
         )
         Skin.background_fade_judge[challenge].draw(
-            fade_layout.translate(Vec2(X_NOTE_DISAPPEAR - 0.05, 0)),
+            fade_layout.translate(Vec2(camera.scaled_x_note_disappear - 0.05, 0)),
             LAYER_BACKGROUND_FADE_JUDGE,
             1.5,
         )
@@ -112,7 +117,8 @@ def note_speed_distance() -> float:
 def floor_to_x(point_floor_position: float, canvas_floor_position: float) -> float:
     remaining = point_floor_position - canvas_floor_position
     progress = remaining / note_speed_distance()
-    return lerp(X_JUDGE, X_SPAWN, progress)
+    x = lerp(X_JUDGE, X_SPAWN, progress)
+    return camera_scale_x(x, camera.scale)
 
 
 def get_visual_start_time(floor_position: float, first_speed: CanvasSpeed) -> float:

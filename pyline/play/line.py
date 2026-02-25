@@ -17,17 +17,17 @@ from sonolus.script.vec import Vec2
 
 from pyline.lib.layout import (
     X_JUDGE,
-    floor_to_x,
     get_visual_end_time,
     get_visual_start_time,
 )
 from pyline.lib.line import (
     draw_judge_ring,
     draw_line,
+    get_point_pos,
     get_y_at_judge_line,
 )
 from pyline.lib.options import Options
-from pyline.play.ease_events import Canvas, camera
+from pyline.play.ease_events import Canvas
 
 
 class Line(PlayArchetype):
@@ -170,9 +170,7 @@ class LinePoint(PlayArchetype):
 
     @property
     def pos(self) -> Vec2:
-        x = floor_to_x(self.floor_position, self.canvas.floor_position)
-        y = 2 * (self.y_pos + self.canvas.y_pos - camera.y_pos)
-        return Vec2(x, y)
+        return get_point_pos(self)
 
     @callback(order=1)  # need to run after canvas speed preprocess
     def preprocess(self):

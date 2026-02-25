@@ -29,6 +29,9 @@ from sonolus.script.interval import lerp, unlerp
 class camera:
     y_pos: float
     scale: float
+    scaled_x_spawn: float
+    scaled_x_judge: float
+    scaled_x_note_disappear: float
 
 
 class Canvas(Protocol):
@@ -37,6 +40,7 @@ class Canvas(Protocol):
     @property
     def index(self) -> int: ...
 
+    y_pos: float
     floor_position: float
 
 
