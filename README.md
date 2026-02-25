@@ -53,7 +53,8 @@ Unlike with Skin we can change the colours by only modifying the data.
 Default Sonolus effect names are used, however only `#PERFECT` (for Tap and Hold Start notes) and `#GREAT` (for Drag notes) are used.
 
 ## Links
+- [Rizwiki.cn](https://rizwiki.cn/index.php), for detailed gameplay mechanics descriptions.
 - [Rhythm Game Wiki: Rizline](https://rgwiki.stary.pc.pl/wiki/Rizline), useful informations about Rizline files.
 - [Rizlib](https://gitlab.com/TadeLn/rizlib), Rust library to interact with the game files.
-- [Sonolus Website](https://sonolus.com/)
+- [Sonolus Website](https://sonolus.com)
 - This repository is based on [Sonolus.py Template](https://github.com/qwewqa/sonolus.py-template-project)

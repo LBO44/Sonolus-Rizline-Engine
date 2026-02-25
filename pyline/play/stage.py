@@ -4,9 +4,9 @@ from sonolus.script.interval import Interval
 from sonolus.script.runtime import level_score, time
 from sonolus.script.timing import beat_to_time
 
-from pyline.lib.buckets import init_buckets
+from pyline.lib.buckets import ChartDifficulty, init_buckets
 from pyline.lib.layout import Challenge, draw_background
-from pyline.lib.note import ChartDifficulty, LevelNoteStats, init_note_archetype_life
+from pyline.lib.note import ChartStats, init_note_archetype_life
 from pyline.lib.ui import init_ui
 from pyline.play.input import refresh_input_state
 from pyline.play.note import NOTES_ARCHETYPES
@@ -22,7 +22,7 @@ class Stage(PlayArchetype):
     def preprocess(self):
         debug_log(0)
         init_ui()
-        init_buckets()
+        init_buckets(self.difficulty)
         for note in NOTES_ARCHETYPES:
             if note.is_scored:  # skip note effects
                 init_note_archetype_life(note, self.difficulty)
@@ -38,10 +38,11 @@ class Stage(PlayArchetype):
             consecutive_great_step=4,
             consecutive_great_cap=4,
         )
-        LevelNoteStats.challenge_hit_count = self.challenge_total_hit_count
-        LevelNoteStats.challenge_score_multiplier = self.max_rizline_combo / (
+        ChartStats.challenge_hit_count = self.challenge_total_hit_count
+        ChartStats.challenge_score_multiplier = self.max_rizline_combo / (
             5 * self.challenge_total_hit_count
         )
+        ChartStats.difficulty = self.difficulty
 
     def spawn_order(self) -> float:
         return 0
