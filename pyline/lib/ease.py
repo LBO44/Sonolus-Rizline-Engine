@@ -22,7 +22,7 @@ from sonolus.script.easing import (
     ease_out_sine,
 )
 from sonolus.script.globals import level_memory
-from sonolus.script.interval import lerp, remap
+from sonolus.script.interval import lerp, unlerp
 
 
 @level_memory
@@ -83,7 +83,7 @@ class RizEaseType(IntEnum):
 def remap_ease(
     a: float, b: float, c: float, d: float, x: float, ease_type: int
 ) -> float:
-    t = remap(a, b, 0, 1, x)
+    t = unlerp(a, b, x)
     e = ease(t, ease_type)
     return lerp(c, d, e)
 
