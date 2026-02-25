@@ -124,15 +124,19 @@ def get_tap_window(diff: ChartDifficulty, challenge: bool = False) -> JudgmentWi
 
 
 # Can be early but can't be Late as you don't need to release
+# Can be Early only during riztime, can never be Bad
 def get_hold_end_window(
     diff: ChartDifficulty, challenge: bool = False
 ) -> JudgmentWindow:
     window = get_window(challenge, diff)
-    return JudgmentWindow(
-        perfect=Interval(window.perfect.start, 0),
-        great=Interval(window.great.start, 0),  # Hold End can be Early
-        good=Interval(window.great.start, 0),  # Hold End can't be Bad apparently
+    newWindow = JudgmentWindow(
+        perfect=Interval(window.good.start, 0),
+        great=Interval(window.good.start, 0),  # use bad window for early?
+        good=Interval(window.good.start, 0),
     )
+    if challenge:
+        newWindow.update(perfect=Interval(window.perfect.start, 0))
+    return newWindow
 
 
 # Can only be perfect or miss

@@ -301,7 +301,9 @@ class NoteHoldTail(PlayArchetype):
         return self.head.pos.x if self.head.target_time > time() else X_JUDGE
 
     def preprocess(self):
-        self.judgment_window = get_hold_end_window(ChartStats.difficulty)
+        self.judgment_window = get_hold_end_window(
+            ChartStats.difficulty, self.is_challenge
+        )
         self.tail_target_time = beat_to_time(self.beat)
         self.input_interval = (
             self.judgment_window.good + self.tail_target_time + input_offset()
