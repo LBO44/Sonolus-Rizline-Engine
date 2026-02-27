@@ -65,12 +65,8 @@ type RizColorKeyPoint = {
 
 type RizColorList = [background: RizColor, note: RizColor, particle: RizColor]
 /** Colors of the level, changes during challenge time.
- * First color list is for "normal" time, second one for 1st challenge time, third one for 2nd challenge time...
- * However only Brave Road has challenge times with different colours for now*/
-type RizThemes = [
-	normal: { colorsList: RizColorList },
-	challenge: { colorsList: RizColorList },
-]
+ * First color list is for "normal" time, second one for 1st challenge time, third one for 2nd challenge time...*/
+type RizThemes = { colorsList: RizColorList }[]
 
 enum RizNoteType {
 	Tap = 0,
@@ -92,7 +88,7 @@ export type RizChart = {
 	bpmShifts: RizKeyPoint[]
 	/** Intervals where the colors change and notes heal */
 	challengeTimes: {
-		/** unknown, usually equals to start time */
+		/** unknown, usually equals to start time, 0 in charts from the editor */
 		checkPoint: number
 		start: number
 		end: number
@@ -169,7 +165,14 @@ const getColorIndex = (rizcolor: RizColor, colorArray: string[]) => {
 		index = colorArray.push(color) - 1
 	}
 
-	return Math.min(index, 31)
+	return index
+}
+
+const getThemeIndex = <T>(themes: T[], targetTheme: T): number => {
+	return themes.findIndex((theme) => {
+		const targetThemeStr = JSON.stringify(targetTheme)
+		return JSON.stringify(theme) === targetThemeStr
+	})
 }
 
 const entity = (
@@ -223,12 +226,19 @@ export const convertsChart = (
 	)
 
 	//challenge time
-	chart.challengeTimes.forEach((challengeTime) => {
+	const seenThemes = new Set<string>()
+	const themes = chart.themes.filter((theme) => {
+		const serial = JSON.stringify(theme)
+		return seenThemes.has(serial) ? false : seenThemes.add(serial)
+	})
+
+	chart.challengeTimes.forEach((challengeTime, i) => {
 		entities.push(
 			entity("Challenge Time", {
 				startBeat: challengeTime.start,
 				endBeat: challengeTime.end,
 				transitionDuration: challengeTime.transTime,
+				themeIndex: Math.min(getThemeIndex(themes, chart.themes[i + 1]), 7), // engine/skin only support up to 8 themes
 			})
 		)
 	})
@@ -255,7 +265,7 @@ export const convertsChart = (
 		)
 
 		line.linePoints.forEach((point, pointIndex) => {
-			const colorIndex = getColorIndex(point.color, lineColors)
+			const colorIndex = Math.min(61, getColorIndex(point.color, lineColors))
 
 			entities.push(
 				entity(
@@ -278,8 +288,14 @@ export const convertsChart = (
 
 		line.lineColor.sort((a, b) => a.time - b.time)
 		line.lineColor.forEach((lineColor, pointIndex) => {
-			const startColorIdx = getColorIndex(lineColor.startColor, lineColors)
-			const endColorIdx = getColorIndex(lineColor.endColor, lineColors)
+			const startColorIdx = Math.min(
+				61,
+				getColorIndex(lineColor.startColor, lineColors)
+			)
+			const endColorIdx = Math.min(
+				61,
+				getColorIndex(lineColor.endColor, lineColors)
+			)
 
 			const hasTransition =
 				lineColor.startColor.r !== lineColor.endColor.r ||
@@ -306,8 +322,14 @@ export const convertsChart = (
 
 		line.judgeRingColor.sort((a, b) => a.time - b.time)
 		line.judgeRingColor.forEach((ringColor, pointIndex) => {
-			const startColorIdx = getColorIndex(ringColor.startColor, judgeRingColors)
-			const endColorIdx = getColorIndex(ringColor.endColor, judgeRingColors)
+			const startColorIdx = Math.min(
+				31,
+				getColorIndex(ringColor.startColor, judgeRingColors)
+			)
+			const endColorIdx = Math.min(
+				31,
+				getColorIndex(ringColor.endColor, judgeRingColors)
+			)
 
 			const hasTransition =
 				ringColor.startColor.r !== ringColor.endColor.r ||
@@ -517,5 +539,6 @@ export const convertsChart = (
 		bgmOffset: (chart.chartDelayMs ?? 0) / 1000,
 		entities: entities,
 	} as LevelData
-	return { data, info: { themes: chart.themes, lineColors, judgeRingColors } }
+
+	return { data, info: { themes, lineColors, judgeRingColors } }
 }

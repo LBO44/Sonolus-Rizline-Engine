@@ -15,8 +15,8 @@ from pyline.lib.layout import (
     X_JUDGE,
     X_LINE_DISAPPEAR,
     X_SPAWN,
+    challenge_theme,
     floor_to_x,
-    is_in_challenge,
 )
 from pyline.lib.options import Options
 from pyline.lib.skin import Skin
@@ -132,7 +132,7 @@ def draw_judge_ring(point: LinePoint) -> None:
 
             if true_alpha != 1:
                 Skin.judge_ring_background[
-                    is_in_challenge(Vec2(X_JUDGE, point.pos.y))
+                    challenge_theme(Vec2(X_JUDGE, point.pos.y))
                 ].draw(
                     layout,
                     LAYER_JUDGE_RING + z_offset(-point.line.index, 2),
@@ -321,14 +321,14 @@ def draw_curved_line(
                     quad, z_index + z_offset(0, 1), global_transition_top_alpha
                 )
                 if final_alpha < 1:
-                    Skin.line_background[is_in_challenge(af)].draw(
+                    Skin.background[challenge_theme(af)].draw(
                         quad, z_index + z_offset(0, 2), 1 - final_alpha
                     )
             case DrawMode.Local:
                 base_sprite.draw(quad, z_index, 1)
                 top_sprite.draw(quad, z_index + z_offset(0, 1), u0)
                 if final_alpha < 1:
-                    Skin.line_background[is_in_challenge(af)].draw(
+                    Skin.background[challenge_theme(af)].draw(
                         quad, z_index + z_offset(0, 2), 1 - final_alpha
                     )
 

@@ -83,15 +83,20 @@ readdirSync("./resources/levels/").forEach((level) => {
 		subtitle: { en: "" },
 	}
 
-	const paricleData = readFileSync("./convert/particle/data.json", "utf8")
-		.replaceAll("#0000ff", hexColor(converted.info.themes[0].colorsList[2]))
-		.replaceAll("#ff00ff", hexColor(converted.info.themes[1].colorsList[2]))
+	const particleData = readFileSync(
+		"./convert/particle/data.json",
+		"utf8"
+	).replace(/ColorTheme(\d+)/g, (match, number) => {
+		const themeIndex = Number.parseInt(number)
+		const theme = converted.info.themes[themeIndex]
+		return theme ? hexColor(theme.colorsList[2]) : match
+	})
 
 	writeFileSync(
 		`${particlePath}item.json`,
 		JSON.stringify(paricleItem, null, 2)
 	)
-	writeFileSync(`${particlePath}data.json`, paricleData)
+	writeFileSync(`${particlePath}data.json`, particleData)
 	copyFileSync("./convert/particle/texture.png", `${particlePath}texture.png`)
 	copyFileSync(`${levelPath}cover.png`, `${particlePath}thumbnail.png`)
 })

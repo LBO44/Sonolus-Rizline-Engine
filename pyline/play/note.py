@@ -31,7 +31,6 @@ from pyline.lib.layout import (
     X_NOTE_DISAPPEAR,
     X_SPAWN,
     floor_to_x,
-    is_in_challenge,
 )
 from pyline.lib.note import (
     NOTE_HOLD_DESPAWN_DURATION,
@@ -106,10 +105,6 @@ class Note(PlayArchetype):
     @property
     def pos(self) -> Vec2:
         return get_note_pos(self)
-
-    @property
-    def is_in_challenge(self) -> bool:
-        return is_in_challenge(self.pos)
 
     @callback(order=2)  # need to run after LinePoint
     def preprocess(self):

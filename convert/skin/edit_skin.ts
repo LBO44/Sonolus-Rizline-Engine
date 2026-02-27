@@ -13,25 +13,19 @@ function hexToRgb(hex: string) {
 export const chartInfoToSpritesColors = (
 	info: convertedChartInfo
 ): Record<string, string> => {
+	const themeSpriteColours = info.themes.reduce((acc, theme, index) => {
+		acc[`Background Theme ${index}`] = hexColor(theme.colorsList[0])
+		acc[`Background Circle Theme ${index}`] = hexColor(theme.colorsList[0])
+		acc[`Fade Out Theme ${index}`] = hexColor(theme.colorsList[0])
+		acc[`Judge Ring Background Theme ${index}`] = hexColor(theme.colorsList[0])
+		acc[`Tap Note Theme ${index}`] = hexColor(theme.colorsList[1])
+		acc[`Hold Connector Theme ${index}`] = hexColor(theme.colorsList[1])
+		acc[`Hold Connector Fade Out Theme ${index}`] = hexColor(theme.colorsList[1])
+		return acc
+	}, {})
+
 	return {
-		"Background Normal": hexColor(info.themes[0].colorsList[0]),
-		"Background Challenge": hexColor(info.themes[1].colorsList[0]),
-		"Background Circle Normal": hexColor(info.themes[0].colorsList[0]),
-		"Background Circle Challenge": hexColor(info.themes[1].colorsList[0]),
-		"Fade Out Spawn Normal": hexColor(info.themes[0].colorsList[0]),
-		"Fade Out Spawn Challenge": hexColor(info.themes[1].colorsList[0]),
-		"Fade Out Judge Normal": hexColor(info.themes[0].colorsList[0]),
-		"Judge Ring Background Challenge": hexColor(info.themes[1].colorsList[0]),
-		"Judge Ring Background Normal": hexColor(info.themes[0].colorsList[0]),
-		"Line Background Challenge": hexColor(info.themes[1].colorsList[0]),
-		"Line Background Normal": hexColor(info.themes[0].colorsList[0]),
-		"Fade Out Judge Challenge": hexColor(info.themes[1].colorsList[0]),
-		"Tap Note Normal": hexColor(info.themes[0].colorsList[1]),
-		"Tap Note Challenge": hexColor(info.themes[1].colorsList[1]),
-		"Hold Connector Normal": hexColor(info.themes[0].colorsList[1]),
-		"Hold Connector Challenge": hexColor(info.themes[1].colorsList[1]),
-		"Hold Connector Fade Out Normal": hexColor(info.themes[0].colorsList[1]),
-		"Hold Connector Fade Out Challenge": hexColor(info.themes[1].colorsList[1]),
+		...themeSpriteColours,
 		...Object.fromEntries(
 			info.lineColors.map((c, i) => [`Line Color ${i}`, c])
 		),

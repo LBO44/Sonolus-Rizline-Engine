@@ -14,7 +14,7 @@ from sonolus.script.runtime import is_replay, is_skip, time
 from sonolus.script.timing import beat_to_time
 from sonolus.script.vec import Vec2
 
-from pyline.lib.layout import X_JUDGE, X_NOTE_DISAPPEAR, floor_to_x, is_in_challenge
+from pyline.lib.layout import X_JUDGE, X_NOTE_DISAPPEAR, floor_to_x
 from pyline.lib.note import (
     NOTE_HOLD_DESPAWN_DURATION,
     NOTE_HOLD_MISS_SPEED,
@@ -64,10 +64,6 @@ class Note(WatchArchetype):
     @property
     def pos(self) -> Vec2:
         return get_note_pos(self)
-
-    @property
-    def is_in_challenge(self) -> bool:
-        return is_in_challenge(self.pos)
 
     @callback(order=2)  # need to run after LinePoint
     def preprocess(self):

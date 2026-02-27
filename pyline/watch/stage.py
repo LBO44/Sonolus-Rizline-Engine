@@ -67,6 +67,7 @@ class ChallengeTime(WatchArchetype):
     start_beat: float = imported(name="startBeat")
     end_beat: float = imported(name="endBeat")
     transition_duration: float = imported(name="transitionDuration")
+    theme_index: int = imported(name="themeIndex")
 
     challenge_transition: Interval = entity_data()
     challenge_in: Interval = entity_data()
@@ -90,3 +91,4 @@ class ChallengeTime(WatchArchetype):
     def update_sequential(self):
         Challenge.transition = self.challenge_transition
         Challenge.inside = self.challenge_in
+        Challenge.theme_index = self.theme_index

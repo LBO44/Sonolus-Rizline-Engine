@@ -27,6 +27,7 @@ X_NOTE_DISAPPEAR = screen().r * 0.8
 class Challenge:
     inside: Interval
     transition: Interval
+    theme_index: int
 
 
 def camera_scale_x(x: float, scale: float) -> float:
@@ -41,23 +42,27 @@ def draw_background() -> None:
 
     # ideally should cover up to the side of the screen
     fade_layout = Rect.from_margin(screen().t, screen().t * 0.625)
-    challenge = -1
+    fade_spawn_layout = fade_layout.translate(Vec2(camera.scaled_x_spawn + 0.1, 0))
+    fade_judge_layout = fade_layout.scale(Vec2(-1, 1)).translate(
+        Vec2(camera.scaled_x_note_disappear - 0.05, 0)
+    )
+    theme = -1
 
     if i := time() in Challenge.inside:
-        challenge = True
+        theme = Challenge.theme_index
 
     if o := time() not in Challenge.transition:
-        challenge = False
+        theme = 0
 
     if o or i:
-        Skin.background[challenge].draw(screen(), LAYER_BACKGROUND, 1)
-        Skin.background_fade_spawn[challenge].draw(
-            fade_layout.translate(Vec2(camera.scaled_x_spawn + 0.1, 0)),
+        Skin.background[theme].draw(screen().scale(Vec2(2, 1)), LAYER_BACKGROUND, 1)
+        Skin.background_fade[theme].draw(
+            fade_spawn_layout,
             LAYER_BACKGROUND_FADE_SPAWN,
             1.5,
         )
-        Skin.background_fade_judge[challenge].draw(
-            fade_layout.translate(Vec2(camera.scaled_x_note_disappear - 0.05, 0)),
+        Skin.background_fade[theme].draw(
+            fade_judge_layout,
             LAYER_BACKGROUND_FADE_JUDGE,
             1.5,
         )
@@ -69,20 +74,20 @@ def draw_background() -> None:
     # challenge start transition animation
     if time() <= Challenge.inside.start:
         under @= Skin.background[0]
-        over @= Skin.background_circle_challenge
+        over @= Skin.background_circle[Challenge.theme_index]
         t0, t1 = Challenge.transition.start, Challenge.inside.start
         trans_progress = remap(t0, t1, 0, screen().w, time())
         trans_rect @= Rect.from_margin(trans_progress).translate(screen().mr)
 
     # challenge end transition animation
     else:
-        under @= Skin.background[1]
-        over @= Skin.background_circle_normal
+        under @= Skin.background[Challenge.theme_index]
+        over @= Skin.background_circle[0]
         t0, t1 = Challenge.inside.end, Challenge.transition.end
         trans_progress = remap(t0, t1, 0, screen().w, time())
         trans_rect @= Rect.from_margin(trans_progress).translate(screen().ml)
 
-    under.draw(screen(), LAYER_BACKGROUND, 1)
+    under.draw(screen().scale(Vec2(2, 1)), LAYER_BACKGROUND, 1)
     over.draw(trans_rect, LAYER_BACKGROUND_OVER, 1)
 
 
@@ -108,6 +113,10 @@ def is_in_challenge(pos: Vec2) -> bool:
         trans_progress = remap(t0, t1, 0, screen().w, time())
         dist = (pos - screen().ml).magnitude
         return dist >= trans_progress
+
+
+def challenge_theme(pos: Vec2) -> int:
+    return is_in_challenge(pos) and Challenge.theme_index
 
 
 def note_speed_distance() -> float:

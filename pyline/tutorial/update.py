@@ -39,8 +39,8 @@ def run_current_phase():
 
 def update():
     Skin.background[0].draw(screen())
-    fade_layout = Rect.from_margin(screen().t, screen().t / 2)
-    Skin.background_fade_judge[0].draw(
+    fade_layout = Rect.from_margin(screen().t, screen().t / 2).scale(Vec2(-1, 1))
+    Skin.background_fade[0].draw(
         fade_layout.translate(Vec2(X_NOTE_DISAPPEAR - 0.05, 0)),
         45,
         1.5,
