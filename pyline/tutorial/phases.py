@@ -99,7 +99,7 @@ def hold_phase(t: float) -> bool:
             HoldPhaseState.played_tap_particles = True
 
         x = remap_clamped(FROZEN_END, FROZEN_END + 1, X_JUDGE, X_JUDGE + 1, t)
-        draw_hold_note(0, x, x - 1, 30)
+        draw_hold_note(0, X_JUDGE, x - 1, 30)
         paint_tap_motion(Vec2(0.8, 0.5), 0.75)
         return False
 

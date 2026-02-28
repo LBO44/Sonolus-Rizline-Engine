@@ -63,10 +63,14 @@ class Options:
         default=False,
         scope="Rizline",
     )
-    disable_background: bool = toggle_option(
-        name="Disable Color Background",
-        description="In case you wish to use a custom Sonolus background instead.",
-        default=False,
+    background_opacity: float = slider_option(
+        name="Colour Background Opacity",
+        description="In case you wish to use a custom Sonolus background instead.\nWill slightly break transparent lines.",
+        unit=StandardText.PERCENTAGE_UNIT,
+        min=0,
+        max=1,
+        step=0.1,
+        default=1,
         scope="Rizline",
     )
     color_transition: bool = toggle_option(

@@ -1,6 +1,6 @@
 from sonolus.script.debug import notify
 from sonolus.script.globals import level_memory
-from sonolus.script.interval import Interval, lerp, remap
+from sonolus.script.interval import Interval, lerp, remap, unlerp
 from sonolus.script.quad import Rect
 from sonolus.script.runtime import is_tutorial, screen, time
 from sonolus.script.sprite import Sprite
@@ -12,6 +12,7 @@ from pyline.lib.layer import (
     LAYER_BACKGROUND_FADE_JUDGE,
     LAYER_BACKGROUND_FADE_SPAWN,
     LAYER_BACKGROUND_OVER,
+    z_offset,
 )
 from pyline.lib.options import Options
 from pyline.lib.skin import Skin
@@ -37,7 +38,7 @@ def camera_scale_x(x: float, scale: float) -> float:
 def draw_background() -> None:
     """draw the coloured background with transition animations"""
 
-    if Options.disable_background:
+    if Options.background_opacity == 0:
         return
 
     # ideally should cover up to the side of the screen
@@ -47,6 +48,7 @@ def draw_background() -> None:
         Vec2(camera.scaled_x_note_disappear - 0.05, 0)
     )
     theme = -1
+    bg_layout = screen().scale(Vec2(2, 2))  # to cover notch
 
     if i := time() in Challenge.inside:
         theme = Challenge.theme_index
@@ -55,17 +57,20 @@ def draw_background() -> None:
         theme = 0
 
     if o or i:
-        Skin.background[theme].draw(screen().scale(Vec2(2, 1)), LAYER_BACKGROUND, 1)
-        Skin.background_fade[theme].draw(
-            fade_spawn_layout,
-            LAYER_BACKGROUND_FADE_SPAWN,
-            1.5,
+        Skin.background[theme].draw(
+            bg_layout, LAYER_BACKGROUND, Options.background_opacity
         )
-        Skin.background_fade[theme].draw(
-            fade_judge_layout,
-            LAYER_BACKGROUND_FADE_JUDGE,
-            1.5,
-        )
+        if Options.background_opacity == 1:
+            Skin.background_fade[theme].draw(
+                fade_spawn_layout,
+                LAYER_BACKGROUND_FADE_SPAWN,
+                1.5,
+            )
+            Skin.background_fade[theme].draw(
+                fade_judge_layout,
+                LAYER_BACKGROUND_FADE_JUDGE,
+                1.5,
+            )
         return
 
     under = +Sprite
@@ -87,8 +92,13 @@ def draw_background() -> None:
         trans_progress = remap(t0, t1, 0, screen().w, time())
         trans_rect @= Rect.from_margin(trans_progress).translate(screen().ml)
 
-    under.draw(screen().scale(Vec2(2, 1)), LAYER_BACKGROUND, 1)
-    over.draw(trans_rect, LAYER_BACKGROUND_OVER, 1)
+    if Options.background_opacity == 1:
+        under.draw(bg_layout, LAYER_BACKGROUND, 1)
+        over.draw(trans_rect, LAYER_BACKGROUND_OVER, 1)
+    else:
+        a = unlerp(t0, t1, time()) * Options.background_opacity
+        under.draw(bg_layout, LAYER_BACKGROUND, Options.background_opacity - a)
+        over.draw(bg_layout, LAYER_BACKGROUND + z_offset(1), a)
 
 
 def is_in_challenge(pos: Vec2) -> bool:
