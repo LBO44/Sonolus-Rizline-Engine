@@ -14,19 +14,18 @@ from sonolus.script.runtime import is_replay, is_skip, time
 from sonolus.script.timing import beat_to_time
 from sonolus.script.vec import Vec2
 
+from pyline.lib.buckets import NoteKind
 from pyline.lib.layout import X_JUDGE, X_NOTE_DISAPPEAR, floor_to_x
 from pyline.lib.note import (
     NOTE_HOLD_DESPAWN_DURATION,
     NOTE_HOLD_MISS_SPEED,
     NOTE_MISS_EFFECT_DURATION,
     ChartStats,
-    NoteKind,
     draw_hold_note,
     draw_hold_note_despawn,
     draw_hold_note_miss_effect,
     draw_miss_effect,
     draw_note,
-    get_hold_end_bucket,
     get_note_bucket,
     get_note_pos,
     init_challenge_note_entity_life,
@@ -154,7 +153,7 @@ class NoteHoldTail(WatchArchetype):
         return self.head.pos.x if self.head.target_time > time() else X_JUDGE
 
     def preprocess(self):
-        self.result.bucket = get_hold_end_bucket(self.is_challenge)
+        self.result.bucket = get_note_bucket(NoteKind.HOLD_END, self.is_challenge)
         self.tail_target_time = beat_to_time(self.beat)
         self.result.target_time = self.tail_target_time
 

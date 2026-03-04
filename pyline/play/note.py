@@ -25,7 +25,7 @@ from sonolus.script.runtime import (
 from sonolus.script.timing import beat_to_time
 from sonolus.script.vec import Vec2
 
-from pyline.lib.buckets import get_hold_end_window
+from pyline.lib.buckets import NoteKind
 from pyline.lib.layout import (
     X_JUDGE,
     X_NOTE_DISAPPEAR,
@@ -37,13 +37,11 @@ from pyline.lib.note import (
     NOTE_HOLD_MISS_SPEED,
     NOTE_MISS_EFFECT_DURATION,
     ChartStats,
-    NoteKind,
     draw_hold_note,
     draw_hold_note_despawn,
     draw_hold_note_miss_effect,
     draw_miss_effect,
     draw_note,
-    get_hold_end_bucket,
     get_note_bucket,
     get_note_judgement_window,
     get_note_pos,
@@ -296,8 +294,8 @@ class NoteHoldTail(PlayArchetype):
         return self.head.pos.x if self.head.target_time > time() else X_JUDGE
 
     def preprocess(self):
-        self.judgment_window = get_hold_end_window(
-            ChartStats.difficulty, self.is_challenge
+        self.judgment_window = get_note_judgement_window(
+            NoteKind.HOLD_END, self.is_challenge
         )
         self.tail_target_time = beat_to_time(self.beat)
         self.input_interval = (
@@ -308,7 +306,7 @@ class NoteHoldTail(PlayArchetype):
             init_challenge_note_entity_life(self)
             self.entity_score_multiplier = ChartStats.challenge_score_multiplier
 
-        self.result.bucket = get_hold_end_bucket(self.is_challenge)
+        self.result.bucket = get_note_bucket(NoteKind.HOLD_END, self.is_challenge)
 
         self.result.accuracy = 1.0
         self.start_time = min(self.head.start_time, self.input_interval.start)

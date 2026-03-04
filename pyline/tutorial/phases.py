@@ -6,11 +6,11 @@ from sonolus.script.quad import Rect
 from sonolus.script.sprite import Sprite
 from sonolus.script.vec import Vec2
 
+from pyline.lib.buckets import NoteKind
 from pyline.lib.layout import X_JUDGE, X_SPAWN
 from pyline.lib.note import (
     NOTE_DRAG_RADIUS,
     NOTE_TAP_RADIUS,
-    NoteKind,
     draw_hold_note,
     play_note_particle,
     play_note_sfx,

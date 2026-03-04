@@ -14,6 +14,18 @@ class ChartDifficulty(IntEnum):
     IN = 2  # AT and IN have same
 
 
+class NoteKind(IntEnum):
+    TAP = 0
+    DRAG = 1
+    HOLD_START = 2
+    HOLD_END = 3
+
+
+NORMAL = False
+CHALLENGE = True
+NOTE_TYPES = (NORMAL, CHALLENGE)
+
+
 def get_simple_bucket(sprite: Sprite) -> Bucket:
     return bucket(
         sprites=[bucket_sprite(sprite=sprite, x=0, y=0, w=1.5, h=1.5)],
@@ -55,107 +67,80 @@ class Buckets:
     challenge_drag: Bucket = get_simple_bucket(Skin.note_drag)
 
 
-WINDOW_SCALE = 1000  # windows are in ms
+BUCKETS: dict[tuple[bool, NoteKind], Bucket] = {
+    (t, k): getattr(Buckets, f"{'challenge' if t else 'normal'}_{k.name.lower()}")
+    for k in NoteKind
+    for t in NOTE_TYPES
+}
 
 
 # from rizwiki.cn:
-
-# non challenge/riztime notes only have Hit/Bad/Miss
 # bad: bad will spawn a bad particle, but it's still possible to hit the note afterward
-NORMAL_WINDOWS: dict[ChartDifficulty, JudgmentWindow] = {
-    ChartDifficulty.EZ: JudgmentWindow(
+
+WINDOWS: dict[tuple[bool, ChartDifficulty], JudgmentWindow] = {
+    # normal/not challenge notes only have Hit/Bad/Miss
+    (False, ChartDifficulty.EZ): JudgmentWindow(
         perfect=Interval(-0.140, 0.140),
         great=Interval(-0.140, 0.140),
         good=Interval(-0.200, 0.140),
     ),
-    ChartDifficulty.HD: JudgmentWindow(
+    (False, ChartDifficulty.HD): JudgmentWindow(
         perfect=Interval(-0.115, 0.115),
         great=Interval(-0.115, 0.115),
         good=Interval(-0.170, 0.115),
     ),
-    ChartDifficulty.IN: JudgmentWindow(
+    (False, ChartDifficulty.IN): JudgmentWindow(
         perfect=Interval(-0.090, 0.090),
         great=Interval(-0.090, 0.090),
         good=Interval(-0.125, 0.090),
     ),
-}
-
-# has different timings + early/late
-CHALLENGE_WINDOWS: dict[ChartDifficulty, JudgmentWindow] = {
-    ChartDifficulty.EZ: JudgmentWindow(
+    # Challenge: has different timings + early/late
+    (True, ChartDifficulty.EZ): JudgmentWindow(
         perfect=Interval(-0.070, 0.070),
         great=Interval(-0.180, 0.840),
         good=Interval(-0.200, 0.180),
     ),
-    ChartDifficulty.HD: JudgmentWindow(
+    (True, ChartDifficulty.HD): JudgmentWindow(
         perfect=Interval(-0.060, 0.060),
         great=Interval(-0.145, 0.145),
         good=Interval(-0.170, 0.145),
     ),
-    ChartDifficulty.IN: JudgmentWindow(
+    (True, ChartDifficulty.IN): JudgmentWindow(
         perfect=Interval(-0.050, 0.050),
         great=Interval(-0.110, 0.110),
         good=Interval(-0.125, 0.110),
     ),
 }
+WINDOW_SCALE = 1000  # windows are in ms
 
 
-def get_window(challenge: bool, diff: ChartDifficulty) -> JudgmentWindow:
+def get_window(
+    diff: ChartDifficulty, is_challenge: bool, kind: NoteKind
+) -> JudgmentWindow:
+    base = WINDOWS[(is_challenge, diff)]
     window = +JudgmentWindow
-    match diff, challenge:
-        case ChartDifficulty.EZ, 1:
-            window @= CHALLENGE_WINDOWS[ChartDifficulty.EZ]
-        case ChartDifficulty.HD, 1:
-            window @= CHALLENGE_WINDOWS[ChartDifficulty.HD]
-        case ChartDifficulty.IN, 1:
-            window @= CHALLENGE_WINDOWS[ChartDifficulty.IN]
-        case ChartDifficulty.EZ, 0:
-            window @= NORMAL_WINDOWS[ChartDifficulty.EZ]
-        case ChartDifficulty.HD, 0:
-            window @= NORMAL_WINDOWS[ChartDifficulty.HD]
-        case ChartDifficulty.IN, 0:
-            window @= NORMAL_WINDOWS[ChartDifficulty.IN]
+    match kind:
+        case NoteKind.TAP | NoteKind.HOLD_START:
+            window @= base
+        case NoteKind.DRAG:
+            # Can only be perfect or miss
+            window @= JudgmentWindow(
+                perfect=base.perfect, great=base.perfect, good=base.perfect
+            )
+        case NoteKind.HOLD_END:
+            # Can be early but can't be Late as you don't need to release
+            # Can be Early only during riztime, can never be Bad
+            window @= JudgmentWindow(
+                perfect=Interval(
+                    base.perfect.start if is_challenge else base.good.start, 0
+                ),
+                great=Interval(base.good.start, 0),  # use bad window for early?
+                good=Interval(base.good.start, 0),
+            )
     return window
 
 
-# Tap Note and Hold start
-def get_tap_window(diff: ChartDifficulty, challenge: bool = False) -> JudgmentWindow:
-    return get_window(challenge, diff)
-
-
-# Can be early but can't be Late as you don't need to release
-# Can be Early only during riztime, can never be Bad
-def get_hold_end_window(
-    diff: ChartDifficulty, challenge: bool = False
-) -> JudgmentWindow:
-    window = get_window(challenge, diff)
-    newWindow = JudgmentWindow(
-        perfect=Interval(window.good.start, 0),
-        great=Interval(window.good.start, 0),  # use bad window for early?
-        good=Interval(window.good.start, 0),
-    )
-    if challenge:
-        newWindow.update(perfect=Interval(window.perfect.start, 0))
-    return newWindow
-
-
-# Can only be perfect or miss
-def get_drag_window(diff: ChartDifficulty, challenge: bool = False) -> JudgmentWindow:
-    window = get_window(challenge, diff)
-    return JudgmentWindow(
-        perfect=window.perfect,
-        great=window.perfect,
-        good=window.perfect,
-    )
-
-
 def init_buckets(diff: ChartDifficulty):
-    Buckets.normal_tap.window @= get_tap_window(diff) * WINDOW_SCALE
-    Buckets.normal_hold_start.window @= get_tap_window(diff) * WINDOW_SCALE
-    Buckets.normal_hold_end.window @= get_hold_end_window(diff) * WINDOW_SCALE
-    Buckets.normal_drag.window @= get_drag_window(diff) * WINDOW_SCALE
-
-    Buckets.challenge_tap.window @= get_tap_window(diff, True) * WINDOW_SCALE
-    Buckets.challenge_hold_start.window @= get_tap_window(diff, True) * WINDOW_SCALE
-    Buckets.challenge_hold_end.window @= get_hold_end_window(diff, True) * WINDOW_SCALE
-    Buckets.challenge_drag.window @= get_drag_window(diff, True) * WINDOW_SCALE
+    for t in NOTE_TYPES:
+        for k in NoteKind:
+            BUCKETS[t, k].window @= get_window(diff, t, k) * WINDOW_SCALE

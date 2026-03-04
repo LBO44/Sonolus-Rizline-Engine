@@ -1,4 +1,3 @@
-from enum import IntEnum
 from math import floor, sin
 from typing import Protocol
 
@@ -16,7 +15,12 @@ from sonolus.script.runtime import time
 from sonolus.script.sprite import Sprite
 from sonolus.script.vec import Vec2
 
-from pyline.lib.buckets import Buckets, ChartDifficulty, get_drag_window, get_tap_window
+from pyline.lib.buckets import (
+    BUCKETS,
+    ChartDifficulty,
+    NoteKind,
+    get_window,
+)
 from pyline.lib.ease import remap_ease
 from pyline.lib.effect import Effects
 from pyline.lib.layer import (
@@ -49,12 +53,6 @@ HOLD_FADE_LENGTH = 0.14
 NOTE_HOLD_DESPAWN_DURATION = 0.25
 NOTE_HOLD_MISS_SPEED = 5
 NOTE_MISS_EFFECT_DURATION = 0.6
-
-
-class NoteKind(IntEnum):
-    TAP = 0
-    DRAG = 1
-    HOLD_START = 2
 
 
 class Note(Protocol):
@@ -91,30 +89,23 @@ class ChartStats:
     difficulty: ChartDifficulty
 
 
+NOTE_EFFECTS: dict[NoteKind, Effect] = {
+    NoteKind.TAP: Effects.tap,
+    NoteKind.HOLD_START: Effects.tap,
+    NoteKind.DRAG: Effects.drag,
+}
+
+
 def schedule_note_sfx(kind: NoteKind, target_time: float) -> None:
     if not Options.sfx:
         return
-
-    effect = Effect(-1)
-    match kind:
-        case NoteKind.TAP | NoteKind.HOLD_START:
-            effect @= Effects.tap
-        case NoteKind.DRAG:
-            effect @= Effects.drag
-    effect.schedule(target_time, 0)
+    NOTE_EFFECTS[kind].schedule(target_time, 0)
 
 
 def play_note_sfx(kind: NoteKind) -> None:
     if (not Options.sfx) or Options.auto_sfx:
         return
-
-    effect = Effect(-1)
-    match kind:
-        case NoteKind.TAP | NoteKind.HOLD_START:
-            effect @= Effects.tap
-        case NoteKind.DRAG:
-            effect @= Effects.drag
-    effect.play(0)
+    NOTE_EFFECTS[kind].play(0)
 
 
 def get_note_pos(note: Note) -> Vec2:
@@ -312,44 +303,12 @@ def play_bad_particle(pos: Vec2) -> None:
     Particles.bad.spawn(layout, 0.55)
 
 
-def get_note_bucket(kind: NoteKind, challenge: bool) -> Bucket:
-    result = Bucket(-1)
-    match (kind, challenge):
-        case (NoteKind.TAP, 0):
-            result @= Buckets.normal_tap
-        case (NoteKind.DRAG, 0):
-            result @= Buckets.normal_drag
-        case (NoteKind.HOLD_START, 0):
-            result @= Buckets.normal_hold_start
-
-        case (NoteKind.TAP, 1):
-            result @= Buckets.challenge_tap
-        case (NoteKind.DRAG, 1):
-            result @= Buckets.challenge_drag
-        case (NoteKind.HOLD_START, 1):
-            result @= Buckets.challenge_hold_start
-
-    return result
+def get_note_bucket(kind: NoteKind, is_challenge: bool) -> Bucket:
+    return BUCKETS[is_challenge, kind]
 
 
-def get_hold_end_bucket(challenge: bool) -> Bucket:
-    result = Bucket(-1)
-    match challenge:
-        case 0:
-            result @= Buckets.normal_hold_end
-        case 1:
-            result @= Buckets.challenge_hold_end
-    return result
-
-
-def get_note_judgement_window(kind: NoteKind, challenge: bool) -> JudgmentWindow:
-    result = +JudgmentWindow
-    match kind:
-        case NoteKind.TAP | NoteKind.HOLD_START:
-            result @= get_tap_window(ChartStats.difficulty, challenge)
-        case NoteKind.DRAG:
-            result @= get_drag_window(ChartStats.difficulty, challenge)
-    return result
+def get_note_judgement_window(kind: NoteKind, is_challenge: bool) -> JudgmentWindow:
+    return get_window(ChartStats.difficulty, is_challenge, kind)
 
 
 def init_note_archetype_life(
