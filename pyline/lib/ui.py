@@ -2,6 +2,8 @@ from sonolus.script.runtime import HorizontalAlign, runtime_ui, screen
 from sonolus.script.ui import UiConfig, UiJudgmentErrorPlacement, UiMetric
 from sonolus.script.vec import Vec2
 
+from pyline.lib.options import Options
+
 ui_config = UiConfig(
     primary_metric=UiMetric.LIFE,
     secondary_metric=UiMetric.ACCURACY_PERCENTAGE,
@@ -18,7 +20,7 @@ def init_ui():
         rotation=90,
         alpha=ui.menu_config.alpha,
         horizontal_align=HorizontalAlign.CENTER,
-        background=True,
+        background=not Options.colored_ui,
     )
     ui.primary_metric_bar.update(
         anchor=screen().bl + Vec2(0.085, 0.075),
@@ -30,7 +32,7 @@ def init_ui():
         rotation=90,
         alpha=ui.primary_metric_config.scale,
         horizontal_align=HorizontalAlign.LEFT,
-        background=True,
+        background=not Options.colored_ui,
     )
     ui.primary_metric_value.update(
         anchor=screen().bl

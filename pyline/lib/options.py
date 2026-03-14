@@ -63,6 +63,12 @@ class Options:
         default=False,
         scope="Rizline",
     )
+    colored_ui: bool = toggle_option(
+        name="Colourful UI",
+        description="Use the level's colours for the UI menu and metric.",
+        default=True,
+        scope="Rizline",
+    )
     background_opacity: float = slider_option(
         name="Colour Background Opacity",
         description="In case you wish to use a custom Sonolus background instead.\nWill slightly break transparent lines.",

@@ -21,6 +21,7 @@ export const chartInfoToSpritesColors = (
 		acc[`Tap Note Theme ${index}`] = hexColor(theme.colorsList[1])
 		acc[`Hold Connector Theme ${index}`] = hexColor(theme.colorsList[1])
 		acc[`Hold Connector Fade Out Theme ${index}`] = hexColor(theme.colorsList[1])
+		acc[`UI Background Theme ${index}`] = hexColor(theme.colorsList[2])
 		return acc
 	}, {})
 

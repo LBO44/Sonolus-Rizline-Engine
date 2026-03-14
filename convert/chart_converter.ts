@@ -63,7 +63,7 @@ type RizColorKeyPoint = {
 	time: number
 }
 
-type RizColorList = [background: RizColor, note: RizColor, particle: RizColor]
+type RizColorList = [background: RizColor, note: RizColor, particle: RizColor] //particle is UI too
 /** Colors of the level, changes during challenge time.
  * First color list is for "normal" time, second one for 1st challenge time, third one for 2nd challenge time...*/
 type RizThemes = { colorsList: RizColorList }[]

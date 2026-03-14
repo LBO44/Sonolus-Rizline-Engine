@@ -5,7 +5,7 @@ from sonolus.script.runtime import level_score, time
 from sonolus.script.timing import beat_to_time
 
 from pyline.lib.buckets import ChartDifficulty, init_buckets
-from pyline.lib.layout import Challenge, draw_background
+from pyline.lib.layout import Challenge, draw_background, draw_ui
 from pyline.lib.note import ChartStats, init_note_archetype_life
 from pyline.lib.ui import init_ui
 from pyline.play.input import refresh_input_state
@@ -52,6 +52,7 @@ class Stage(PlayArchetype):
 
     def update_parallel(self):
         draw_background()
+        draw_ui()
 
     def update_sequential(self):
         refresh_input_state()

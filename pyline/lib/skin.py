@@ -24,6 +24,7 @@ class Skin:
     background: SpriteGroup = themed_sprites("Background")
     background_circle: SpriteGroup = themed_sprites("Background Circle")
     background_fade: SpriteGroup = themed_sprites("Fade Out")
+    ui_backgrounds: SpriteGroup = themed_sprites("UI Background")
 
     # notes
     note_drag: Sprite = sprite("Drag Note")

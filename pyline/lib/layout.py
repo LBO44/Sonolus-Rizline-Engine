@@ -2,7 +2,7 @@ from sonolus.script.debug import notify
 from sonolus.script.globals import level_memory
 from sonolus.script.interval import Interval, lerp, remap, unlerp
 from sonolus.script.quad import Rect
-from sonolus.script.runtime import is_tutorial, screen, time
+from sonolus.script.runtime import is_tutorial, runtime_ui, screen, time
 from sonolus.script.sprite import Sprite
 from sonolus.script.vec import Vec2
 
@@ -33,6 +33,33 @@ class Challenge:
 
 def camera_scale_x(x: float, scale: float) -> float:
     return X_JUDGE + (x - X_JUDGE) * scale
+
+
+def draw_ui() -> None:
+    """draw coloured rects behind menu and metric"""
+    if not Options.colored_ui:
+        return
+
+    ui = runtime_ui()
+
+    menu_size = 0.15 * ui.menu_config.scale
+    menu_left = screen().tl.x + 0.085
+    menu_right = screen().tl.y - 0.075
+    menu_rect = Rect(
+        t=menu_right, r=menu_left + menu_size, b=menu_right - menu_size, l=menu_left
+    )
+
+    bar_w = screen().h - (0.2 + menu_size)
+    bar_h = 0.15 * ui.primary_metric_config.scale
+    anchor_pt = screen().bl + Vec2(0.085, 0.075)
+    metric_rect = Rect(
+        t=anchor_pt.y + bar_w, r=anchor_pt.x + bar_h, b=anchor_pt.y, l=anchor_pt.x
+    )
+
+    theme = Challenge.theme_index if time() in Challenge.inside else 0
+
+    Skin.ui_backgrounds[theme].draw(menu_rect, 999, ui.menu_config.alpha)
+    Skin.ui_backgrounds[theme].draw(metric_rect, 999, ui.secondary_metric_config.alpha)
 
 
 def draw_background() -> None:
