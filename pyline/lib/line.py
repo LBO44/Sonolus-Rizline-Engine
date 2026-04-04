@@ -335,9 +335,7 @@ def draw_curved_line(
 
 def points_to_quad(a: Vec2, b: Vec2) -> Quad:
     """Get the quad that connect 2 coordinates"""
-    # Rizline doesn't seem to scale width
-    # But it sometimes looks ugly in Sonolus if not scaled
-    LINE_WIDTH = 0.01 * min(1, camera.scale)
+    LINE_WIDTH = 0.01 * camera.scale
     x = b.x - a.x
     y = b.y - a.y
 
