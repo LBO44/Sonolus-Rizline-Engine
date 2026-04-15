@@ -51,6 +51,7 @@ For exemple, `Background Theme 0` has the non-challenge time colour, `Background
 | `Miss Effect Overlay`                 |
 | `Miss Effect Cross`                   |
 | `Line Color [0-61]`                   |
+| `Line Disc Color [0-61]`              |
 | `Judge Ring Color [0-31]`             |
 | `Judge Ring Background Theme [0-7]`   |
 

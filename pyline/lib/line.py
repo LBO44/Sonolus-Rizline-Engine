@@ -65,6 +65,8 @@ class LinePoint(Protocol):
 
     @property
     def next(self) -> LinePoint: ...
+    @property
+    def is_last_point(self) -> bool: ...
 
     @property
     def line(self) -> Line: ...
@@ -152,6 +154,41 @@ class DrawMode(IntEnum):
     Local = 3
 
 
+def draw_join(
+    pos: Vec2,
+    a: float,
+    z_index: float,
+    mode: DrawMode,
+    base_color: int,
+    top_color: int,
+    global_transition_top_alpha: float = -1,
+):
+    if pos.x < X_SPAWN or pos.x > X_LINE_DISAPPEAR:
+        return
+    LINE_WIDTH = 0.01 * camera.scale
+
+    dist = min(X_JUDGE - pos.x, pos.x - X_SPAWN)
+    fade = remap_clamped(0, 0.2, 0.25, 1, dist)
+
+    alpha = a * fade
+
+    disc_rect = Rect.from_margin(LINE_WIDTH).translate(pos)
+    match mode:
+        case DrawMode.Simple:
+            Skin.line_discs[base_color].draw(disc_rect, z_index, alpha)
+        case DrawMode.Local:
+            Skin.line_discs[base_color].draw(disc_rect, z_index, alpha)
+        case DrawMode.Global:
+            Skin.line_discs[base_color].draw(disc_rect, z_index, 1)
+            Skin.line_discs[top_color].draw(
+                disc_rect, z_index + z_offset(0, 1), global_transition_top_alpha
+            )
+            if alpha < 1:
+                Skin.background[challenge_theme(pos)].draw(
+                    disc_rect, z_index + z_offset(0, 2), 1 - alpha
+                )
+
+
 def draw_line(point: LinePoint) -> None:
     """
     Draw a (curved) line between 2 points
@@ -159,10 +196,13 @@ def draw_line(point: LinePoint) -> None:
     since it's pretty rare and not that much noticeable
     """
 
+    a = point.pos
+    b = point.next.pos
+
     if (
-        (X_SPAWN > point.pos.x and X_SPAWN > point.next.pos.x)
-        or (1 < point.pos.y and 1 < point.next.pos.y)
-        or (-1 > point.pos.y and -1 > point.next.pos.y)
+        (X_SPAWN > a.x and X_SPAWN > b.x)
+        or (1 < a.y and 1 < b.y)
+        or (-1 > a.y and -1 > b.y)
     ):
         return
 
@@ -207,14 +247,30 @@ def draw_line(point: LinePoint) -> None:
             else:
                 mode = DrawMode.Simple
 
+    # Looks like rizline draw lines using rounded extremeties
+    def draw_join_curr(pos, alpha):
+        draw_join(
+            pos,
+            alpha,
+            z + z_offset(point.line.index, -5),
+            mode,
+            base_color_index,
+            top_color_index,
+            global_transition_top_alpha,
+        )
+
+    draw_join_curr(a, point.alpha)
+    if point.next.is_last_point:
+        draw_join_curr(b, point.next.alpha)
+
     base_sprite = Skin.lines[base_color_index]
     top_sprite = Skin.lines[top_color_index]
 
     # vertical/horizontal lines also need fade out and gradients
-    if point.pos.x > point.next.pos.x:
+    if a.x > b.x:
         draw_curved_line(
-            a=point.pos,
-            b=point.next.pos,
+            a=a,
+            b=b,
             alpha_a=point.alpha,
             alpha_b=point.next.alpha,
             ease_type=point.ease_type,
@@ -225,11 +281,14 @@ def draw_line(point: LinePoint) -> None:
             global_transition_top_alpha=global_transition_top_alpha,
         )
     else:
+        if mode == DrawMode.Local:
+            base_sprite @= Skin.lines[top_color_index]
+            top_sprite @= Skin.lines[base_color_index]
         draw_curved_line(
-            b=point.pos,
-            a=point.next.pos,
-            alpha_b=point.alpha,
+            a=b,
+            b=a,
             alpha_a=point.next.alpha,
+            alpha_b=point.alpha,
             ease_type=point.ease_type,
             z_index=z + z_offset(point.line.index),
             base_sprite=base_sprite,
@@ -237,6 +296,10 @@ def draw_line(point: LinePoint) -> None:
             mode=mode,
             global_transition_top_alpha=global_transition_top_alpha,
         )
+
+
+def lerp_vec(a: Vec2, b: Vec2, x: float, ease_type: int) -> Vec2:
+    return Vec2(lerp(a.x, b.x, x), lerp(a.y, b.y, ease(x, ease_type)))
 
 
 def draw_curved_line(
@@ -265,53 +328,96 @@ def draw_curved_line(
     else:
         t0 = unlerp_clamped(a.x, b.x, X_LINE_DISAPPEAR)
         t1 = unlerp_clamped(a.x, b.x, X_SPAWN)
-
-        # outside the area
+        # #NOTE: outside the area, very important for perf
         if t0 >= t1:
             return
 
-    lengh = (a - b).magnitude
+    lenght = (a - b).magnitude
     segments = (
         1
         if a.x == b.x and alpha_a == alpha_b
         else (
             32
-            if lengh > 1
+            if lenght > 1
             else (
-                16 if lengh > 0.5 or alpha_a != alpha_b else (8 if lengh > 0.2 else 4)
+                16 if lenght > 0.5 or alpha_a != alpha_b else (8 if lenght > 0.2 else 4)
             )
         )
     )
 
+    """
+    Draw each segment/quad of the line in a loop
+    We use miter vectors (miter = average of the normals of the 2 segment, the diagonal of the gap between the 2 if they were rects),
+    so that the segments connect perfectly (if we used simple rects there would be a lot more gaps in curves)
+
+    For optimization, end miter = start miter of next segment, so we just to calculate the first start miter before the loop,
+    then in the loop we just need to calculate the end miter (which will because the start miter in the next iteration)
+    """
+
+    LINE_WIDTH = 0.01 * camera.scale
+
+    # First quad indexes
+    u_step = 1 / segments
+
+    u_start = 0
+    u_end = u_step
+
+    # Map the quad indexes to the clipped line
+    t_start = t0
+    t_end = lerp(t0, t1, u_end)
+
+    # Map it back to real coordinates,
+    # start (= end of previous) and end (= start of next) of the current segment
+    start_point = lerp_vec(a, b, t_start, ease_type)
+    end_point = lerp_vec(a, b, t_end, ease_type)
+    next_point = +Vec2
+
+    segment_normal = (
+        end_point - start_point
+    ).normalize_or_zero().orthogonal() * LINE_WIDTH
+    next_normal = +Vec2
+
+    start_mitter = segment_normal
+    end_miter = +Vec2
+
     for i in range(segments):
-        # split the clipped line into multiple quads
-        u0 = i / segments
-        u1 = (i + 1) / segments
+        alpha = lerp(alpha_a, alpha_b, u_start)
 
-        # Map the quad indexes to the clipped line
-        ta = lerp(t0, t1, u0)
-        tb = lerp(t0, t1, u1)
-
-        # Map it back to real coordinates
-        af = Vec2(
-            lerp(a.x, b.x, ta),
-            lerp(a.y, b.y, ease(ta, ease_type)),
-        )
-        bf = Vec2(
-            lerp(a.x, b.x, tb),
-            lerp(a.y, b.y, ease(tb, ease_type)),
-        )
-
-        alpha = lerp(alpha_a, alpha_b, u0)
-
-        dist = min(X_JUDGE - af.x, bf.x - X_SPAWN)
+        dist = min(X_JUDGE - start_point.x, end_point.x - X_SPAWN)
         fade = remap_clamped(0, 0.2, 0.25, 1, dist)
 
         final_alpha = alpha * fade
+
+        if i < segments - 1:
+            u_next = u_end + u_step
+            t_next = lerp(t0, t1, u_next)
+            next_point @= lerp_vec(a, b, t_next, ease_type)
+
+            next_normal @= (
+                next_point - end_point
+            ).normalize_or_zero().orthogonal() * LINE_WIDTH
+            end_miter @= (segment_normal + next_normal) * 0.5
+        else:
+            end_miter @= segment_normal
+
+        quad = Quad(
+            Vec2(start_point.x + start_mitter.x, start_point.y + start_mitter.y),
+            Vec2(start_point.x - start_mitter.x, start_point.y - start_mitter.y),
+            Vec2(end_point.x - end_miter.x, end_point.y - end_miter.y),
+            Vec2(end_point.x + end_miter.x, end_point.y + end_miter.y),
+        )
+
+        # update for the next iteration
+        start_point @= end_point
+        start_mitter @= end_miter
+        end_point @= next_point
+        segment_normal @= next_normal
+        u_start = u_end
+        u_end += u_step
+
         if final_alpha <= 0:
             continue
 
-        quad = points_to_quad(af, bf)
         match mode:
             case DrawMode.Simple:
                 base_sprite.draw(quad, z_index, final_alpha)
@@ -321,32 +427,13 @@ def draw_curved_line(
                     quad, z_index + z_offset(0, 1), global_transition_top_alpha
                 )
                 if final_alpha < 1:
-                    Skin.background[challenge_theme(af)].draw(
+                    Skin.background[challenge_theme(end_point)].draw(
                         quad, z_index + z_offset(0, 2), 1 - final_alpha
                     )
             case DrawMode.Local:
                 base_sprite.draw(quad, z_index, 1)
-                top_sprite.draw(quad, z_index + z_offset(0, 1), u0)
+                top_sprite.draw(quad, z_index + z_offset(0, 1), u_start)
                 if final_alpha < 1:
-                    Skin.background[challenge_theme(af)].draw(
+                    Skin.background[challenge_theme(end_point)].draw(
                         quad, z_index + z_offset(0, 2), 1 - final_alpha
                     )
-
-
-def points_to_quad(a: Vec2, b: Vec2) -> Quad:
-    """Get the quad that connect 2 coordinates"""
-    LINE_WIDTH = 0.01 * camera.scale
-    x = b.x - a.x
-    y = b.y - a.y
-
-    length = (a - b).magnitude
-
-    nx = (-y / length) * LINE_WIDTH
-    ny = (x / length) * LINE_WIDTH
-
-    return Quad(
-        Vec2(a.x + nx, a.y + ny),
-        Vec2(a.x - nx, a.y - ny),
-        Vec2(b.x - nx, b.y - ny),
-        Vec2(b.x + nx, b.y + ny),
-    )

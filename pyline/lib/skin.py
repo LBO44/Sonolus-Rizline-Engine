@@ -38,6 +38,7 @@ class Skin:
     miss_cross: Sprite = sprite("Miss Effect Cross")
 
     lines: SpriteGroup = sprite_group([f"Line Color {i}" for i in range(62)])
+    line_discs: SpriteGroup = sprite_group([f"Line Disc Color {i}" for i in range(62)])
     judge_rings: SpriteGroup = sprite_group(
         [f"Judge Ring Color {i}" for i in range(32)]
     )

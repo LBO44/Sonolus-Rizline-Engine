@@ -5,7 +5,7 @@ import {
 	type LevelDataEntity,
 } from "@sonolus/core"
 
-//Rizline chart object types, check out https://rgwiki.stary.pc.pl/wiki/Rizline:Chart_file for more details
+// Rizline chart object types, check out https://rgwiki.stary.pc.pl/wiki/Rizline:Chart_file for more details
 
 /** Rizline ease type */
 enum RizEaseType {

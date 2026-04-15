@@ -159,6 +159,10 @@ class LinePoint(WatchArchetype):
         return not self.next_point_ref.index
 
     @property
+    def is_first_point(self) -> bool:
+        return self.line.first_point_ref.index == self.index
+
+    @property
     def next(self) -> LinePoint:
         return self.next_point_ref.get()
 
@@ -184,7 +188,7 @@ class LinePoint(WatchArchetype):
         if self.is_last_point:
             return
 
-        if self.line.first_point_ref.index == self.index:
+        if self.is_first_point:
             self.visual_start_time = get_visual_start_time(
                 self.floor_position,
                 self.canvas.first_speed,

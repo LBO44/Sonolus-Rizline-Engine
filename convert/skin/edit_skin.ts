@@ -31,6 +31,9 @@ export const chartInfoToSpritesColors = (
 			info.lineColors.map((c, i) => [`Line Color ${i}`, c])
 		),
 		...Object.fromEntries(
+			info.lineColors.map((c, i) => [`Line Disc Color ${i}`, c])
+		),
+		...Object.fromEntries(
 			info.judgeRingColors.map((c, i) => [`Judge Ring Color ${i}`, c])
 		),
 	}
