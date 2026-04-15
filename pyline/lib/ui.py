@@ -1,4 +1,10 @@
-from sonolus.script.runtime import HorizontalAlign, runtime_ui, safe_area
+from sonolus.script.runtime import (
+    HorizontalAlign,
+    is_preview,
+    is_tutorial,
+    runtime_ui,
+    safe_area,
+)
 from sonolus.script.ui import UiConfig, UiJudgmentErrorPlacement, UiMetric
 from sonolus.script.vec import Vec2
 
@@ -8,6 +14,7 @@ ui_config = UiConfig(
     primary_metric=UiMetric.LIFE,
     secondary_metric=UiMetric.ACCURACY_PERCENTAGE,
     judgment_error_placement=UiJudgmentErrorPlacement.BOTTOM,
+    judgment_error_min=50,
 )
 
 
@@ -21,7 +28,7 @@ def init_ui():
         rotation=90,
         alpha=ui.menu_config.alpha,
         horizontal_align=HorizontalAlign.CENTER,
-        background=not Options.colored_ui,
+        background=is_tutorial() or is_preview() or (not Options.colored_ui),
     )
     ui.primary_metric_bar.update(
         anchor=ui_area.bl + Vec2(0.085, 0.075),
