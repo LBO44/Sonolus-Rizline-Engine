@@ -105,7 +105,7 @@ def draw_judge_ring(point: LinePoint) -> None:
         JUDGE_RING_RADIUS * camera.scale * Options.note_size
     ).translate(Vec2(X_JUDGE, get_y_at_judge_line(point)))
 
-    if Options.color_transition and judge_ring.has_transition:
+    if judge_ring.has_transition:
         top_alpha = unlerp_clamped(judge_ring.time, judge_ring.next_time, time())
 
         true_alpha = lerp(
@@ -175,7 +175,7 @@ def draw_line(point: LinePoint) -> None:
     top_color_index = point.next.color
     global_transition_top_alpha = -1
 
-    if Options.color_transition and point.color != point.next.color:
+    if point.color != point.next.color:
         mode = DrawMode.Local
 
     if point.line.has_line_color:
@@ -197,7 +197,7 @@ def draw_line(point: LinePoint) -> None:
         if line_color_alpha > 0.8:
             base_color_index = line_color.start_color
 
-            if Options.color_transition and line_color.has_transition:
+            if line_color.has_transition:
                 mode = DrawMode.Global
                 z = LAYER_LINE_GLOBAL
                 top_color_index = line_color.end_color

@@ -79,8 +79,3 @@ class Options:
         default=1,
         scope="Rizline",
     )
-    color_transition: bool = toggle_option(
-        name="Colour Transitions",
-        default=True,
-        scope="Rizline",
-    )
