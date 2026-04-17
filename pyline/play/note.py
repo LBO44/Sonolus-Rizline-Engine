@@ -104,6 +104,16 @@ class Note(PlayArchetype):
     def pos(self) -> Vec2:
         return get_note_pos(self)
 
+    @property
+    def pos_end_y(self) -> float:
+        # If missed it means we passed Judge Line
+        # I don't know whether this should also apply to tap/drag
+        return (
+            self.point.line.y_at_judge_line
+            if self.kind == NoteKind.HOLD_START
+            else get_note_pos(self).y
+        )
+
     @callback(order=2)  # need to run after LinePoint
     def preprocess(self):
         self.judgment_window = get_note_judgement_window(self.kind, self.is_challenge)
@@ -146,7 +156,7 @@ class Note(PlayArchetype):
             else:
                 self.despawn = True
                 NoteMissEffect.spawn(
-                    start_time=self.input_interval.end, pos_y=self.pos.y
+                    start_time=self.input_interval.end, pos_y=self.pos_end_y
                 )
             return
         draw_note(self)
@@ -244,7 +254,7 @@ class Note(PlayArchetype):
 
     def terminate(self):
         self.end_time = time()
-        self.end_y = self.pos.y
+        self.end_y = self.pos_end_y
 
 
 class NoteHoldTail(PlayArchetype):

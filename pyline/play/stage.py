@@ -45,7 +45,7 @@ class Stage(PlayArchetype):
         ChartStats.difficulty = self.difficulty
 
     def spawn_order(self) -> float:
-        return 0
+        return -1e6
 
     def should_spawn(self) -> bool:
         return True

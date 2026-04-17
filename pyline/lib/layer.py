@@ -16,4 +16,4 @@ LAYER_MISS_EFFECT = 12
 
 
 def z_offset(index: float, local_offset: float = 0) -> float:
-    return index / 12800 + local_offset / 25600
+    return index * 7.8125e-5 + local_offset * 3.90625e-5
