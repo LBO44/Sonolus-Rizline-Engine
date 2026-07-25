@@ -174,7 +174,7 @@ class Note(PlayArchetype):
 
     def handle_tap_input(self):
         for touch in unclaimed_taps():
-            if touch.start_time not in (self.judgment_window.good + self.target_time):
+            if touch.start_time not in self.input_interval:
                 continue
 
             if self.should_skip_touch_for_partner(touch):
