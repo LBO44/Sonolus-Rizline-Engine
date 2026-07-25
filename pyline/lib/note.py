@@ -27,7 +27,6 @@ from pyline.lib.layer import (
     LAYER_HOLD_NOTE,
     LAYER_MISS_EFFECT,
     LAYER_NOTE,
-    z_offset,
 )
 from pyline.lib.layout import (
     X_JUDGE,
@@ -157,7 +156,7 @@ def draw_note(note: Note) -> None:
             sprite @= Skin.note_tap[challenge_theme(note.pos)]
 
     layout = Rect.from_margin(radius).translate(note.pos)
-    sprite.draw(layout, LAYER_NOTE + z_offset(note.index), fade)
+    sprite.draw(layout, (LAYER_NOTE, note.index), fade)
 
 
 def draw_hold_note(
@@ -182,10 +181,8 @@ def draw_hold_note(
 
     head_layout = Rect.from_margin(radius).translate(head_pos)
 
-    Skin.note_hold.draw(head_layout, z + z_offset(draw_index), head_fade)
-    Skin.note_hold_head_decorator.draw(
-        head_layout, z + z_offset(draw_index, 2), head_fade
-    )
+    Skin.note_hold.draw(head_layout, (z, draw_index), head_fade)
+    Skin.note_hold_head_decorator.draw(head_layout, (z, draw_index, 2), head_fade)
 
     line_left = clamp(
         tail_x - radius * 0.5, camera.scaled_x_spawn, camera.scaled_x_note_disappear
@@ -196,7 +193,7 @@ def draw_hold_note(
 
     line_split_left = min(line_left + HOLD_FADE_LENGTH, line_right)
 
-    z_connctor = z + z_offset(draw_index, 1)
+    z_connctor = (z, draw_index, 1)
 
     if head_x <= camera.scaled_x_note_disappear - radius:
         line_split_right = line_right
@@ -276,9 +273,7 @@ def draw_miss_effect(start_time: float, start_y: float) -> None:
         .translate(Vec2(-0.4, start_y))
     )
 
-    Skin.miss_cross.draw(
-        cross_quad, LAYER_MISS_EFFECT + z_offset(0, 1), 1 - ease_in_quad(t)
-    )
+    Skin.miss_cross.draw(cross_quad, (LAYER_MISS_EFFECT, 0, 1), 1 - ease_in_quad(t))
 
 
 def play_note_particle(pos: Vec2) -> None:

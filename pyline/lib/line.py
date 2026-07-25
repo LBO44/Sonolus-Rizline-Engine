@@ -10,7 +10,7 @@ from sonolus.script.sprite import Sprite
 from sonolus.script.vec import Vec2
 
 from pyline.lib.ease import Canvas, camera, ease
-from pyline.lib.layer import LAYER_JUDGE_RING, LAYER_LINE, LAYER_LINE_GLOBAL, z_offset
+from pyline.lib.layer import LAYER_JUDGE_RING, LAYER_LINE, LAYER_LINE_GLOBAL
 from pyline.lib.layout import (
     X_JUDGE,
     X_LINE_DISAPPEAR,
@@ -128,7 +128,7 @@ def draw_judge_ring(point: LinePoint) -> None:
             top_sprite = Skin.judge_rings[judge_ring.end_color]
             top_sprite.draw(
                 layout,
-                LAYER_JUDGE_RING + z_offset(-point.line.index, 1),
+                (LAYER_JUDGE_RING, -point.line.index, 1),
                 top_alpha,
             )
 
@@ -137,13 +137,13 @@ def draw_judge_ring(point: LinePoint) -> None:
                     challenge_theme(Vec2(X_JUDGE, point.pos.y))
                 ].draw(
                     layout,
-                    LAYER_JUDGE_RING + z_offset(-point.line.index, 2),
+                    (LAYER_JUDGE_RING, -point.line.index, 2),
                     1 - true_alpha,
                 )
 
     base_sprite.draw(
         layout,
-        LAYER_JUDGE_RING + z_offset(-point.line.index),
+        (LAYER_JUDGE_RING, -point.line.index),
         base_alpha,
     )
 
@@ -157,7 +157,7 @@ class DrawMode(IntEnum):
 def draw_join(
     pos: Vec2,
     a: float,
-    z_index: float,
+    z_index: tuple[float, float],
     mode: DrawMode,
     base_color: int,
     top_color: int,
@@ -181,11 +181,11 @@ def draw_join(
         case DrawMode.Global:
             Skin.line_discs[base_color].draw(disc_rect, z_index, 1)
             Skin.line_discs[top_color].draw(
-                disc_rect, z_index + z_offset(0, 1), global_transition_top_alpha
+                disc_rect, z_index + (-5, 1), global_transition_top_alpha
             )
             if alpha < 1:
                 Skin.background[challenge_theme(pos)].draw(
-                    disc_rect, z_index + z_offset(0, 2), 1 - alpha
+                    disc_rect, z_index + (-5, 2), 1 - alpha
                 )
 
 
@@ -252,7 +252,7 @@ def draw_line(point: LinePoint) -> None:
         draw_join(
             pos,
             alpha,
-            z + z_offset(point.line.index, -5),
+            (z, point.line.index),
             mode,
             base_color_index,
             top_color_index,
@@ -274,7 +274,7 @@ def draw_line(point: LinePoint) -> None:
             alpha_a=point.alpha,
             alpha_b=point.next.alpha,
             ease_type=point.ease_type,
-            z_index=z + z_offset(point.line.index),
+            z_index=(z, point.line.index),
             base_sprite=base_sprite,
             top_sprite=top_sprite,
             mode=mode,
@@ -290,7 +290,7 @@ def draw_line(point: LinePoint) -> None:
             alpha_a=point.next.alpha,
             alpha_b=point.alpha,
             ease_type=point.ease_type,
-            z_index=z + z_offset(point.line.index),
+            z_index=(z, point.line.index),
             base_sprite=base_sprite,
             top_sprite=top_sprite,
             mode=mode,
@@ -308,7 +308,7 @@ def draw_curved_line(
     alpha_a: float,
     alpha_b: float,
     ease_type: int,
-    z_index: float,
+    z_index: tuple[float, float],
     base_sprite: Sprite,
     top_sprite: Sprite,
     mode: DrawMode = DrawMode.Simple,
@@ -423,17 +423,15 @@ def draw_curved_line(
                 base_sprite.draw(quad, z_index, final_alpha)
             case DrawMode.Global:
                 base_sprite.draw(quad, z_index, 1)
-                top_sprite.draw(
-                    quad, z_index + z_offset(0, 1), global_transition_top_alpha
-                )
+                top_sprite.draw(quad, z_index + (0, 1), global_transition_top_alpha)
                 if final_alpha < 1:
                     Skin.background[challenge_theme(end_point)].draw(
-                        quad, z_index + z_offset(0, 2), 1 - final_alpha
+                        quad, z_index + (0, 2), 1 - final_alpha
                     )
             case DrawMode.Local:
                 base_sprite.draw(quad, z_index, 1)
-                top_sprite.draw(quad, z_index + z_offset(0, 1), u_start)
+                top_sprite.draw(quad, z_index + (0, 1), u_start)
                 if final_alpha < 1:
                     Skin.background[challenge_theme(end_point)].draw(
-                        quad, z_index + z_offset(0, 2), 1 - final_alpha
+                        quad, z_index + (0, 2), 1 - final_alpha
                     )

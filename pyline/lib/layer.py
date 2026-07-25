@@ -13,7 +13,3 @@ LAYER_NOTE = 11
 LAYER_HOLD_NOTE = 10
 LAYER_HOLD_NOTE_MISS_EFFECT = 8
 LAYER_MISS_EFFECT = 12
-
-
-def z_offset(index: float, local_offset: float = 0) -> float:
-    return index * 7.8125e-5 + local_offset * 3.90625e-5

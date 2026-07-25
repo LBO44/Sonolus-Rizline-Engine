@@ -12,7 +12,6 @@ from pyline.lib.layer import (
     LAYER_BACKGROUND_FADE_JUDGE,
     LAYER_BACKGROUND_FADE_SPAWN,
     LAYER_BACKGROUND_OVER,
-    z_offset,
 )
 from pyline.lib.options import Options
 from pyline.lib.skin import Skin
@@ -125,7 +124,7 @@ def draw_background() -> None:
     else:
         a = unlerp(t0, t1, time()) * Options.background_opacity
         under.draw(bg_layout, LAYER_BACKGROUND, Options.background_opacity - a)
-        over.draw(bg_layout, LAYER_BACKGROUND + z_offset(1), a)
+        over.draw(bg_layout, (LAYER_BACKGROUND, 1), a)
 
 
 def is_in_challenge(pos: Vec2) -> bool:
