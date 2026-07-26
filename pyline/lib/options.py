@@ -65,13 +65,27 @@ class Options:
     )
     colored_ui: bool = toggle_option(
         name="Colourful UI",
-        description="Use the level's colours for the UI menu and metric.",
+        title={
+            "en": "Colourful UI",
+            "fr": "Interface Colorée",
+        },
+        description={
+            "en": "Use the level's colours for the UI menu and metric.",
+            "fr": "Utiliser les couleurs du niveau pour l'interface et les métriques.",
+        },
         default=True,
         scope="Rizline",
     )
     background_opacity: float = slider_option(
         name="Colour Background Opacity",
-        description="In case you wish to use a custom Sonolus background instead.\nWill slightly break transparent lines.",
+        title={
+            "en": "Colour Background Opacity",
+            "fr": "Opacité de l'Arrière-plan Coloré",
+        },
+        description={
+            "en": "In case you wish to use a custom Sonolus background instead.\nWill slightly break transparent lines.",
+            "fr": "Si vous souhaitez utiliser un autre arrière-plan Sonolus.\nAbîmera les lignes transparentes.",
+        },
         unit=StandardText.PERCENTAGE_UNIT,
         min=0,
         max=1,

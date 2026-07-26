@@ -9,10 +9,23 @@ from sonolus.script.instruction import (
 
 @instructions
 class Instructions:
-    tap: Instruction = instruction("Tap Anywhere")
-    drag: Instruction = instruction("Touch Anywhere")
+    tap: Instruction = instruction(
+        {
+            "en": "Tap Anywhere",
+            "fr": "Tapez n'importe où",
+        }
+    )
+    drag: Instruction = instruction(
+        {
+            "en": "Touch Anywhere",
+            "fr": "Touchez n'importe où",
+        }
+    )
     hold: Instruction = instruction(
-        "Tap and hold until the end. You don't need to release."
+        {
+            "en": "Tap and hold until the end, no need to release",
+            "fr": "Tapez et maintenez jusqu'à la fin, pas besoin de relâcher au moment exact",
+        }
     )
 
 
