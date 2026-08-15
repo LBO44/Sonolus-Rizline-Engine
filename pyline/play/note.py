@@ -10,7 +10,6 @@ from sonolus.script.archetype import (
     entity_memory,
     exported,
     imported,
-    shared_memory,
 )
 from sonolus.script.bucket import Judgment, JudgmentWindow
 from sonolus.script.interval import Interval, clamp
@@ -54,7 +53,13 @@ from pyline.lib.note import (
 from pyline.lib.options import Options
 from pyline.lib.streams import Streams
 from pyline.play.ease_events import Canvas
-from pyline.play.input import claim_touch, unclaimed_taps
+from pyline.play.input import (
+    claim_touch,
+    claimed_taps,
+    get_touch_owner_index,
+    is_touch_claimed,
+    unclaimed_taps,
+)
 from pyline.play.line import Line, LinePoint
 
 
@@ -68,30 +73,19 @@ class Note(PlayArchetype):
     previous_line_point_ref: EntityRef[LinePoint] = imported(name="previousLinePoint")
     is_challenge: bool = imported(name="isChallenge")
 
-    partner_note: EntityRef[Note] = imported(name="partnerNote")
-    """
-    This is a ref to the other note on the same beat (if there is one)
-    If there are 2 notes with the same beat (tap or hold start, don't matter),
-    touch position will be used to determine which touch is for wich note.
-    (In Rizline there will never be more than 2 tappable notes at the same beat
-    """
-
     target_time: float = entity_data()
     start_time: float = entity_data()
 
     judgment_window: JudgmentWindow = entity_data()
     input_interval: Interval = entity_data()
-    # for early drag notes
-    best_touch_time: float = entity_memory()
 
-    was_hit: bool = shared_memory()
-    """
-    used by hold start and double (same beat) notes
-    can't use entity state (despwan) for double notes because it only gets updated next frame
-    """
-    skipped_touch_for_partner: bool = entity_memory()
-    """ If there are multiple touch, we only want to skip one. """
+    claimed_touch_id: int = entity_memory()
+    claimed_touch_time: float = entity_memory()
+    best_touch_time: float = entity_memory()
+    """for early drag notes"""
+
     bad_time: float = entity_memory()
+    bad_pos: Vec2 = entity_memory()
 
     end_time: float = exported(name="endTime")
     end_y: float = exported(name="endY")  # used for miss effect
@@ -128,6 +122,7 @@ class Note(PlayArchetype):
 
         self.result.bucket = get_note_bucket(self.kind, self.is_challenge)
         self.result.accuracy = 1.0
+        self.claimed_touch_id = -1
 
         self.start_time = min(self.point.visual_start_time, self.input_interval.start)
         if Options.auto_sfx:
@@ -140,24 +135,8 @@ class Note(PlayArchetype):
         return time() >= self.start_time
 
     def update_parallel(self):
-        if (
-            self.kind == NoteKind.DRAG
-            and offset_adjusted_time() > self.target_time
-            and self.best_touch_time
-        ):
-            if (offset_adjusted_time() - self.target_time) > (
-                self.best_touch_time - self.target_time
-            ):
-                self.judge(self.best_touch_time)
-
-        if time() > self.input_interval.end:
-            if self.bad_time:
-                self.judge(self.bad_time)
-            else:
-                self.despawn = True
-                NoteMissEffect.spawn(
-                    start_time=self.input_interval.end, pos_y=self.pos_end_y
-                )
+        self.validate_touch()
+        if self.despawn:
             return
         draw_note(self)
 
@@ -172,63 +151,127 @@ class Note(PlayArchetype):
             case NoteKind.DRAG:
                 self.handle_drag_input()
 
+    def check_bad_tap(self, tap: Touch):
+        is_bad_tap = tap.start_time < (
+            self.target_time + self.judgment_window.great.start
+        )
+
+        if is_bad_tap:
+            if self.bad_time < tap.start_time:
+                self.bad_time = tap.start_time
+                self.bad_pos = tap.position
+
     def handle_tap_input(self):
-        for touch in unclaimed_taps():
-            if touch.start_time not in self.input_interval:
+        """loop in unclaimed taps first, if there are none left, loop in all (claimed) taps"""
+
+        for tap in unclaimed_taps():
+            if tap.start_time not in self.input_interval:
                 continue
 
-            if self.should_skip_touch_for_partner(touch):
+            claim_touch(tap.id, self.index)
+            self.claimed_touch_id = tap.id
+            self.claimed_touch_time = tap.start_time
+
+            self.check_bad_tap(tap)
+
+            return
+
+        # means all valid taps were already claimed,
+        # we should go steal a claimed ones if we are before the note using it
+
+        # Sorting the array each time since it might have been modfied by other notes
+        sorted_tap = claimed_taps()
+        sorted_tap.sort(
+            key=lambda tap: self.at(get_touch_owner_index(tap.id)).target_time,
+            reverse=True,
+        )
+
+        for tap in sorted_tap:
+            if tap.start_time not in self.input_interval:
                 continue
 
-            claim_touch(touch.id)
+            tap_owner = self.at(get_touch_owner_index(tap.id))
 
-            is_bad_tap = touch.start_time < (
-                self.target_time + self.judgment_window.great.start
-            )
-
-            if is_bad_tap:
-                self.bad_time = max(touch.start_time, self.bad_time)
-                play_bad_particle(touch.position)
-                Streams.bad_effects[time()] = touch.position
-            else:
-                self.judge(touch.start_time)
-                self.was_hit = True
-                break
-
-    def should_skip_touch_for_partner(self, touch: Touch) -> bool:
-        if self.partner_note.index == 0 or self.skipped_touch_for_partner:
-            return False
-
-        partner_note = self.partner_note.get()
-        if partner_note.was_hit:
-            return False
-
-        partner_y = partner_note.pos.y
-        middle_y = (self.pos.y + partner_y) / 2
-
-        if (self.pos.y < partner_y and touch.start_position.y > middle_y) or (
-            self.pos.y > partner_y and touch.start_position.y < middle_y
-        ):
-            self.skipped_touch_for_partner = True
-            return True
-
-        return False
+            """
+            If there are 2 notes with the same beat (tap or hold start, don't matter),
+            touch position will be used to determine which touch is for which note.
+            (In official Rizline chart there will never be more than 2 tappable notes on the same beat)
+            """
+            if (
+                self.target_time == tap_owner.target_time
+                and (
+                    (
+                        self.pos.y > tap_owner.pos.y
+                        and tap.start_position.y > (self.pos.y + tap_owner.pos.y) / 2
+                    )
+                    or (
+                        self.pos.y < tap_owner.pos.y
+                        and tap.start_position.y < (self.pos.y + tap_owner.pos.y) / 2
+                    )
+                )
+            ) or self.target_time < tap_owner.target_time:
+                claim_touch(tap.id, self.index)
+                self.claimed_touch_id = tap.id
+                self.claimed_touch_time = tap.start_time
+                self.check_bad_tap(tap)
+                return
 
     def handle_drag_input(self):
-        for _ in touches():
-            if offset_adjusted_time() >= self.target_time:
-                if (
-                    offset_adjusted_time() - delta_time()
-                    <= self.target_time
-                    <= offset_adjusted_time()
-                ):
-                    # get perfect accuracy if touch is on the target time frame
-                    self.judge(self.target_time)
-                else:
-                    # can't get a better time
-                    self.judge(offset_adjusted_time())
-        else:
+        if len(touches()) > 0:
+            self.update_best_judgment_time_with_current_time()
+            if (
+                offset_adjusted_time() - delta_time()
+                <= self.target_time
+                <= offset_adjusted_time()
+            ):
+                # get perfect accuracy if touch is on the target time frame
+                self.best_touch_time = self.target_time
+
+    def update_best_judgment_time_with_current_time(self):
+        prev_error = abs(self.best_touch_time - self.target_time)
+        new_error = abs(offset_adjusted_time() - self.target_time)
+        if new_error < prev_error:
             self.best_touch_time = offset_adjusted_time()
+
+    def validate_touch(self):
+        # Make Sure Drag Notes get the best judgemnt possible
+        if self.kind == NoteKind.DRAG and self.best_touch_time:
+            can_improve_drag = (
+                self.best_touch_time < self.target_time
+                and offset_adjusted_time() - self.target_time
+                < self.target_time - self.best_touch_time
+            )
+            if not can_improve_drag:
+                self.judge(self.best_touch_time)
+                return
+
+        # Hanlde missed notes
+        if time() > self.input_interval.end:
+            if self.bad_time:
+                self.judge(self.bad_time)
+            else:
+                self.despawn = True
+                NoteMissEffect.spawn(
+                    start_time=self.input_interval.end, pos_y=self.pos_end_y
+                )
+            return
+
+        if self.claimed_touch_id == -1:
+            return
+
+        # Make sure our touch wasn't stolen
+        if is_touch_claimed(
+            self.claimed_touch_id
+        ) and self.index == get_touch_owner_index(self.claimed_touch_id):
+            if self.bad_time == self.claimed_touch_time:
+                play_bad_particle(self.bad_pos)
+                Streams.bad_effects[time()] = self.bad_pos
+            else:
+                self.judge(self.claimed_touch_time)
+        else:
+            self.bad_time = 0
+
+        self.claimed_touch_id = -1
 
     def judge(self, judgment_time: float):
         judgment = self.judgment_window.judge(
@@ -329,7 +372,7 @@ class NoteHoldTail(PlayArchetype):
 
     @callback(order=1)
     def touch(self):
-        if (not self.head.was_hit) or self.despawn or self.was_judged:
+        if (not self.head.is_despawned) or self.despawn or self.was_judged:
             return
 
         last_release_time = 0
@@ -365,7 +408,7 @@ class NoteHoldTail(PlayArchetype):
         self.result.bucket_value = self.result.accuracy * 1000
 
     def update_parallel(self):
-        if time() > self.head.input_interval.end and not self.head.was_hit:
+        if time() > self.head.input_interval.end and not self.head.is_despawned:
             NoteHoldMissEffect.spawn(
                 start_time=time(),
                 pos_y=self.pos_y,
@@ -380,9 +423,10 @@ class NoteHoldTail(PlayArchetype):
             play_note_particle(Vec2(X_JUDGE, self.pos_y))
             if Options.haptic:
                 self.result.haptic = HapticType.LIGHT
-            NoteHoldDespawnEffect.spawn(
-                start_time=self.tail_target_time, line_ref=self.head.point.line_ref
-            )
+            if self.head.is_despawned:
+                NoteHoldDespawnEffect.spawn(
+                    start_time=self.tail_target_time, line_ref=self.head.point.line_ref
+                )
             self.despawn = True
             return
 

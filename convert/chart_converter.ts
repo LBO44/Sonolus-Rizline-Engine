@@ -107,16 +107,16 @@ export type RizChart = {
 		}[]
 		notes: ({ time: number; floorPosition: number } & (
 			| {
-					type: RizNoteType.Hold
-					otherInformations: [
-						/**for hold end input/when to despawn the hold note (in beat) */
-						holdEndTime: number,
-						/** usually a float, but always end with .0 */
-						holdEndCanvasIndex: number,
-						/** Rizline use it to figure out the hold visual length / where to draw the hold end */
-						holdEndFloorPosition: number,
-					]
-			  }
+				type: RizNoteType.Hold
+				otherInformations: [
+					/**for hold end input/when to despawn the hold note (in beat) */
+					holdEndTime: number,
+					/** usually a float, but always end with .0 */
+					holdEndCanvasIndex: number,
+					/** Rizline use it to figure out the hold visual length / where to draw the hold end */
+					holdEndFloorPosition: number,
+				]
+			}
 			| { type: RizNoteType.Tap | RizNoteType.Drag; otherInformations: [] }
 		))[]
 		/** Chnage the color and alpha of the line's judge over time, with linear transitions.
@@ -355,7 +355,7 @@ export const convertsChart = (
 		})
 	})
 
-	//add notes, they need to be sorted beat-wise for inputs
+	//add notes 
 
 	const notes = chart.lines
 		.flatMap((line, lineIndex) => {
@@ -369,17 +369,10 @@ export const convertsChart = (
 				}
 			})
 		})
-		.sort((a, b) => a.time - b.time)
 
-	/**Map each note to its beat to find double notes*/
-	const notesAtSameTime = new Map<number, string[]>()
 
-	notes.forEach((note, noteIndex) => {
+	notes.forEach((note) => {
 		if (note.type == RizNoteType.Drag) return
-		const noteName = `Note ${noteIndex}`
-		const noteNames = notesAtSameTime.get(note.time) ?? []
-		noteNames.push(noteName)
-		notesAtSameTime.set(note.time, noteNames)
 	})
 
 	notes.forEach((note, noteIndex) => {
@@ -390,11 +383,6 @@ export const convertsChart = (
 		)
 
 		const noteName = `Note ${noteIndex}`
-
-		const partnerNote =
-			note.type == RizNoteType.Drag
-				? undefined
-				: notesAtSameTime.get(note.time).find((v) => v != noteName)
 
 		const isChallenge = chart.challengeTimes.some(
 			(ct) => note.time >= ct.start && note.time <= ct.end
@@ -410,11 +398,9 @@ export const convertsChart = (
 					"#BEAT": note.time,
 					floorPosition: note.floorPosition,
 					previousLinePoint: `Line ${note.lineIndex} Point ${previousLinePointIndex}`,
-					...(partnerNote ? { partnerNote } : {}),
 					isChallenge: +isChallenge,
 					kind: note.type,
 				},
-				...(partnerNote || note.type == RizNoteType.Hold ? [noteName] : [])
 			)
 		)
 
