@@ -161,7 +161,7 @@ def draw_join(
     mode: DrawMode,
     base_color: int,
     top_color: int,
-    global_transition_top_alpha: float = -1,
+    transition_top_alpha: float = -1,
 ):
     if pos.x < X_SPAWN or pos.x > X_LINE_DISAPPEAR:
         return
@@ -177,15 +177,22 @@ def draw_join(
         case DrawMode.Simple:
             Skin.line_discs[base_color].draw(disc_rect, z_index, alpha)
         case DrawMode.Local:
-            Skin.line_discs[base_color].draw(disc_rect, z_index, alpha)
-        case DrawMode.Global:
-            Skin.line_discs[base_color].draw(disc_rect, z_index, 1)
+            Skin.line_discs[base_color].draw(disc_rect, z_index + (-1, 0), 1)
             Skin.line_discs[top_color].draw(
-                disc_rect, z_index + (-5, 1), global_transition_top_alpha
+                disc_rect, z_index + (-1, 1), transition_top_alpha
             )
             if alpha < 1:
                 Skin.background[challenge_theme(pos)].draw(
-                    disc_rect, z_index + (-5, 2), 1 - alpha
+                    disc_rect, z_index + (-1, 2), 1 - alpha
+                )
+        case DrawMode.Global:
+            Skin.line_discs[base_color].draw(disc_rect, z_index + (-1, 0), 1)
+            Skin.line_discs[top_color].draw(
+                disc_rect, z_index + (-1, 1), transition_top_alpha
+            )
+            if alpha < 1:
+                Skin.background[challenge_theme(pos)].draw(
+                    disc_rect, z_index + (-1, 2), 1 - alpha
                 )
 
 
@@ -248,7 +255,7 @@ def draw_line(point: LinePoint) -> None:
                 mode = DrawMode.Simple
 
     # Looks like rizline draw lines using rounded extremeties
-    def draw_join_curr(pos, alpha):
+    def draw_join_curr(pos: Vec2, alpha: float, transition_alpha: float):
         draw_join(
             pos,
             alpha,
@@ -256,12 +263,20 @@ def draw_line(point: LinePoint) -> None:
             mode,
             base_color_index,
             top_color_index,
-            global_transition_top_alpha,
+            transition_alpha,
         )
 
-    draw_join_curr(a, point.alpha)
+    draw_join_curr(
+        a,
+        point.alpha,
+        0 if global_transition_top_alpha == -1 else global_transition_top_alpha,
+    )
     if point.next.is_last_point:
-        draw_join_curr(b, point.next.alpha)
+        draw_join_curr(
+            b,
+            point.next.alpha,
+            1 if global_transition_top_alpha == -1 else global_transition_top_alpha,
+        )
 
     base_sprite = Skin.lines[base_color_index]
     top_sprite = Skin.lines[top_color_index]
