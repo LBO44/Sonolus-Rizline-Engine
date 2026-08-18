@@ -80,7 +80,7 @@ class Note(WatchArchetype):
             self.entity_score_multiplier = ChartStats.challenge_score_multiplier
 
         if is_replay() and self.end_time != 0:
-            if self.jugement == Judgment.MISS:
+            if self.jugement == Judgment.MISS and Options.particle == 0:
                 NoteMissEffect.spawn(start_time=self.end_time, pos_y=self.end_y)
             if self.jugement != Judgment.MISS or Options.auto_sfx:
                 schedule_note_sfx(
@@ -169,7 +169,7 @@ class NoteHoldTail(WatchArchetype):
                     pos_y=self.end_y,
                     start_tail_x=self.end_tail_x,
                 )
-                if self.head.jugement != Judgment.MISS:
+                if self.head.jugement != Judgment.MISS and Options.particle == 0:
                     NoteMissEffect.spawn(start_time=self.end_time, pos_y=self.end_y)
         else:
             self.jugement = Judgment.PERFECT

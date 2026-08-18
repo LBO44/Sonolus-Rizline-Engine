@@ -479,7 +479,10 @@ class NoteMissEffect(PlayArchetype):
     pos_y: float = entity_memory()
 
     def update_parallel(self):
-        if time() >= self.start_time + NOTE_MISS_EFFECT_DURATION:
+        if (
+            Options.particle != 0
+            or time() >= self.start_time + NOTE_MISS_EFFECT_DURATION
+        ):
             self.despawn = True
             return
 

@@ -1,4 +1,4 @@
-from sonolus.script.options import options, slider_option, toggle_option
+from sonolus.script.options import options, select_option, slider_option, toggle_option
 from sonolus.script.text import StandardText
 
 
@@ -34,9 +34,10 @@ class Options:
         unit=StandardText.PERCENTAGE_UNIT,
         scope="Rizline",
     )
-    particle: bool = toggle_option(
+    particle: int = select_option(
         name=StandardText.NOTE_EFFECT,
-        default=True,
+        values=[StandardText.ALL, StandardText.PARTICLE, StandardText.NONE],
+        default=StandardText.ALL,
         scope="Rizline",
     )
     particle_size: float = slider_option(

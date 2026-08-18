@@ -277,7 +277,7 @@ def draw_miss_effect(start_time: float, start_y: float) -> None:
 
 
 def play_note_particle(pos: Vec2) -> None:
-    if not Options.particle:
+    if Options.particle == 2:
         return
 
     layout = Rect.from_margin(0.3 * Options.particle_size).translate(
@@ -291,7 +291,7 @@ def play_note_particle(pos: Vec2) -> None:
 
 
 def play_bad_particle(pos: Vec2) -> None:
-    if not Options.particle:
+    if Options.particle == 2:
         return
 
     layout = Rect.from_margin(0.35 * Options.particle_size).translate(pos)
