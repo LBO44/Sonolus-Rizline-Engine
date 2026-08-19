@@ -253,21 +253,25 @@ export const convertsChart = (
 		getColorIndex(note, noteColors)
 	}
 	//challenge time
-	chart.challengeTimes.forEach((challengeTime, i) => {
+	chart.challengeTimes.forEach((challengeTime, i, cs) => {
 		const theme = chart.themes[i + 1] //+1 because theme 0 is default outside riztime
 		const [background, note, particleAndUI] = theme.colorsList
+		const next = cs.at(i + 1)
+		const endBeat = Math.min(next?.start ?? +Infinity, challengeTime.end)
+		const transitionDuration = Math.min(endBeat - challengeTime.start, challengeTime.transTime)
 		entities.push(
 			entity("Challenge Time", {
 				startBeat: challengeTime.start,
-				endBeat: challengeTime.end,
-				transitionDuration: challengeTime.transTime,
+				endBeat,
+				transitionDuration,
 				colorIndexParticle: getColorIndex(particleAndUI, particleColors),
 				colorIndexBackgroundPixel: getColorIndex(background, pixelColors),
 				colorIndexBackgroundElement: getColorIndex(background, backgroundElementColors),
 				colorIndexBackgroundJudgeRing: getColorIndex(background, judgeRingColors),
 				colorIndexUI: getColorIndex(particleAndUI, pixelColors),
 				colorIndexNote: getColorIndex(note, noteColors),
-			})
+				...(i ? { previous: `Challenge Time ${i - 1}` } : {})
+			}, `Challenge Time ${i}`)
 		)
 	})
 

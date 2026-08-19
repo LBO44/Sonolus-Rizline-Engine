@@ -7,11 +7,11 @@
 Currently featuring *fully working* play and watch mode, plus a simple tutorial.
 
 ## Quick Dev Setup
-1. Install [uv](https://docs.astral.sh/uv/), run `uv sync` in the project folder.
-2. To add Rizline levels, copy one of the existing `resources/levels/...` folder, modify `item.json` with the new level name (modify the particle and skin too) and change `chart.json` to the corresponding Rizline chart file.
-3. Convert Rizline chart to Sonolus data and generate corresponding skin and particle by running `npx -p pngjs tsx convert/generate_resources.ts`, [pngjs](https://www.npmjs.com/package/pngjs) is used to generate skin textures.
-4. [Ensure your venv is activated](https://docs.astral.sh/uv/pip/environments/#using-a-virtual-environment).
-5. Run `sonolus-py dev`.
+1. Install [uv](https://docs.astral.sh/uv/)
+2. Run `uv sync` in the project folder to install the project dependencies.
+3. Optionally add Rizline levels: copy one of the existing `resources/levels/...` folder, modify `item.json` with the new level name (modify the particle and skin too) and change `chart.json` to the corresponding Rizline chart file.
+4. Convert Rizline chart to Sonolus data and generate corresponding skin and particle by running `npx -p pngjs tsx convert/generate_resources.ts`, [pngjs](https://www.npmjs.com/package/pngjs) is used to generate skin textures.
+5. Start the dev server with `uv run sonolus-py dev`.
 
 ## Development Notes
 <details>

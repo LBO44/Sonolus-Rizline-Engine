@@ -99,14 +99,20 @@ def draw_judge_ring(point: LinePoint) -> None:
     if point.line.no_judge_ring:
         return
 
+    y_pos = point.pos.y
+    radius = JUDGE_RING_RADIUS * camera.scale * Options.note_size
+
+    if y_pos < -1 - radius or y_pos > 1 + radius:
+        return
+
     judge_ring = point.line.judge_ring
 
     base_sprite = Skin.judge_rings[judge_ring.start_color]
 
     base_alpha = judge_ring.start_alpha
-    layout = Rect.from_margin(
-        JUDGE_RING_RADIUS * camera.scale * Options.note_size
-    ).translate(Vec2(X_JUDGE, get_y_at_judge_line(point)))
+    layout = Rect.from_margin(radius).translate(
+        Vec2(X_JUDGE, get_y_at_judge_line(point))
+    )
 
     if judge_ring.has_transition:
         top_alpha = unlerp_clamped(judge_ring.time, judge_ring.next_time, time())

@@ -1,4 +1,5 @@
 from sonolus.script.archetype import (
+    EntityRef,
     WatchArchetype,
     entity_data,
     imported,
@@ -68,6 +69,7 @@ class ChallengeTime(WatchArchetype):
     start_beat: float = imported(name="startBeat")
     end_beat: float = imported(name="endBeat")
     transition_duration: float = imported(name="transitionDuration")
+    previous_ref: EntityRef[ChallengeTime] = imported(name="previous")
 
     color_index_particle: int = imported(name="colorIndexParticle")
     color_index_pixel: int = imported(name="colorIndexBackgroundPixel")
@@ -77,14 +79,14 @@ class ChallengeTime(WatchArchetype):
     color_index_judge_ring: int = imported(name="colorIndexBackgroundJudgeRing")
 
     challenge_transition: Interval = entity_data()
-    challenge_in: Interval = entity_data()
+    challenge_inside: Interval = entity_data()
 
     def preprocess(self):
         self.challenge_transition = Interval(
             beat_to_time(self.start_beat),
             beat_to_time(self.end_beat + self.transition_duration),
         )
-        self.challenge_in = Interval(
+        self.challenge_inside = Interval(
             beat_to_time(self.start_beat + self.transition_duration),
             beat_to_time(self.end_beat),
         )
@@ -96,12 +98,13 @@ class ChallengeTime(WatchArchetype):
         return self.challenge_transition.end
 
     def update_sequential(self):
-        Challenge.transition = self.challenge_transition
-        Challenge.inside = self.challenge_in
+        Challenge.current_idx = self.index
+        Challenge.previous_idx = (
+            self.previous_ref.index
+            if self.previous_ref.index
+            and self.previous_ref.get().end_beat == self.start_beat
+            else 0
+        )
 
-        Challenge.color_index_particle = self.color_index_particle
-        Challenge.color_index_pixel = self.color_index_pixel
-        Challenge.color_index_background_element = self.color_index_background_element
-        Challenge.color_index_ui = self.color_index_ui
-        Challenge.color_index_note = self.color_index_note
-        Challenge.color_index_judge_ring = self.color_index_judge_ring
+        Challenge.inside = self.challenge_inside
+        Challenge.transition = self.challenge_transition

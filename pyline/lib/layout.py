@@ -1,10 +1,18 @@
 import math
+from typing import TYPE_CHECKING, Protocol
 
+from sonolus.script.archetype import get_archetype_by_name
 from sonolus.script.debug import notify
 from sonolus.script.globals import level_memory
 from sonolus.script.interval import Interval, lerp, remap, unlerp
 from sonolus.script.quad import Quad, Rect
-from sonolus.script.runtime import is_tutorial, runtime_ui, safe_area, screen, time
+from sonolus.script.runtime import (
+    is_tutorial,
+    runtime_ui,
+    safe_area,
+    screen,
+    time,
+)
 from sonolus.script.sprite import Sprite
 from sonolus.script.vec import Vec2
 
@@ -25,10 +33,7 @@ X_LINE_DISAPPEAR = X_JUDGE + 0.12
 X_NOTE_DISAPPEAR = screen().r * 0.8
 
 
-@level_memory
-class Challenge:
-    inside: Interval
-    transition: Interval
+class ChallengeTimeProtocol(Protocol):
     color_index_particle: int
     color_index_pixel: int
     color_index_background_element: int
@@ -37,8 +42,77 @@ class Challenge:
     color_index_judge_ring: int
 
 
-def camera_scale_x(x: float, scale: float) -> float:
-    return X_JUDGE + (x - X_JUDGE) * scale
+@level_memory
+class Challenge:
+    current_idx: int
+    previous_idx: int
+
+    inside: Interval
+    transition: Interval
+
+    # mainly to avoid dealing with circular imports
+    if TYPE_CHECKING:
+        active: ChallengeTimeProtocol
+        previous: ChallengeTimeProtocol
+        use_prev: bool
+    else:
+
+        @property
+        def active(self) -> ChallengeTimeProtocol:
+            return get_archetype_by_name("Challenge Time").at(self.current_idx)
+
+        @property
+        def previous(self) -> ChallengeTimeProtocol:
+            return get_archetype_by_name("Challenge Time").at(self.previous_idx)
+
+        @property
+        def use_prev(self) -> bool:
+            if is_tutorial():
+                return False
+            return self.previous_idx != 0 and time() in self.transition
+
+
+def note_color(pos: Vec2) -> int:
+    return (
+        is_in_challenge(pos)
+        or (Challenge.use_prev and Challenge.previous.color_index_note)
+    ) and Challenge.active.color_index_note
+
+
+def background_judge_ring(y: float) -> Sprite:
+    return Skin.judge_rings[
+        (
+            is_in_challenge(Vec2(X_JUDGE, y))
+            or (Challenge.use_prev and Challenge.previous.color_index_judge_ring)
+        )
+        and Challenge.active.color_index_judge_ring
+    ]
+
+
+def particle_color(challenge: bool) -> int:
+    return (
+        challenge or (Challenge.use_prev and Challenge.previous.color_index_particle)
+    ) and Challenge.active.color_index_particle
+
+
+def background_pixel(pos: Vec2) -> Sprite:
+    return Skin.pixel[
+        (
+            is_in_challenge(pos)
+            or (Challenge.use_prev and Challenge.previous.color_index_pixel)
+        )
+        and Challenge.active.color_index_pixel
+    ]
+
+
+def ui_pixel() -> Sprite:
+    if time() in Challenge.inside:
+        index = Challenge.active.color_index_ui
+    elif Challenge.use_prev:
+        index = Challenge.previous.color_index_ui
+    else:
+        index = 1
+    return Skin.pixel[index]
 
 
 def draw_ui() -> None:
@@ -64,10 +138,10 @@ def draw_ui() -> None:
 
     # in chart converter initial ui colour is added after initial background color
     # so the index is 1
-    ui_color = Challenge.color_index_ui if time() in Challenge.inside else 1
+    ui_sprite = ui_pixel()
 
-    Skin.pixel[ui_color].draw(menu_rect, 999, ui.menu_config.alpha)
-    Skin.pixel[ui_color].draw(metric_rect, 999, ui.secondary_metric_config.alpha)
+    ui_sprite.draw(menu_rect, 999, ui.menu_config.alpha)
+    ui_sprite.draw(metric_rect, 999, ui.secondary_metric_config.alpha)
 
 
 def draw_background() -> None:
@@ -87,8 +161,8 @@ def draw_background() -> None:
     bg_layout = screen().scale(Vec2(2, 2))  # to cover notch
 
     if i := time() in Challenge.inside:
-        background_element_color = Challenge.color_index_background_element
-        background_pixel_color = Challenge.color_index_pixel
+        background_element_color = Challenge.active.color_index_background_element
+        background_pixel_color = Challenge.active.color_index_pixel
 
     if o := time() not in Challenge.transition:
         background_element_color = 0
@@ -116,9 +190,14 @@ def draw_background() -> None:
     trans_rect = +Quad
     # challenge start transition animation
     if time() <= Challenge.inside.start:
-        under @= Skin.pixel[0]
-        over @= Skin.background_half_disc[Challenge.color_index_background_element]
-        t0, t1 = Challenge.transition.start, Challenge.inside.start
+        under @= Skin.pixel[Challenge.use_prev and Challenge.previous.color_index_pixel]
+        over @= Skin.background_half_disc[
+            Challenge.active.color_index_background_element
+        ]
+        t0, t1 = (
+            Challenge.transition.start,
+            Challenge.inside.start,
+        )
         trans_progress = remap(t0, t1, 0, screen().w, time())
         trans_rect @= (
             Rect.from_center(Vec2(0, 0), Vec2(trans_progress * 2, trans_progress))
@@ -129,9 +208,12 @@ def draw_background() -> None:
 
     # challenge end transition animation
     else:
-        under @= Skin.pixel[Challenge.color_index_pixel]
+        under @= Skin.pixel[Challenge.active.color_index_pixel]
         over @= Skin.background_half_disc[0]
-        t0, t1 = Challenge.inside.end, Challenge.transition.end
+        t0, t1 = (
+            Challenge.inside.end,
+            Challenge.transition.end,
+        )
         trans_progress = remap(t0, t1, 0, screen().w, time())
         trans_rect @= (
             Rect.from_center(Vec2(0, 0), Vec2(trans_progress * 2, trans_progress))
@@ -161,34 +243,30 @@ def is_in_challenge(pos: Vec2) -> bool:
         return False
 
     if time() <= Challenge.inside.start:
-        t0, t1 = Challenge.transition.start, Challenge.inside.start
+        t0, t1 = (
+            Challenge.transition.start,
+            Challenge.inside.start,
+        )
         trans_progress = remap(t0, t1, 0, screen().w, time())
         dist = (pos - screen().mr).magnitude
         return dist <= trans_progress
 
     else:
-        t0, t1 = Challenge.inside.end, Challenge.transition.end
+        t0, t1 = (
+            Challenge.inside.end,
+            Challenge.transition.end,
+        )
         trans_progress = remap(t0, t1, 0, screen().w, time())
         dist = (pos - screen().ml).magnitude
         return dist >= trans_progress
 
 
-def note_color(pos: Vec2) -> int:
-    return is_in_challenge(pos) and Challenge.color_index_note
-
-
-def background_judge_ring(y: float) -> Sprite:
-    return Skin.judge_rings[
-        is_in_challenge(Vec2(X_JUDGE, y)) and Challenge.color_index_background_element
-    ]
-
-
-def background_pixel(pos: Vec2) -> Sprite:
-    return Skin.pixel[is_in_challenge(pos) and Challenge.color_index_pixel]
-
-
 def note_speed_distance() -> float:
     return (X_LINE_DISAPPEAR - X_SPAWN) * remap(1, 10, 0.45, 0.20, Options.note_speed)
+
+
+def camera_scale_x(x: float, scale: float) -> float:
+    return X_JUDGE + (x - X_JUDGE) * scale
 
 
 def floor_to_x(point_floor_position: float, canvas_floor_position: float) -> float:

@@ -32,11 +32,11 @@ from pyline.lib.layout import (
     X_JUDGE,
     X_NOTE_DISAPPEAR,
     X_SPAWN,
-    Challenge,
     floor_to_x,
     is_in_challenge,
     note_color,
     note_speed_distance,
+    particle_color,
 )
 from pyline.lib.line import LinePoint
 from pyline.lib.options import Options
@@ -283,7 +283,7 @@ def play_note_particle(pos: Vec2) -> None:
         Vec2(X_JUDGE, pos.y)
     )
     challenge = is_in_challenge(pos)
-    color = challenge and Challenge.color_index_particle
+    color = particle_color(challenge)
     Particles.hit[color].spawn(layout, 0.7)
     if challenge:
         Particles.hit_extension[color].spawn(layout, 0.7)

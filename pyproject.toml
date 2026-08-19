@@ -4,4 +4,16 @@ version = "0.1.0"
 description = "A Sonolus Rizline Engine"
 readme = "README.md"
 requires-python = ">=3.12.5"
-dependencies = ["sonolus-py>=0.18.1"]
+dependencies = ["sonolus-py>=1.0.0"]
+
+[tool.pyright]
+venvPath = "."
+venv = ".venv"
+
+reportAny = "none"
+reportImplicitOverride = "none"
+reportUnannotatedClassAttribute = "none"
+reportMatchNotExhaustive = "none"
+reportUnknownMemberType = "none"
+reportUnusedCallResult = "none"
+reportExplicitAny = "none"
