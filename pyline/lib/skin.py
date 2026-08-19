@@ -10,8 +10,8 @@ from sonolus.script.sprite import (
 )
 
 
-def themed_sprites(name: str) -> Any:
-    return sprite_group([f"{name} Theme {v}" for v in range(8)])
+def colored_sprites(name: str, count: int) -> Any:
+    return sprite_group(f"{name} Color {v}" for v in range(count))
 
 
 @skin
@@ -19,29 +19,22 @@ class Skin:
     render_mode: RenderMode = RenderMode.LIGHTWEIGHT
     # Drawing order: background < lines < hold connectors < notes < judge rings
 
-    # backgrounds
-    # also used as line background
-    background: SpriteGroup = themed_sprites("Background")
-    background_circle: SpriteGroup = themed_sprites("Background Circle")
-    background_fade: SpriteGroup = themed_sprites("Fade Out")
-    ui_backgrounds: SpriteGroup = themed_sprites("UI Background")
+    background_half_disc: SpriteGroup = colored_sprites("Background Half Disc", 18)
+    background_fade: SpriteGroup = colored_sprites("Fade Out", 18)
 
     # notes
     note_drag: Sprite = sprite("Drag Note")
     note_hold: Sprite = sprite("Hold Note")
 
-    note_tap: SpriteGroup = themed_sprites("Tap Note")
+    note_tap: SpriteGroup = colored_sprites("Tap Note", 18)
     note_hold_head_decorator: Sprite = sprite("Hold Head Decorator")
-    note_hold_connector: SpriteGroup = themed_sprites("Hold Connector")
-    note_hold_tail: SpriteGroup = themed_sprites("Hold Connector Fade Out")
+    note_hold_connector: SpriteGroup = colored_sprites("Hold Connector", 18)
+    note_hold_tail: SpriteGroup = colored_sprites("Hold Connector Fade Out", 18)
     miss_effect: Sprite = sprite("Miss Effect Overlay")
     miss_cross: Sprite = sprite("Miss Effect Cross")
 
-    lines: SpriteGroup = sprite_group([f"Line Color {i}" for i in range(62)])
-    line_discs: SpriteGroup = sprite_group([f"Line Disc Color {i}" for i in range(62)])
-    judge_rings: SpriteGroup = sprite_group(
-        [f"Judge Ring Color {i}" for i in range(32)]
-    )
+    line_discs: SpriteGroup = colored_sprites("Line Disc", 64)
+    pixel: SpriteGroup = colored_sprites("Pixel", 64)
+    """Pixel is used for lines, background, ui"""
 
-    # drawn on top of colored sprites to simulate transparency
-    judge_ring_background: SpriteGroup = themed_sprites("Judge Ring Background")
+    judge_rings: SpriteGroup = colored_sprites("Judge Ring", 32)

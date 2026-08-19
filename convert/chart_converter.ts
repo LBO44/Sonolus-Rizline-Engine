@@ -63,7 +63,7 @@ type RizColorKeyPoint = {
 	time: number
 }
 
-type RizColorList = [background: RizColor, note: RizColor, particle: RizColor] //particle is UI too
+type RizColorList = [background: RizColor, note: RizColor, particleAndUI: RizColor]
 /** Colors of the level, changes during challenge time.
  * First color list is for "normal" time, second one for 1st challenge time, third one for 2nd challenge time...*/
 type RizThemes = { colorsList: RizColorList }[]
@@ -143,9 +143,19 @@ export type RizChart = {
 
 /** Info made during chart convertion used for skin generation*/
 export type convertedChartInfo = {
-	themes: RizThemes
-	lineColors: string[]
+	pixelColors: string[]
 	judgeRingColors: string[]
+	particleColors: string[]
+	noteColors: string[]
+	backgroundElementColors: string[]
+}
+
+
+export const hexToRgb = (hex: string) => {
+	const r = Number.parseInt(hex.slice(1, 3), 16)
+	const g = Number.parseInt(hex.slice(3, 5), 16)
+	const b = Number.parseInt(hex.slice(5, 7), 16)
+	return { r, g, b }
 }
 
 /** rgb (+ a) color to hex string, ignore alpha*/
@@ -154,25 +164,28 @@ export const hexColor = (color: RizColor): string => {
 	return `#${toHex(color.r)}${toHex(color.g)}${toHex(color.b)}`
 }
 
-/** return the index of the color in its array, and add it if it's not in it yet*/
-const getColorIndex = (rizcolor: RizColor, colorArray: string[]) => {
-	const color = hexColor(rizcolor)
-	let index: number
-
-	if (colorArray.includes(color)) {
-		index = colorArray.indexOf(color)
-	} else {
-		index = colorArray.push(color) - 1
-	}
-
-	return index
+const isSimilarColor = (c1: { r: number, g: number, b: number }, c2: RizColor, threshold: number): boolean => {
+	const distance = Math.sqrt(
+		Math.pow(c1.r - c2.r, 2) +
+		Math.pow(c1.g - c2.g, 2) +
+		Math.pow(c1.b - c2.b, 2)
+	)
+	return distance <= threshold
 }
 
-const getThemeIndex = <T>(themes: T[], targetTheme: T): number => {
-	return themes.findIndex((theme) => {
-		const targetThemeStr = JSON.stringify(targetTheme)
-		return JSON.stringify(theme) === targetThemeStr
-	})
+/** return the index of the color in its array, and add it if it's not in it yet*/
+const getColorIndex = (rizcolor: RizColor, colorArray: string[]): number => {
+
+	const existingIndex = colorArray.findIndex((hex) =>
+		isSimilarColor(hexToRgb(hex), rizcolor, 2)
+	)
+
+	if (existingIndex !== -1) {
+		return existingIndex
+	}
+
+	colorArray.push(hexColor(rizcolor))
+	return colorArray.length - 1
 }
 
 const entity = (
@@ -193,8 +206,11 @@ export const convertsChart = (
 	chart: RizChart,
 	difficulty: "ez" | "hd" | "in" | "at"
 ): { data: LevelData; info: convertedChartInfo } => {
-	const lineColors: string[] = []
+	const pixelColors: string[] = []
 	const judgeRingColors: string[] = []
+	const particleColors: string[] = []
+	const backgroundElementColors: string[] = [] //also fade out
+	const noteColors: string[] = []
 
 	const entities: LevelDataEntity[] = []
 
@@ -202,7 +218,7 @@ export const convertsChart = (
 	let challengeTotalHitCount = 0
 	let TotalHitCount = 0
 
-	// adding the satge now but we'll modify at the end
+	// adding the stage now but we'll modify at the end
 	entities.push(entity("Stage", {}))
 
 	//bpm change entities
@@ -225,20 +241,32 @@ export const convertsChart = (
 		)
 	)
 
+	//Make sure default theme corresponds to index 0
+	{
+		const baseTheme = chart.themes[0]
+		const [background, note, particleAndUI] = baseTheme.colorsList
+		getColorIndex(particleAndUI, particleColors)
+		getColorIndex(background, pixelColors)
+		getColorIndex(background, backgroundElementColors)
+		getColorIndex(background, judgeRingColors)
+		getColorIndex(particleAndUI, pixelColors)
+		getColorIndex(note, noteColors)
+	}
 	//challenge time
-	const seenThemes = new Set<string>()
-	const themes = chart.themes.filter((theme) => {
-		const serial = JSON.stringify(theme)
-		return seenThemes.has(serial) ? false : seenThemes.add(serial)
-	})
-
 	chart.challengeTimes.forEach((challengeTime, i) => {
+		const theme = chart.themes[i + 1] //+1 because theme 0 is default outside riztime
+		const [background, note, particleAndUI] = theme.colorsList
 		entities.push(
 			entity("Challenge Time", {
 				startBeat: challengeTime.start,
 				endBeat: challengeTime.end,
 				transitionDuration: challengeTime.transTime,
-				themeIndex: Math.min(getThemeIndex(themes, chart.themes[i + 1]), 7), // engine/skin only support up to 8 themes
+				colorIndexParticle: getColorIndex(particleAndUI, particleColors),
+				colorIndexBackgroundPixel: getColorIndex(background, pixelColors),
+				colorIndexBackgroundElement: getColorIndex(background, backgroundElementColors),
+				colorIndexBackgroundJudgeRing: getColorIndex(background, judgeRingColors),
+				colorIndexUI: getColorIndex(particleAndUI, pixelColors),
+				colorIndexNote: getColorIndex(note, noteColors),
 			})
 		)
 	})
@@ -265,7 +293,7 @@ export const convertsChart = (
 		)
 
 		line.linePoints.forEach((point, pointIndex) => {
-			const colorIndex = Math.min(61, getColorIndex(point.color, lineColors))
+			const colorIndex = Math.min(63, getColorIndex(point.color, pixelColors))
 
 			entities.push(
 				entity(
@@ -289,12 +317,12 @@ export const convertsChart = (
 		line.lineColor.sort((a, b) => a.time - b.time)
 		line.lineColor.forEach((lineColor, pointIndex) => {
 			const startColorIdx = Math.min(
-				61,
-				getColorIndex(lineColor.startColor, lineColors)
+				63,
+				getColorIndex(lineColor.startColor, pixelColors)
 			)
 			const endColorIdx = Math.min(
-				61,
-				getColorIndex(lineColor.endColor, lineColors)
+				63,
+				getColorIndex(lineColor.endColor, pixelColors)
 			)
 
 			const hasTransition =
@@ -401,6 +429,7 @@ export const convertsChart = (
 					isChallenge: +isChallenge,
 					kind: note.type,
 				},
+				note.type == RizNoteType.Hold ? noteName : undefined
 			)
 		)
 
@@ -515,16 +544,25 @@ export const convertsChart = (
 	// 	.forEach((entity, i) => (entity.__index = i))
 
 	//pack to level data and return
+
+	for (const [colors, s] of [[noteColors, 18], [pixelColors, 64], [judgeRingColors, 32], [backgroundElementColors, 18], [particleColors, 10]] as const) {
+		if (colors.length > s) console.error(`Too Many Colors: ${colors.length}/${s}`)
+	}
+
+
 	const data = {
 		//also for debugging
 		__colors: {
-			line: lineColors.map((c, i) => `${i} - ${c}`),
-			judgeRing: judgeRingColors.map((c, i) => `${i} - ${c}`),
+			notes: { ...noteColors },
+			pixels: { ...pixelColors },
+			judgeRings: { ...judgeRingColors },
+			backgroundElements: { ...backgroundElementColors },
+			particles: { ...particleColors },
 		},
 
 		bgmOffset: (chart.chartDelayMs ?? 0) / 1000,
 		entities: entities,
 	} as LevelData
 
-	return { data, info: { themes, lineColors, judgeRingColors } }
+	return { data, info: { pixelColors, judgeRingColors, backgroundElementColors, noteColors, particleColors } }
 }

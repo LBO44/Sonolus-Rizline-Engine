@@ -64,7 +64,13 @@ class ChallengeTime(PlayArchetype):
     start_beat: float = imported(name="startBeat")
     end_beat: float = imported(name="endBeat")
     transition_duration: float = imported(name="transitionDuration")
-    theme_index: int = imported(name="themeIndex")
+
+    color_index_particle: int = imported(name="colorIndexParticle")
+    color_index_pixel: int = imported(name="colorIndexBackgroundPixel")
+    color_index_background_element: int = imported(name="colorIndexBackgroundElement")
+    color_index_ui: int = imported(name="colorIndexUI")
+    color_index_note: int = imported(name="colorIndexNote")
+    color_index_judge_ring: int = imported(name="colorIndexBackgroundJudgeRing")
 
     challenge_transition: Interval = entity_data()
     challenge_in: Interval = entity_data()
@@ -89,4 +95,9 @@ class ChallengeTime(PlayArchetype):
         self.despawn = True
         Challenge.transition = self.challenge_transition
         Challenge.inside = self.challenge_in
-        Challenge.theme_index = self.theme_index
+        Challenge.color_index_particle = self.color_index_particle
+        Challenge.color_index_pixel = self.color_index_pixel
+        Challenge.color_index_background_element = self.color_index_background_element
+        Challenge.color_index_ui = self.color_index_ui
+        Challenge.color_index_note = self.color_index_note
+        Challenge.color_index_judge_ring = self.color_index_judge_ring

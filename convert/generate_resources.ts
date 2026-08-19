@@ -13,7 +13,7 @@ import type {
 	SkinDataSprite,
 } from "@sonolus/core"
 import type { RizChart } from "./chart_converter"
-import { convertsChart, hexColor } from "./chart_converter"
+import { convertsChart } from "./chart_converter"
 import { chartInfoToSpritesColors, colorizeSkin } from "./skin/edit_skin"
 
 /*
@@ -86,11 +86,12 @@ readdirSync("./resources/levels/").forEach((level) => {
 	const particleData = readFileSync(
 		"./convert/particle/data.json",
 		"utf8"
-	).replace(/ColorTheme(\d+)/g, (match, number) => {
-		const themeIndex = Number.parseInt(number)
-		const theme = converted.info.themes[themeIndex]
-		return theme ? hexColor(theme.colorsList[2]) : match
-	})
+	)
+		.replace(/Color(\d+)/g, (match, number) => {
+			const colorIndex = Number.parseInt(number)
+			const color = converted.info.particleColors[colorIndex]
+			return color ?? match
+		})
 
 	writeFileSync(
 		`${particlePath}item.json`,

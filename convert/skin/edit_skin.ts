@@ -1,43 +1,32 @@
 import { readFileSync, writeFileSync } from "fs"
 import type { SkinDataSprite } from "@sonolus/core"
 import { PNG } from "pngjs"
-import { type convertedChartInfo, hexColor } from "../chart_converter"
+import { type convertedChartInfo, hexColor, hexToRgb } from "../chart_converter.js"
 
-function hexToRgb(hex: string) {
-	const r = Number.parseInt(hex.slice(1, 3), 16)
-	const g = Number.parseInt(hex.slice(3, 5), 16)
-	const b = Number.parseInt(hex.slice(5, 7), 16)
-	return { r, g, b }
-}
 
 export const chartInfoToSpritesColors = (
 	info: convertedChartInfo
 ): Record<string, string> => {
-	const themeSpriteColours = info.themes.reduce((acc, theme, index) => {
-		acc[`Background Theme ${index}`] = hexColor(theme.colorsList[0])
-		acc[`Background Circle Theme ${index}`] = hexColor(theme.colorsList[0])
-		acc[`Fade Out Theme ${index}`] = hexColor(theme.colorsList[0])
-		acc[`Judge Ring Background Theme ${index}`] = hexColor(theme.colorsList[0])
-		acc[`Tap Note Theme ${index}`] = hexColor(theme.colorsList[1])
-		acc[`Hold Connector Theme ${index}`] = hexColor(theme.colorsList[1])
-		acc[`Hold Connector Fade Out Theme ${index}`] = hexColor(theme.colorsList[1])
-		acc[`UI Background Theme ${index}`] = hexColor(theme.colorsList[2])
-		return acc
-	}, {})
+	const mappings: Array<[colors: string[], prefixes: string[]]> = [
+		[info.backgroundElementColors, ["Background Half Disc Color", "Fade Out Color"]],
+		[info.noteColors, ["Tap Note Color", "Hold Connector Color", "Hold Connector Fade Out Color"]],
+		[info.judgeRingColors, ["Judge Ring Color"]],
+		[info.pixelColors, ["Pixel Color", "Line Disc Color"]],
+	]
 
-	return {
-		...themeSpriteColours,
-		...Object.fromEntries(
-			info.lineColors.map((c, i) => [`Line Color ${i}`, c])
-		),
-		...Object.fromEntries(
-			info.lineColors.map((c, i) => [`Line Disc Color ${i}`, c])
-		),
-		...Object.fromEntries(
-			info.judgeRingColors.map((c, i) => [`Judge Ring Color ${i}`, c])
-		),
+	const spriteColors: Record<string, string> = {}
+
+	for (const [colors, prefixes] of mappings) {
+		colors.forEach((color, index) => {
+			prefixes.forEach((prefix) => {
+				spriteColors[`${prefix} ${index}`] = color
+			})
+		})
 	}
+
+	return spriteColors
 }
+
 
 export const colorizeSkin = (
 	baseTexturePath: string,

@@ -15,7 +15,8 @@ from pyline.lib.layout import (
     X_JUDGE,
     X_LINE_DISAPPEAR,
     X_SPAWN,
-    challenge_theme,
+    background_judge_ring,
+    background_pixel,
     floor_to_x,
 )
 from pyline.lib.options import Options
@@ -133,9 +134,7 @@ def draw_judge_ring(point: LinePoint) -> None:
             )
 
             if true_alpha != 1:
-                Skin.judge_ring_background[
-                    challenge_theme(Vec2(X_JUDGE, point.pos.y))
-                ].draw(
+                background_judge_ring(point.pos.y).draw(
                     layout,
                     (LAYER_JUDGE_RING, -point.line.index, 2),
                     1 - true_alpha,
@@ -182,18 +181,14 @@ def draw_join(
                 disc_rect, z_index + (-1, 1), transition_top_alpha
             )
             if alpha < 1:
-                Skin.background[challenge_theme(pos)].draw(
-                    disc_rect, z_index + (-1, 2), 1 - alpha
-                )
+                background_pixel(pos).draw(disc_rect, z_index + (-1, 2), 1 - alpha)
         case DrawMode.Global:
             Skin.line_discs[base_color].draw(disc_rect, z_index + (-1, 0), 1)
             Skin.line_discs[top_color].draw(
                 disc_rect, z_index + (-1, 1), transition_top_alpha
             )
             if alpha < 1:
-                Skin.background[challenge_theme(pos)].draw(
-                    disc_rect, z_index + (-1, 2), 1 - alpha
-                )
+                background_pixel(pos).draw(disc_rect, z_index + (-1, 2), 1 - alpha)
 
 
 def draw_line(point: LinePoint) -> None:
@@ -278,8 +273,8 @@ def draw_line(point: LinePoint) -> None:
             1 if global_transition_top_alpha == -1 else global_transition_top_alpha,
         )
 
-    base_sprite = Skin.lines[base_color_index]
-    top_sprite = Skin.lines[top_color_index]
+    base_sprite = Skin.pixel[base_color_index]
+    top_sprite = Skin.pixel[top_color_index]
 
     # vertical/horizontal lines also need fade out and gradients
     if a.x > b.x:
@@ -297,8 +292,8 @@ def draw_line(point: LinePoint) -> None:
         )
     else:
         if mode == DrawMode.Local:
-            base_sprite @= Skin.lines[top_color_index]
-            top_sprite @= Skin.lines[base_color_index]
+            base_sprite @= Skin.pixel[top_color_index]
+            top_sprite @= Skin.pixel[base_color_index]
         draw_curved_line(
             a=b,
             b=a,
@@ -440,13 +435,13 @@ def draw_curved_line(
                 base_sprite.draw(quad, z_index, 1)
                 top_sprite.draw(quad, z_index + (0, 1), global_transition_top_alpha)
                 if final_alpha < 1:
-                    Skin.background[challenge_theme(end_point)].draw(
+                    background_pixel(end_point).draw(
                         quad, z_index + (0, 2), 1 - final_alpha
                     )
             case DrawMode.Local:
                 base_sprite.draw(quad, z_index, 1)
                 top_sprite.draw(quad, z_index + (0, 1), u_start)
                 if final_alpha < 1:
-                    Skin.background[challenge_theme(end_point)].draw(
+                    background_pixel(end_point).draw(
                         quad, z_index + (0, 2), 1 - final_alpha
                     )

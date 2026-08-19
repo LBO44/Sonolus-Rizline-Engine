@@ -1,7 +1,9 @@
+import math
+
 from sonolus.script.debug import notify
 from sonolus.script.globals import level_memory
 from sonolus.script.interval import Interval, lerp, remap, unlerp
-from sonolus.script.quad import Rect
+from sonolus.script.quad import Quad, Rect
 from sonolus.script.runtime import is_tutorial, runtime_ui, safe_area, screen, time
 from sonolus.script.sprite import Sprite
 from sonolus.script.vec import Vec2
@@ -27,7 +29,12 @@ X_NOTE_DISAPPEAR = screen().r * 0.8
 class Challenge:
     inside: Interval
     transition: Interval
-    theme_index: int
+    color_index_particle: int
+    color_index_pixel: int
+    color_index_background_element: int
+    color_index_ui: int
+    color_index_note: int
+    color_index_judge_ring: int
 
 
 def camera_scale_x(x: float, scale: float) -> float:
@@ -55,10 +62,12 @@ def draw_ui() -> None:
         t=anchor_pt.y + bar_w, r=anchor_pt.x + bar_h, b=anchor_pt.y, l=anchor_pt.x
     )
 
-    theme = Challenge.theme_index if time() in Challenge.inside else 0
+    # in chart converter initial ui colour is added after initial background color
+    # so the index is 1
+    ui_color = Challenge.color_index_ui if time() in Challenge.inside else 1
 
-    Skin.ui_backgrounds[theme].draw(menu_rect, 999, ui.menu_config.alpha)
-    Skin.ui_backgrounds[theme].draw(metric_rect, 999, ui.secondary_metric_config.alpha)
+    Skin.pixel[ui_color].draw(menu_rect, 999, ui.menu_config.alpha)
+    Skin.pixel[ui_color].draw(metric_rect, 999, ui.secondary_metric_config.alpha)
 
 
 def draw_background() -> None:
@@ -73,26 +82,29 @@ def draw_background() -> None:
     fade_judge_layout = fade_layout.scale(Vec2(-1, 1)).translate(
         Vec2(camera.scaled_x_note_disappear - 0.05, 0)
     )
-    theme = -1
+    background_element_color = -1
+    background_pixel_color = -1
     bg_layout = screen().scale(Vec2(2, 2))  # to cover notch
 
     if i := time() in Challenge.inside:
-        theme = Challenge.theme_index
+        background_element_color = Challenge.color_index_background_element
+        background_pixel_color = Challenge.color_index_pixel
 
     if o := time() not in Challenge.transition:
-        theme = 0
+        background_element_color = 0
+        background_pixel_color = 0
 
     if o or i:
-        Skin.background[theme].draw(
+        Skin.pixel[background_pixel_color].draw(
             bg_layout, LAYER_BACKGROUND, Options.background_opacity
         )
         if Options.background_opacity == 1:
-            Skin.background_fade[theme].draw(
+            Skin.background_fade[background_element_color].draw(
                 fade_spawn_layout,
                 LAYER_BACKGROUND_FADE_SPAWN,
                 1.5,
             )
-            Skin.background_fade[theme].draw(
+            Skin.background_fade[background_element_color].draw(
                 fade_judge_layout,
                 LAYER_BACKGROUND_FADE_JUDGE,
                 1.5,
@@ -101,22 +113,32 @@ def draw_background() -> None:
 
     under = +Sprite
     over = +Sprite
-    trans_rect = +Rect
+    trans_rect = +Quad
     # challenge start transition animation
     if time() <= Challenge.inside.start:
-        under @= Skin.background[0]
-        over @= Skin.background_circle[Challenge.theme_index]
+        under @= Skin.pixel[0]
+        over @= Skin.background_half_disc[Challenge.color_index_background_element]
         t0, t1 = Challenge.transition.start, Challenge.inside.start
         trans_progress = remap(t0, t1, 0, screen().w, time())
-        trans_rect @= Rect.from_margin(trans_progress).translate(screen().mr)
+        trans_rect @= (
+            Rect.from_center(Vec2(0, 0), Vec2(trans_progress * 2, trans_progress))
+            .as_quad()
+            .rotate(-math.pi / 2)
+            .translate(Vec2(screen().r - (trans_progress / 2), 0))
+        )
 
     # challenge end transition animation
     else:
-        under @= Skin.background[Challenge.theme_index]
-        over @= Skin.background_circle[0]
+        under @= Skin.pixel[Challenge.color_index_pixel]
+        over @= Skin.background_half_disc[0]
         t0, t1 = Challenge.inside.end, Challenge.transition.end
         trans_progress = remap(t0, t1, 0, screen().w, time())
-        trans_rect @= Rect.from_margin(trans_progress).translate(screen().ml)
+        trans_rect @= (
+            Rect.from_center(Vec2(0, 0), Vec2(trans_progress * 2, trans_progress))
+            .as_quad()
+            .rotate(math.pi / 2)
+            .translate(Vec2(screen().l + (trans_progress / 2), 0))
+        )
 
     if Options.background_opacity == 1:
         under.draw(bg_layout, LAYER_BACKGROUND, 1)
@@ -151,8 +173,18 @@ def is_in_challenge(pos: Vec2) -> bool:
         return dist >= trans_progress
 
 
-def challenge_theme(pos: Vec2) -> int:
-    return is_in_challenge(pos) and Challenge.theme_index
+def note_color(pos: Vec2) -> int:
+    return is_in_challenge(pos) and Challenge.color_index_note
+
+
+def background_judge_ring(y: float) -> Sprite:
+    return Skin.judge_rings[
+        is_in_challenge(Vec2(X_JUDGE, y)) and Challenge.color_index_background_element
+    ]
+
+
+def background_pixel(pos: Vec2) -> Sprite:
+    return Skin.pixel[is_in_challenge(pos) and Challenge.color_index_pixel]
 
 
 def note_speed_distance() -> float:

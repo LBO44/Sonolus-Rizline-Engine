@@ -9,13 +9,13 @@ from sonolus.script.particle import (
 )
 
 
-def themed_particles(name: str) -> Any:
-    return particle_group([f"{name} Theme {v}" for v in range(8)])
+def colored_particles(name: str) -> Any:
+    return particle_group([f"{name} Color {v}" for v in range(10)])
 
 
 @particles
 class Particles:
-    hit: ParticleGroup = themed_particles("Hit")
-    hit_extension: ParticleGroup = themed_particles("Hit Extension")
+    hit: ParticleGroup = colored_particles("Hit")
+    hit_extension: ParticleGroup = colored_particles("Hit Extension")
     # every note gets particle, including hold end
     bad: Particle = particle("Bad")  # spawn on touch pos

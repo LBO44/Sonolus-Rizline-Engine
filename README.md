@@ -38,30 +38,27 @@ For exemple, `Background Theme 0` has the non-challenge time colour, `Background
 
 | Name                                  |
 | ------------------------------------- |
-| `Background Theme [0-7]`              |
-| `Background Circle Theme [0-7]`       |
-| `Fade Out Theme [0-7]`                |
 | `Drag Note`                           |
 | `Hold Note`                           |
-| `Tap Note Theme [0-7]`                |
-| `Hold Head Theme [0-7] `              |
-| `Hold Head Decorator Theme [0-7]`     |
-| `Hold Connector Theme [0-7]`          |
-| `Hold Connector Fade Out Theme [0-7]` |
+| `Hold Head Decorator`     |
+| `Tap Note Color [0-17]`                |
+| `Hold Connector Color [0-17]`          |
+| `Hold Connector Fade Out Color [0-17]` |
+| `Background Half Disc Color [0-17]`       |
+| `Fade Out Color [0-17]`                |
 | `Miss Effect Overlay`                 |
 | `Miss Effect Cross`                   |
-| `Line Color [0-61]`                   |
-| `Line Disc Color [0-61]`              |
+| `Pixel Color [0-63]`                   |
+| `Line Disc Color [0-63]`              |
 | `Judge Ring Color [0-31]`             |
-| `Judge Ring Background Theme [0-7]`   |
 
 ### Particles
 Unlike with Skin we can change the colours by only modifying the data.
 
 | Name                        |
 | --------------------------- |
-| `Hit Theme [0-7]`           |
-| `Hit Extension Theme [0-7]` |
+| `Hit Color [0-9]`           |
+| `Hit Extension Color [0-9]` |
 | `Bad`                       |
 
 ### Effect Clips

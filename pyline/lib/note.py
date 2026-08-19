@@ -21,7 +21,7 @@ from pyline.lib.buckets import (
     NoteKind,
     get_window,
 )
-from pyline.lib.ease import remap_ease
+from pyline.lib.ease import camera, remap_ease
 from pyline.lib.effect import Effects
 from pyline.lib.layer import (
     LAYER_HOLD_NOTE,
@@ -33,16 +33,15 @@ from pyline.lib.layout import (
     X_NOTE_DISAPPEAR,
     X_SPAWN,
     Challenge,
-    challenge_theme,
     floor_to_x,
     is_in_challenge,
+    note_color,
     note_speed_distance,
 )
 from pyline.lib.line import LinePoint
 from pyline.lib.options import Options
 from pyline.lib.particle import Particles
 from pyline.lib.skin import Skin
-from pyline.watch.ease_events import camera
 
 NOTE_HOLD_RADIUS = 0.07 * 1.2
 NOTE_TAP_RADIUS = 0.07 * 1.2
@@ -153,7 +152,7 @@ def draw_note(note: Note) -> None:
             sprite @= Skin.note_drag
         case NoteKind.TAP:
             radius *= NOTE_TAP_RADIUS
-            sprite @= Skin.note_tap[challenge_theme(note.pos)]
+            sprite @= Skin.note_tap[note_color(note.pos)]
 
     layout = Rect.from_margin(radius).translate(note.pos)
     sprite.draw(layout, (LAYER_NOTE, note.index), fade)
@@ -165,7 +164,7 @@ def draw_hold_note(
     """Hold head still need to be drawn after head despawn,
     so hold drawing logic is fully handled by hold tail"""
     head_pos = Vec2(head_x, pos_y)
-    theme = challenge_theme(head_pos)
+    color = note_color(head_pos)
 
     z = LAYER_HOLD_NOTE
 
@@ -205,7 +204,7 @@ def draw_hold_note(
             r=line_split_right,
             l=line_right,
         )
-        Skin.note_hold_tail[theme].draw(fade_right_layout, z_connctor, 1)
+        Skin.note_hold_tail[color].draw(fade_right_layout, z_connctor, 1)
 
     fade_left_layout = Rect(
         t=radius + pos_y,
@@ -221,8 +220,8 @@ def draw_hold_note(
         r=line_split_right,
     )
 
-    Skin.note_hold_connector[theme].draw(line_layout, z_connctor, 1)
-    Skin.note_hold_tail[theme].draw(fade_left_layout, z_connctor, 1)
+    Skin.note_hold_connector[color].draw(line_layout, z_connctor, 1)
+    Skin.note_hold_tail[color].draw(fade_left_layout, z_connctor, 1)
 
 
 def draw_hold_note_despawn(start_time: float, pos_y: float) -> None:
@@ -284,10 +283,10 @@ def play_note_particle(pos: Vec2) -> None:
         Vec2(X_JUDGE, pos.y)
     )
     challenge = is_in_challenge(pos)
-    theme = challenge and Challenge.theme_index
-    Particles.hit[theme].spawn(layout, 0.7)
+    color = challenge and Challenge.color_index_particle
+    Particles.hit[color].spawn(layout, 0.7)
     if challenge:
-        Particles.hit_extension[theme].spawn(layout, 0.7)
+        Particles.hit_extension[color].spawn(layout, 0.7)
 
 
 def play_bad_particle(pos: Vec2) -> None:
