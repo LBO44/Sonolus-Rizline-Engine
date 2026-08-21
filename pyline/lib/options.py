@@ -35,7 +35,8 @@ class Options:
         scope="Rizline",
     )
     particle: int = select_option(
-        name=StandardText.NOTE_EFFECT,
+        name="Note Effects Select",
+        title=StandardText.NOTE_EFFECT,
         values=[StandardText.ALL, StandardText.PARTICLE, StandardText.NONE],
         default=StandardText.ALL,
         scope="Rizline",

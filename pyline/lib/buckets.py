@@ -97,7 +97,7 @@ WINDOWS: dict[tuple[bool, ChartDifficulty], JudgmentWindow] = {
     # Challenge: has different timings + early/late
     (True, ChartDifficulty.EZ): JudgmentWindow(
         perfect=Interval(-0.070, 0.070),
-        great=Interval(-0.180, 0.840),
+        great=Interval(-0.180, 0.180),
         good=Interval(-0.200, 0.180),
     ),
     (True, ChartDifficulty.HD): JudgmentWindow(

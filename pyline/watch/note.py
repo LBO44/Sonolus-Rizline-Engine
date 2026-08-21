@@ -66,7 +66,6 @@ class Note(WatchArchetype):
 
     @callback(order=2)  # need to run after LinePoint
     def preprocess(self):
-        self.result.bucket = get_note_bucket(self.kind, self.is_challenge)
 
         self.target_time = beat_to_time(self.beat)
         self.result.target_time = self.target_time
@@ -88,7 +87,11 @@ class Note(WatchArchetype):
                 )
             self.result.bucket_value = self.accuracy * 1000
 
+            if self.jugement != Judgment.MISS:
+                self.result.bucket = get_note_bucket(self.kind, self.is_challenge)
+
         else:
+            self.result.bucket = get_note_bucket(self.kind, self.is_challenge)
             self.jugement = Judgment.PERFECT
             schedule_note_sfx(self.kind, self.target_time)
 
@@ -153,7 +156,6 @@ class NoteHoldTail(WatchArchetype):
         return self.head.pos.x if self.head.target_time > time() else X_JUDGE
 
     def preprocess(self):
-        self.result.bucket = get_note_bucket(NoteKind.HOLD_END, self.is_challenge)
         self.tail_target_time = beat_to_time(self.beat)
         self.result.target_time = self.tail_target_time
 
@@ -171,7 +173,13 @@ class NoteHoldTail(WatchArchetype):
                 )
                 if self.head.jugement != Judgment.MISS and Options.particle == 0:
                     NoteMissEffect.spawn(start_time=self.end_time, pos_y=self.end_y)
+
+            if self.jugement != Judgment.MISS:
+                self.result.bucket = get_note_bucket(
+                    NoteKind.HOLD_END, self.is_challenge
+                )
         else:
+            self.result.bucket = get_note_bucket(NoteKind.HOLD_END, self.is_challenge)
             self.jugement = Judgment.PERFECT
 
         if self.jugement != Judgment.MISS:

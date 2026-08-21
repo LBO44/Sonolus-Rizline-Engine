@@ -120,8 +120,6 @@ class Note(PlayArchetype):
             init_challenge_note_entity_life(self)
             self.entity_score_multiplier = ChartStats.challenge_score_multiplier
 
-        self.result.bucket = get_note_bucket(self.kind, self.is_challenge)
-        self.result.accuracy = 1.0
         self.claimed_touch_id = -1
 
         self.start_time = min(self.point.visual_start_time, self.input_interval.start)
@@ -250,6 +248,7 @@ class Note(PlayArchetype):
             if self.bad_time:
                 self.judge(self.bad_time)
             else:
+                self.result.judgment = Judgment.MISS
                 self.despawn = True
                 NoteMissEffect.spawn(
                     start_time=self.input_interval.end, pos_y=self.pos_end_y
@@ -278,6 +277,7 @@ class Note(PlayArchetype):
             actual=judgment_time, target=self.target_time
         )
         self.result.judgment = judgment
+        self.result.bucket = get_note_bucket(self.kind, self.is_challenge)
         self.result.accuracy = clamp(judgment_time - self.target_time, -1.0, 1.0)
         self.result.bucket_value = self.result.accuracy * 1000
 
@@ -359,9 +359,6 @@ class NoteHoldTail(PlayArchetype):
             init_challenge_note_entity_life(self)
             self.entity_score_multiplier = ChartStats.challenge_score_multiplier
 
-        self.result.bucket = get_note_bucket(NoteKind.HOLD_END, self.is_challenge)
-
-        self.result.accuracy = 1.0
         self.start_time = min(self.head.start_time, self.input_interval.start)
 
     def spawn_order(self) -> float:
@@ -404,6 +401,7 @@ class NoteHoldTail(PlayArchetype):
             actual=judgment_time, target=self.tail_target_time
         )
         self.result.judgment = judgment
+        self.result.bucket = get_note_bucket(NoteKind.HOLD_END, self.is_challenge)
         self.result.accuracy = clamp(judgment_time - self.tail_target_time, -1.0, 1.0)
         self.result.bucket_value = self.result.accuracy * 1000
 
@@ -415,6 +413,7 @@ class NoteHoldTail(PlayArchetype):
                 start_tail_x=max(self.tail_x, X_SPAWN),
             )
             self.despawn = True
+            self.result.judgment = Judgment.MISS
             return
 
         if time() >= self.tail_target_time:
