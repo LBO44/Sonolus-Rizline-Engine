@@ -262,7 +262,11 @@ def is_in_challenge(pos: Vec2) -> bool:
 
 
 def note_speed_distance() -> float:
-    return (X_LINE_DISAPPEAR - X_SPAWN) * remap(1, 10, 0.45, 0.20, Options.note_speed)
+    return (
+        (X_LINE_DISAPPEAR - X_SPAWN)
+        * remap(1, 10, 0.45, 0.20, Options.note_speed)
+        * Options.speed
+    )
 
 
 def camera_scale_x(x: float, scale: float) -> float:
