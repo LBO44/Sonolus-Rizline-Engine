@@ -10,6 +10,7 @@ from sonolus.script.archetype import (
     entity_memory,
     exported,
     imported,
+    shared_memory,
 )
 from sonolus.script.bucket import Judgment, JudgmentWindow
 from sonolus.script.interval import Interval, clamp
@@ -86,6 +87,12 @@ class Note(PlayArchetype):
 
     bad_time: float = entity_memory()
     bad_pos: Vec2 = entity_memory()
+
+    was_hit: bool = shared_memory()
+    """
+    Used by hold notes.
+    Can't use entity state (despwan) as it only gets updated next frame (It seems like it caused some weird misses?)
+    """
 
     end_time: float = exported(name="endTime")
     end_y: float = exported(name="endY")  # used for miss effect
@@ -169,6 +176,7 @@ class Note(PlayArchetype):
             claim_touch(tap.id, self.index)
             self.claimed_touch_id = tap.id
             self.claimed_touch_time = tap.start_time
+            self.was_hit = True
 
             self.check_bad_tap(tap)
 
@@ -209,6 +217,8 @@ class Note(PlayArchetype):
                 )
             ) or self.target_time < tap_owner.target_time:
                 claim_touch(tap.id, self.index)
+                tap_owner.was_hit = False  # Doing it here as can't in update parallel
+                self.was_hit = True
                 self.claimed_touch_id = tap.id
                 self.claimed_touch_time = tap.start_time
                 self.check_bad_tap(tap)
@@ -369,7 +379,11 @@ class NoteHoldTail(PlayArchetype):
 
     @callback(order=1)
     def touch(self):
-        if (not self.head.is_despawned) or self.despawn or self.was_judged:
+        """
+        Hold notes can be held with any touch as long as it started in the head's window,
+        Doesn't have to explicitly be the one that hit the old head.
+        """
+        if (not self.head.was_hit) or self.despawn or self.was_judged:
             return
 
         last_release_time = 0
@@ -378,17 +392,20 @@ class NoteHoldTail(PlayArchetype):
         for touch in touches():
             if touch.start_time in self.head.input_interval:
                 if touch.ended:
-                    last_release_time = max(last_release_time, offset_adjusted_time())
+                    last_release_time = max(last_release_time, touch.time)
                 else:
                     has_active_touch = True
                     break
 
         if not has_active_touch:
-            if time() < self.input_interval.start:
+            # Looks like (not certain) Rizline use the release time to judge the hold end
+            # even if it's before head input interval end.
+            # Clamping it to ≥ self.head.input_interval.end would make homds easier to tap
+            if last_release_time < self.input_interval.start:
                 self.despawn = True
                 NoteMissEffect.spawn(start_time=time(), pos_y=self.pos_y)
                 NoteHoldMissEffect.spawn(
-                    start_time=time(),
+                    start_time=min(time(), self.tail_target_time),
                     pos_y=self.pos_y,
                     start_tail_x=max(self.tail_x, X_SPAWN),
                 )
@@ -406,9 +423,12 @@ class NoteHoldTail(PlayArchetype):
         self.result.bucket_value = self.result.accuracy * 1000
 
     def update_parallel(self):
-        if time() > self.head.input_interval.end and not self.head.is_despawned:
+        if (
+            offset_adjusted_time() > self.head.input_interval.end
+            and not self.head.was_hit
+        ):
             NoteHoldMissEffect.spawn(
-                start_time=time(),
+                start_time=min(time(), self.tail_target_time),
                 pos_y=self.pos_y,
                 start_tail_x=max(self.tail_x, X_SPAWN),
             )
@@ -416,16 +436,15 @@ class NoteHoldTail(PlayArchetype):
             self.result.judgment = Judgment.MISS
             return
 
-        if time() >= self.tail_target_time:
+        if offset_adjusted_time() >= self.tail_target_time:
             if not self.was_judged:
                 self.set_result(self.tail_target_time)
             play_note_particle(Vec2(X_JUDGE, self.pos_y))
             if Options.haptic:
                 self.result.haptic = HapticType.LIGHT
-            if self.head.is_despawned:
-                NoteHoldDespawnEffect.spawn(
-                    start_time=self.tail_target_time, line_ref=self.head.point.line_ref
-                )
+            NoteHoldDespawnEffect.spawn(
+                start_time=self.tail_target_time, line_ref=self.head.point.line_ref
+            )
             self.despawn = True
             return
 
