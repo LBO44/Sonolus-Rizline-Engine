@@ -33,8 +33,10 @@ I first started recreating Rizline using sonolus.js (you can check that code in 
 ## Custom Resources
 
 ### Skin Sprites
-Some sprites have variation for normal and challenge time/riztime, each challenge time can have different colour, the engine and skin support up to 8 colours.
-For exemple, `Background Theme 0` has the non-challenge time colour, `Background Theme 1` has the colour of first challenge time…
+Most sprites have multiple colour variants, and more or less variants are actually used depending on the level.
+Notes and background elements have one potentially different colour each Challenge Time, whereas Pixels and Judge Rings are constantly using different colours, hence there are more variants available for them.
+Note that some levels do exceed the current limit for Pixels and Judge Rings.
+The `Pixel` sprites are used for drawing lines, backgrounds, UI element backgrounds.
 
 | Name                                  |
 | ------------------------------------- |

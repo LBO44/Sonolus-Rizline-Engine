@@ -323,6 +323,7 @@ class NoteHoldTail(PlayArchetype):
     tail_target_time: float = entity_data()
     start_time: float = entity_data()
 
+    last_release_time: float = entity_memory()
     was_judged: bool = entity_memory()
     """Hold Note should still be drawn even if it was released slightly early"""
     judgment_window: JudgmentWindow = entity_data()
@@ -386,13 +387,17 @@ class NoteHoldTail(PlayArchetype):
         if (not self.head.was_hit) or self.despawn or self.was_judged:
             return
 
-        last_release_time = 0
         has_active_touch = False
 
         for touch in touches():
             if touch.start_time in self.head.input_interval:
+                self.last_release_time = max(
+                    self.last_release_time, offset_adjusted_time()
+                )
                 if touch.ended:
-                    last_release_time = max(last_release_time, touch.time)
+                    # touch.time is only accurate when the touch is released,
+                    # but using current time is fine too since later inputs will always be better
+                    self.last_release_time = max(self.last_release_time, touch.time)
                 else:
                     has_active_touch = True
                     break
@@ -401,7 +406,7 @@ class NoteHoldTail(PlayArchetype):
             # Looks like (not certain) Rizline use the release time to judge the hold end
             # even if it's before head input interval end.
             # Clamping it to ≥ self.head.input_interval.end would make homds easier to tap
-            if last_release_time < self.input_interval.start:
+            if self.last_release_time < self.input_interval.start:
                 self.despawn = True
                 NoteMissEffect.spawn(start_time=time(), pos_y=self.pos_y)
                 NoteHoldMissEffect.spawn(
@@ -410,9 +415,10 @@ class NoteHoldTail(PlayArchetype):
                     start_tail_x=max(self.tail_x, X_SPAWN),
                 )
             else:
-                self.set_result(last_release_time)
+                self.set_result(self.last_release_time)
 
     def set_result(self, judgment_time: float):
+        judgment_time = min(self.tail_target_time, judgment_time)
         self.was_judged = True
         judgment = self.judgment_window.judge(
             actual=judgment_time, target=self.tail_target_time
@@ -436,7 +442,7 @@ class NoteHoldTail(PlayArchetype):
             self.result.judgment = Judgment.MISS
             return
 
-        if offset_adjusted_time() >= self.tail_target_time:
+        if time() >= self.tail_target_time:
             if not self.was_judged:
                 self.set_result(self.tail_target_time)
             play_note_particle(Vec2(X_JUDGE, self.pos_y))
