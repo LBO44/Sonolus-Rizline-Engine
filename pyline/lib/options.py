@@ -1,9 +1,19 @@
-from sonolus.script.options import options, select_option, slider_option, toggle_option
+from sonolus.script.options import (
+    OptionCategory,
+    options,
+    select_option,
+    slider_option,
+    toggle_option,
+)
 from sonolus.script.text import StandardText
 
 
 @options
 class Options:
+    gameplay = OptionCategory(StandardText.GAMEPLAY)
+    graphics = OptionCategory(StandardText.GRAPHICS)
+    audio = OptionCategory(StandardText.AUDIO)
+
     speed: float = slider_option(
         name=StandardText.SPEED,
         standard=True,
@@ -12,10 +22,12 @@ class Options:
         max=2,
         step=0.05,
         unit=StandardText.PERCENTAGE_UNIT,
+        category=gameplay,
     )
     mirror: bool = toggle_option(
         name=StandardText.MIRROR,
         default=False,
+        category=gameplay,
     )
     note_speed: float = slider_option(
         name=StandardText.NOTE_SPEED,
@@ -24,6 +36,7 @@ class Options:
         max=10,
         step=0.1,
         scope="Rizline",
+        category=gameplay,
     )
     note_size: float = slider_option(
         name=StandardText.NOTE_SIZE,
@@ -33,6 +46,7 @@ class Options:
         step=0.05,
         unit=StandardText.PERCENTAGE_UNIT,
         scope="Rizline",
+        category=graphics,
     )
     particle: int = select_option(
         name="Note Effects Select",
@@ -40,6 +54,7 @@ class Options:
         values=[StandardText.ALL, StandardText.PARTICLE, StandardText.NONE],
         default=StandardText.ALL,
         scope="Rizline",
+        category=graphics,
     )
     particle_size: float = slider_option(
         name=StandardText.NOTE_EFFECT_SIZE,
@@ -49,21 +64,25 @@ class Options:
         step=0.05,
         unit=StandardText.PERCENTAGE_UNIT,
         scope="Rizline",
+        category=graphics,
     )
     sfx: bool = toggle_option(
         name=StandardText.EFFECT,
         default=True,
         scope="Rizline",
+        category=audio,
     )
     auto_sfx: bool = toggle_option(
         name=StandardText.EFFECT_AUTO,
         default=False,
         scope="Rizline",
+        category=audio,
     )
     haptic: bool = toggle_option(
         name=StandardText.HAPTIC,
         default=False,
         scope="Rizline",
+        category=gameplay,
     )
     colored_ui: bool = toggle_option(
         name="Colourful UI",
@@ -77,6 +96,7 @@ class Options:
         },
         default=True,
         scope="Rizline",
+        category=graphics,
     )
     background_opacity: float = slider_option(
         name="Colour Background Opacity",
@@ -94,4 +114,5 @@ class Options:
         step=0.1,
         default=1,
         scope="Rizline",
+        category=graphics,
     )
