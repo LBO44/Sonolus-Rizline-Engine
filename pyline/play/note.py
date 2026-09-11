@@ -18,6 +18,7 @@ from sonolus.script.runtime import (
     Touch,
     delta_time,
     input_offset,
+    is_skip,
     offset_adjusted_time,
     time,
     touches,
@@ -260,9 +261,10 @@ class Note(PlayArchetype):
             else:
                 self.result.judgment = Judgment.MISS
                 self.despawn = True
-                NoteMissEffect.spawn(
-                    start_time=self.input_interval.end, pos_y=self.pos_end_y
-                )
+                if not is_skip():
+                    NoteMissEffect.spawn(
+                        start_time=self.input_interval.end, pos_y=self.pos_end_y
+                    )
             return
 
         if self.claimed_touch_id == -1:
@@ -408,7 +410,8 @@ class NoteHoldTail(PlayArchetype):
             # Clamping it to ≥ self.head.input_interval.end would make homds easier to tap
             if self.last_release_time < self.input_interval.start:
                 self.despawn = True
-                NoteMissEffect.spawn(start_time=time(), pos_y=self.pos_y)
+                if not is_skip():
+                    NoteMissEffect.spawn(start_time=time(), pos_y=self.pos_y)
                 NoteHoldMissEffect.spawn(
                     start_time=min(time(), self.tail_target_time),
                     pos_y=self.pos_y,
